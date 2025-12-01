@@ -56,7 +56,7 @@ import logging
 import weakref
 from collections import defaultdict
 
-from shared.protocol import (
+from src.shared.protocol import (
     SovereignPacket,
     InsightType,
     TargetLayer,
