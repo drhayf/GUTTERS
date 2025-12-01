@@ -62,6 +62,8 @@ class CategoryRegistry:
     This registry scans the categories/ directory for subfolders,
     imports their definitions, and makes them available via a clean API.
     
+    Thread-safe singleton implementation.
+    
     Usage:
         registry = get_category_registry()
         all_categories = registry.list_all()
@@ -69,13 +71,19 @@ class CategoryRegistry:
     """
     
     _instance: Optional["CategoryRegistry"] = None
-    _categories: Dict[str, CategoryInfo] = {}
+    _lock = None  # Class-level lock, initialized lazily
     _initialized: bool = False
     
     def __new__(cls) -> "CategoryRegistry":
-        """Singleton pattern - only one registry instance."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
+        """Thread-safe singleton pattern."""
+        if cls._lock is None:
+            import threading
+            cls._lock = threading.Lock()
+        
+        with cls._lock:
+            if cls._instance is None:
+                cls._instance = super().__new__(cls)
+                cls._instance._categories = {}  # Instance-level categories dict
         return cls._instance
     
     def _discover_categories(self) -> None:
@@ -87,57 +95,69 @@ class CategoryRegistry:
         2. Look for the category constant (e.g., PERSONALITY)
         3. Extract metadata (DISPLAY_NAME, DESCRIPTION, ICON, PRIORITY)
         4. Register in the _categories dictionary
+        
+        Thread-safe: Uses lock to prevent concurrent discovery.
         """
+        # Double-checked locking pattern for thread safety
         if self._initialized:
             return
         
-        categories_dir = Path(__file__).parent
-        
-        for folder in categories_dir.iterdir():
-            # Skip non-directories, private folders, and extensions
-            if not folder.is_dir():
-                continue
-            if folder.name.startswith("_"):
-                continue
-            if folder.name == "extensions":
-                continue  # Handle extensions separately
+        if self._lock is None:
+            import threading
+            CategoryRegistry._lock = threading.Lock()
             
-            try:
-                # Import the category module
-                module = importlib.import_module(
-                    f".{folder.name}",
-                    package="src.digital_twin.traits.categories"
-                )
+        with self._lock:
+            # Check again inside lock
+            if self._initialized:
+                return
+            
+            categories_dir = Path(__file__).parent
+            
+            for folder in categories_dir.iterdir():
+                # Skip non-directories, private folders, and extensions
+                if not folder.is_dir():
+                    continue
+                if folder.name.startswith("_"):
+                    continue
+                if folder.name == "extensions":
+                    continue  # Handle extensions separately
                 
-                # Look for the category constant (uppercase folder name)
-                constant_name = folder.name.upper()
-                if hasattr(module, constant_name):
-                    category_value = getattr(module, constant_name)
-                    
-                    # Extract metadata with fallbacks
-                    display_name = getattr(module, "DISPLAY_NAME", folder.name.title())
-                    description = getattr(module, "DESCRIPTION", "")
-                    icon = getattr(module, "ICON", "")
-                    priority = getattr(module, "PRIORITY", 50)
-                    
-                    # Register the category
-                    self._categories[folder.name] = CategoryInfo(
-                        category_id=category_value,
-                        display_name=display_name,
-                        description=description,
-                        icon=icon,
-                        priority=priority,
+                try:
+                    # Import the category module
+                    module = importlib.import_module(
+                        f".{folder.name}",
+                        package="src.digital_twin.traits.categories"
                     )
                     
-                    logger.debug(f"Discovered category: {folder.name}")
-                    
-            except ImportError as e:
-                logger.warning(f"Failed to import category {folder.name}: {e}")
-            except Exception as e:
-                logger.error(f"Error processing category {folder.name}: {e}")
-        
-        self._initialized = True
-        logger.info(f"CategoryRegistry initialized with {len(self._categories)} categories")
+                    # Look for the category constant (uppercase folder name)
+                    constant_name = folder.name.upper()
+                    if hasattr(module, constant_name):
+                        category_value = getattr(module, constant_name)
+                        
+                        # Extract metadata with fallbacks
+                        display_name = getattr(module, "DISPLAY_NAME", folder.name.title())
+                        description = getattr(module, "DESCRIPTION", "")
+                        icon = getattr(module, "ICON", "")
+                        priority = getattr(module, "PRIORITY", 50)
+                        
+                        # Register the category
+                        self._categories[folder.name] = CategoryInfo(
+                            category_id=category_value,
+                            display_name=display_name,
+                            description=description,
+                            icon=icon,
+                            priority=priority,
+                        )
+                        
+                        logger.debug(f"Discovered category: {folder.name}")
+                        
+                except ImportError as e:
+                    logger.warning(f"Failed to import category {folder.name}: {e}")
+                except Exception as e:
+                    logger.error(f"Error processing category {folder.name}: {e}")
+            
+            self._initialized = True
+            logger.info(f"CategoryRegistry initialized with {len(self._categories)} categories")
     
     def get(self, category_id: str) -> Optional[CategoryInfo]:
         """
