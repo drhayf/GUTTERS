@@ -40,7 +40,7 @@ Architecture:
 @module SovereignMemory
 """
 
-from typing import Optional, Any, Dict, List, Tuple
+from typing import Optional, Any, Dict, List, Tuple, Callable, Deque, Set
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
@@ -306,7 +306,7 @@ class SovereignMemory:
         # Core stores
         self._entries: Dict[str, MemoryEntry] = {}
         self._digital_twin: Dict[str, Any] = {}
-        self._enabled_capabilities: set[AgentCapability] = set()
+        self._enabled_capabilities: Set[AgentCapability] = set()
         
         # Conversation
         self.conversation = ConversationBuffer()
@@ -430,7 +430,7 @@ class SovereignMemory:
         self._enabled_capabilities = set(capabilities)
         logger.info(f"[SovereignMemory] Loaded {len(capabilities)} capabilities")
     
-    def get_enabled_capabilities(self) -> set[AgentCapability]:
+    def get_enabled_capabilities(self) -> Set[AgentCapability]:
         """Get all enabled capabilities."""
         return self._enabled_capabilities.copy()
     

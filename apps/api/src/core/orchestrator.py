@@ -66,7 +66,7 @@ from langchain_core.messages import HumanMessage, AIMessage, SystemMessage, Base
 from langchain_google_genai import ChatGoogleGenerativeAI
 from pydantic import BaseModel, Field
 
-from shared.protocol import (
+from src.shared.protocol import (
     SovereignPacket,
     InsightType,
     TargetLayer,
@@ -77,9 +77,9 @@ from shared.protocol import (
     create_packet,
     create_alert_packet,
 )
-from core.config import settings, HRMConfig
-from core.hrm import HierarchicalReasoningModel
-from core.swarm_bus import SwarmBus, SwarmEnvelope, AgentTier, get_bus
+from src.core.config import settings, HRMConfig
+from src.core.hrm import HierarchicalReasoningModel
+from src.core.swarm_bus import SwarmBus, SwarmEnvelope, AgentTier, get_bus
 
 logger = logging.getLogger(__name__)
 
