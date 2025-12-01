@@ -1,8 +1,8 @@
 # Migration Status Tracker
 
-## Current Phase: 0 - Pre-Migration
-## Current Slice: None (Not Started)
-## Last Verified: Not yet started
+## Current Phase: 1 - Foundation Layer (Traits)
+## Current Slice: 1.3 - TraitSchema Fractal
+## Last Verified: Slice 1.2 PASSED
 
 ---
 
@@ -15,11 +15,11 @@
 
 ---
 
-## Phase 0: Pre-Migration ⏳
+## Phase 0: Pre-Migration ✅
 
 | Task | Status | Verified | Notes |
 |------|--------|----------|-------|
-| Baseline verification | ⏳ Pending | | |
+| Baseline verification | ✅ Done | ✅ | All imports successful |
 | Create this tracking file | ✅ Done | N/A | |
 
 ---
@@ -28,9 +28,9 @@
 
 | Slice | Status | Verified | Notes |
 |-------|--------|----------|-------|
-| 1.1 traits/categories/ | ⏳ Pending | | 23 categories to migrate |
-| 1.2 traits/frameworks/ | ⏳ Pending | | 17 frameworks to migrate |
-| 1.3 traits/schema/ | ⏳ Pending | | TraitSchema dataclass |
+| 1.1 traits/categories/ | ✅ Done | ✅ | 23 categories migrated, TraitFramework/ConfidenceThreshold re-exported from legacy |
+| 1.2 traits/frameworks/ | ✅ Done | ✅ | 19 frameworks migrated |
+| 1.3 traits/schema/ | 🔄 In Progress | | TraitSchema dataclass |
 
 ---
 
