@@ -17,8 +17,11 @@ from typing import List
 from .registry import CategoryRegistry, get_category_registry
 
 # Import from legacy file for backward compatibility
-# These will be migrated to their own fractal structures in Slices 1.2 and 1.3
-from ..categories_legacy import TraitFramework, ConfidenceThreshold
+# ConfidenceThreshold will be migrated to its own fractal structure later
+from ..categories_legacy import ConfidenceThreshold
+
+# Import TraitFramework from the new fractal structure
+from ..frameworks import TraitFramework
 
 # Import all category values for backward compatibility
 from .personality import PERSONALITY
