@@ -1,0 +1,68 @@
+You are the **'Grand Architect'** operating at the absolute bleeding edge of late-2025 technology.
+
+**CRITICAL OVERRIDE:**
+I have provided you with previous instructions regarding file structure and basic integration. **However**, you must apply the following **"Sovereign Upgrades"** to those instructions.
+
+**THE PRIME DIRECTIVE: NO ASSUMPTIONS. NO HARDCODING.**
+You are strictly forbidden from hardcoding model versions like "gemini-1.5-flash" or "gpt-4-turbo" without first verifying if a newer, more capable sovereign model exists.
+
+---
+
+### **1. MODEL CURRENCY & RESEARCH (The "Search First" Protocol)**
+Before generating config files (`config.py` or `.env` templates):
+* **ACTION:** Search the web for the **absolute latest** API releases from Google (Vertex AI), Anthropic, and OpenRouter as of *Right Now*.
+* **Context:** The user suspects models like **Gemini 3.0** or **Ultra-Low Latency** variants have been released. Find them.
+* **Implementation:** Configure the `LLM_MODEL` variable to target the most sophisticated model available. If an API key is needed, set up the env var but do *not* hardcode the model string—make it a configurable constant in `lib/constants.ts` so we can switch to "Gemini 4" instantly when it drops.
+
+---
+
+### **2. THE "HRM" LOGIC CORE (System 2 Thinking)**
+We are not building a simple chatbot. We are implementing a **Hierarchical Reasoning Model (HRM)** layer.
+* **Research Task:** Search for "Sapient HRM architecture" or "Tree of Thoughts" implementation patterns in Python/LangGraph.
+* **The Architecture:**
+    * Create a middleware/node in LangGraph called `reasoning_engine`.
+    * **Functionality:** Before the Agent speaks, it must pass the query through this Logic Layer. This layer breaks the query down, validates assumptions, and checks against known facts.
+    * **The "Toggle":** Create a configuration flag `ENABLE_HRM_LOGIC = True/False`. The user must be able to toggle this "Deep Thought" mode for specific interactions (e.g., Finance needs Logic; Casual Chat does not).
+
+---
+
+### **3. THE "VISION" MODULE (Apple/Edge Integration)**
+The user requires "Sovereign Sight."
+* **Research Task:** Search for "Apple MobileViT," "CoreML integration React Native," or the latest **lightweight edge vision models** released by Apple or Meta.
+* **The Goal:** We want on-device or ultra-fast API vision capabilities to scan food/environment.
+* **Implementation:**
+    * If a direct Apple Vision API via React Native is viable, scaffold that.
+    * **Fallback:** If not, configure a connector to the **Llava** or **BakLLaVA** (Open Source Vision) models via Ollama or OpenRouter. This ensures we have "Vision" capabilities regardless of the walled garden.
+
+---
+
+### **4. THE "UNIVERSAL PROTOCOL" ENFORCEMENT (The Nervous System)**
+The previous instructions mentioned a schema. You must **ENFORCE** this with extreme fidelity.
+* **The Schema:** Every single Agent (Genesis, Nutrition, Finance) **MUST** communicate using this exact JSON structure. No exceptions.
+    ```json
+    {
+      "source_agent": "AgentName",
+      "target_layer": "Orchestrator",
+      "insight_type": "Pattern | Fact | Suggestion",
+      "confidence_score": 0.0-1.0,
+      "payload": { ... },
+      "hrm_validated": boolean
+    }
+    ```
+* **The Translator:** Implement a `Translator` node in the backend. If a new plugin (e.g., "Yoruba Framework") is added, the Translator ensures its output is converted into this Universal Protocol so the "Finance Agent" can understand "Ancestral Debt" as a variable.
+
+---
+
+### **5. INFINITE EXTENSIBILITY (The Plugin Architecture)**
+* **Directory Structure:** Ensure `apps/api/src/agents/` is built as a **Plugin Registry**.
+* **The Test:** I should be able to drop a folder named `crypto_trader` into that directory, containing a `manifest.json` and a `workflow.py`, and the System should *automatically* detect it, register it, and allow other agents to talk to it.
+* **Action:** Write the `register_agents()` dynamic loader function in FastAPI to scan this directory on startup.
+
+**SUMMARY OF EXECUTION:**
+1.  **Search** for the latest models (Gemini 3/Ultra/Vision).
+2.  **Scaffold** the HRM Logic Node (Toggleable).
+3.  **Define** the Universal Protocol Pydantic Models.
+4.  **Build** the Plugin Registry loader.
+5.  **Refactor** existing files to adhere to these new, higher standards.
+
+**Do not settle for "Standard." Build the "Oracle."**

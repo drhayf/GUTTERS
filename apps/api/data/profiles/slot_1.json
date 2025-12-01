@@ -1,0 +1,36 @@
+{
+  "slot": {
+    "slot_id": "slot_1",
+    "name": "first",
+    "status": "in_progress",
+    "created_at": "2025-11-30T05:27:17.189607",
+    "updated_at": "2025-11-30T05:27:17.189607",
+    "phase": "awakening",
+    "completion_percentage": 0.0,
+    "total_responses": 0,
+    "summary": "Awakening (0% complete)"
+  },
+  "session_state": {
+    "session_id": "0979a99e-5528-41c3-b54d-9ba327723664",
+    "created_at": "2025-11-30T05:27:03.839566",
+    "last_activity": "2025-11-30T05:27:03.839566",
+    "phase": "awakening",
+    "question_index": 0,
+    "total_questions_asked": 0,
+    "responses": [],
+    "rubric": {},
+    "insights": [],
+    "pending_probes": [],
+    "profile_complete": false,
+    "conversation_turn": 0,
+    "current_question": "Hey there! So tell me - what's been on your mind lately?",
+    "completion_percentage": 0.0,
+    "memory": {
+      "messages": [],
+      "context": {}
+    },
+    "active_signals": [],
+    "current_hypotheses": []
+  },
+  "digital_twin": null
+}

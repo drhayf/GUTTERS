@@ -1,0 +1,70 @@
+You are the integration engineer for Project Sovereign. Work inside the existing Expo + Tamagui + LangChain template and integrate FastAPI WITHOUT duplicating configurations. Follow these directives exactly:
+
+## 1. Repository Audit (DO FIRST)
+Before making ANY changes:
+- Read package.json to understand existing scripts, especially `yarn start`
+- Read lib/ai/client.ts to understand existing LangChain/AI SDK configuration
+- Read lib/agents/base-agent.ts to understand existing AgentInputSchema and AgentOutputSchema
+- Read lib/agents/human-design-agent.ts to see how agents are implemented
+- Check if apps/api/ exists and what's already there
+- Confirm `yarn start` is the primary Replit workflow - DO NOT create new workflows or scripts
+
+## 2. FastAPI Integration (Minimal Additions)
+- Add FastAPI to apps/api/ ONLY if it doesn't exist, otherwise extend what's there
+- Use existing requirements.txt if present
+- FastAPI must serve under /api/python prefix to match existing lib/api-client.ts
+- Add ONLY necessary files: main.py, routers/, config.py
+- DO NOT create duplicate package.json files or new configuration folders
+
+## 3. Shared Agent Contract (CRITICAL)
+- lib/agents/base-agent.ts is the SOURCE OF TRUTH
+- Create Pydantic models that EXACTLY match:
+  - AgentInput: { framework: string, context: { birthData?, healthMetrics?, journalThemes?, userQuery? } }
+  - AgentOutput: { calculation?, correlations?, interpretationSeed, visualizationData?, method, confidence? }
+- Backend agents MUST accept and return data matching these schemas exactly
+- DO NOT invent alternative field names or structures
+
+## 4. Backend Agent Implementation
+- Implement Genesis agent using the shared Pydantic models
+- Mirror the existing HumanDesignAgent patterns where applicable
+- Use EXISTING environment variables: EXPO_PUBLIC_GOOGLE_API_KEY, GOOGLE_API_KEY
+- DO NOT add new environment variable names unless absolutely necessary
+- Wrap LangGraph/LangChain imports with try/except for graceful fallback
+
+## 5. API Routes
+- Implement /api/python/health, /api/python/agents/, /api/python/chat/
+- Validate requests against shared schemas
+- CORS must allow Replit domains - detect via REPL_SLUG and REPL_OWNER env vars
+- Never use wildcard (*) origins with credentials=True
+
+## 6. Frontend Integration
+- lib/api-client.ts should work UNCHANGED if possible
+- If modifications needed, document why and keep minimal
+- Verify Expo screens can call backend agents through apiClient
+
+## 7. Workflow Alignment (IMPORTANT)
+- Modify the EXISTING yarn start script to also launch FastAPI
+- Use `concurrently` package if needed to run both servers
+- FastAPI on port 8000, Expo on port 5000
+- DO NOT create new commands like `yarn sovereign` - extend `yarn start`
+- The Replit workflow should continue to use the same command
+
+## 8. Validation
+After implementation:
+- Run yarn start and verify BOTH servers launch
+- Test /api/python/health returns 200
+- Test agent invocation with proper AgentInput schema
+- Verify response matches AgentOutput schema
+
+## 9. Documentation
+- Update replit.md with brief notes about the FastAPI integration
+- Document that schemas are shared between frontend and backend
+- Keep documentation minimal and accurate
+
+## RULES
+- Work iteratively, verify after each change
+- NO redundant configurations
+- NO parallel/duplicate systems
+- EXTEND existing configurations, don't replace
+- MATCH existing patterns and conventions
+- ASK before creating new files if unsure

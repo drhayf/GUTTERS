@@ -1,0 +1,59 @@
+You are the **'Frontend Sovereign Architect.'**
+
+**CURRENT STATUS:**
+The FastAPI Backend is COMPLETE. It is running a "Genesis Profiler" agent that streams **Structured JSON UI Instructions** (not just plain text).
+The Frontend is currently a page with 2 tabs that says somatic alignment. This needs to be transformed.
+
+**THE MISSION:**
+Build the **High-Fidelity "Genesis Void" Interface** in Expo/Tamagui.
+This is **NOT** a standard scrolling chat list. It is an immersive, cinematic interaction loop.
+
+**1. VISUAL SPECIFICATION ("THE VOID"):**
+* **The Container:** Absolute Deep Dark Theme (`#050505`).
+* **The "Samsung Edge" Pulse:**
+    * Create a component `PulsingBorder.tsx`.
+    * Use `react-native-reanimated` to create a thin, glowing neon line that travels or pulses around the extreme edge of the device screen.
+    * **State Reactive:** The pulse color MUST change based on the AI state:
+        * **Cyan/Blue:** AI is Listening/Waiting.
+        * **Purple/Gold:** AI is "Thinking" (HRM Logic Active).
+        * **Red:** System Alert/Penalty.
+* **The Interaction Flow:**
+    * Do **NOT** show a history of 50 bubbles.
+    * Show the **Active Question** in the center.
+    * When answered, the old question **Fades Out/Blur** into the background/top, and the new content **Fades In/Pops Up** from the bottom. It should feel like a conversation in a dream, not a text message.
+
+**2. THE GENERATIVE UI ENGINE (Vercel AI SDK):**
+* **Documentation Check:** You MUST verify the latest Vercel AI SDK documentation for **React Native/Expo**.
+* **The Renderer:** Create a `GenerativeRenderer.tsx`.
+* **The Contract:** The backend sends a JSON payload (see below). You must map this payload to Tamagui components.
+    * *Backend sends:* `{"type": "slider", "min": 0, "max": 100, "label": "Energy Level"}`
+    * *Frontend renders:* A high-fidelity, haptic-feedback Slider.
+    * *Backend sends:* `{"type": "binary_choice", "options": ["Striving", "Flowing"]}`
+    * *Frontend renders:* Two large, glass-morphism cards that the user taps.
+
+**3. THE "INFINITE EXTENSIBILITY" ARCHITECTURE:**
+* Do not hardcode the Genesis logic into the screen.
+* Create a `packages/ui/registry` folder.
+* **The Registry Pattern:** Create a mapping file that connects backend `component_types` to frontend React Components.
+* *Why:* When we add a "Finance Module" later with a "Stock Graph" agent, we simply add the graph component to this registry, and the chat can render it immediately without rewriting the chat engine.
+
+**4. THE TECHNICAL EXECUTION:**
+* **Route:** `apps/expo/app/genesis/index.tsx`.
+* **API Connection:** Use the existing `api-client` logic to connect to `http://localhost:8000/api/python/chat`. Ensure streaming is handled correctly (SSE).
+* **Animations:** Use `Tamagui`'s `AnimatePresence` for the enter/exit transitions of the UI elements.
+
+**EXAMPLE BACKEND PAYLOAD TO HANDLE:**
+```json
+{
+  "type": "profiler_step",
+  "phase": "excavation",
+  "visuals": { "pulse_color": "purple", "background_intensity": 0.8 },
+  "components": [
+    { "type": "text", "content": "I sense a blockage in your flow." },
+    { "type": "choice_card", "options": ["Physical Pain", "Mental Fog"] }
+  ]
+}
+
+DIRECTIVE:
+Build the PulsingBorder, the GenesisScreen, and the GenerativeRenderer. Ensure it looks like a Sci-Fi artifact, not a website. Proceed with maximum scrutiny.
+

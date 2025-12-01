@@ -1,0 +1,3189 @@
+"""""""""from typing import Optional, Literal
+
+Genesis Profiler Agent - Full Fractal Integration with SwarmBus
+
+Genesis Profiler Agent - Full Fractal Integration with SwarmBus
+
+This is the MAIN ENTRY POINT for the Genesis profiling system.
+
+It orchestrates ALL fractal components with maximum fidelity:Genesis Profiler Agent - Full Fractal Integration with SwarmBusfrom dataclasses import dataclass, field
+
+
+
+Components:This is the MAIN ENTRY POINT for the Genesis profiling system.
+
+- GenesisCore (core.py) - The FACE: Conversational interface
+
+- GenesisProfiler (profiler.py) - The SCOUT: Silent pattern detectionIt orchestrates ALL fractal components with maximum fidelity:═══════════════════════════════════════════════════════════════════════════════from datetime import datetime
+
+- HypothesisEngine (hypothesis.py) - The LOGIC: Confidence probing
+
+- ProfileRubric (state.py) - The MEMORY: Digital Twin storage
+
+- Face/VoiceSystem (face/) - The EXPRESSION: Oracle, Sage, etc.
+
+- GenesisCore (core.py) - The FACE: Conversational interface
+
+SwarmBus Integration:
+
+- Subscribes as 'genesis.profiler' at DOMAIN tier- GenesisProfiler (profiler.py) - The SCOUT: Silent pattern detection
+
+- Escalates hypotheses to MasterHypothesisEngine
+
+- Sends pattern signals to MasterScout- HypothesisEngine (hypothesis.py) - The LOGIC: Confidence probingThis is the MAIN ENTRY POINT for the Genesis profiling system.from .base import BaseAgent
+
+- Receives cross-domain insights for profile enrichment
+
+- ProfileRubric (state.py) - The MEMORY: Digital Twin storage
+
+The 5 Phases:
+
+1. AWAKENING   - Initial contact, rapport building- Face/VoiceSystem (face/) - The EXPRESSION: Oracle, Sage, etc.It orchestrates ALL fractal components with maximum fidelity:from ..core.schemas import AgentInput, AgentOutput, UniversalProtocolMessage
+
+2. EXCAVATION  - Deep shadow work, pattern hunting
+
+3. MAPPING     - Type determination, binary probes
+
+4. SYNTHESIS   - Pattern weaving, insight integration
+
+5. ACTIVATION  - Digital Twin delivery, empowermentSwarmBus Integration:from ..core.config import settings
+
+
+
+Version: 3.0.0 - Full Fractal Integration- Subscribes as 'genesis.profiler' at DOMAIN tier
+
+"""
+
+- Escalates hypotheses to MasterHypothesisEngine╔═══════════════════════════════════════════════════════════════════════════════╗from ..core.hrm import get_hrm
+
+from typing import Optional, Any, Literal
+
+from dataclasses import dataclass, field- Sends pattern signals to MasterScout
+
+from datetime import datetime
+
+from uuid import uuid4- Receives cross-domain insights for profile enrichment║                           GENESIS FRACTAL ARCHITECTURE                         ║
+
+import asyncio
+
+import logging
+
+import json
+
+The 5 Phases:╠═══════════════════════════════════════════════════════════════════════════════╣# Import the fractal Face system
+
+from .base import BaseAgent
+
+from ..core.schemas import AgentInput, AgentOutput, UniversalProtocolMessage1. AWAKENING   - Initial contact, rapport building
+
+from ..core.config import settings
+
+from ..core.hrm import get_hrm2. EXCAVATION  - Deep shadow work, pattern hunting║                                                                               ║from .genesis.face import FaceOrchestrator, FaceFactory, VoiceSelectionMode, ConversationPhase
+
+from ..core.swarm_bus import (
+
+    SwarmBus,3. MAPPING     - Type determination, binary probes
+
+    SwarmEnvelope,
+
+    AgentTier,4. SYNTHESIS   - Pattern weaving, insight integration║    ┌─────────────────┐                                                        ║from .genesis.state import GenesisPhase, SessionMemory
+
+    RoutingPattern,
+
+    PacketPriority,5. ACTIVATION  - Digital Twin delivery, empowerment
+
+    MessageStatus,
+
+)║    │  GenesisCore    │◄─── The FACE: Conversational interface                 ║
+
+from ..shared.protocol import (
+
+    SovereignPacket,Version: 3.0.0 - Full Fractal Integration
+
+    InsightType,
+
+    TargetLayer,"""║    │  (core.py)      │     Oracle persona, response generation                ║GenesisPhaseStr = Literal["awakening", "excavation", "mapping", "synthesis", "activation"]
+
+    ProbeType,
+
+    create_packet,
+
+    create_hypothesis_packet,
+
+    create_insight_packet,from typing import Optional, Any, Literal║    └────────┬────────┘                                                        ║
+
+)
+
+from dataclasses import dataclass, field
+
+# Import the COMPLETE Genesis fractal system
+
+from .genesis import (from datetime import datetime║             │                                                                  ║# Map string phases to ConversationPhase enum
+
+    GenesisCore,
+
+    GenesisResponse,from uuid import uuid4
+
+    GenesisProfiler,
+
+    Signal,import asyncio║    ┌────────┴────────┐                                                        ║PHASE_TO_CONVERSATION_PHASE = {
+
+    HypothesisEngine,
+
+    Hypothesis,import logging
+
+    GenesisState,
+
+    GenesisPhase,import json║    │                 │                                                        ║    "awakening": ConversationPhase.AWAKENING,
+
+    ProfileRubric,
+
+    DetectedTrait,
+
+    SessionMemory,
+
+    ActiveSignal,from .base import BaseAgent║    ▼                 ▼                                                        ║    "excavation": ConversationPhase.EXCAVATION,
+
+    create_genesis_graph,
+
+    get_genesis_graph,from ..core.schemas import AgentInput, AgentOutput, UniversalProtocolMessage
+
+    run_genesis_turn,
+
+)from ..core.config import settings║  ┌─────────────┐  ┌──────────────────┐                                        ║    "mapping": ConversationPhase.MAPPING,
+
+from .genesis.face import (
+
+    FaceOrchestrator,from ..core.hrm import get_hrm
+
+    FaceFactory,
+
+    VoiceSelectionMode,from ..core.swarm_bus import (║  │ Profiler    │  │ HypothesisEngine │◄─── The LOGIC: Confidence probing      ║    "synthesis": ConversationPhase.SYNTHESIS,
+
+    ConversationPhase,
+
+    Voice,    SwarmBus,
+
+)
+
+    SwarmEnvelope,║  │ (profiler.py)│  │ (hypothesis.py) │     Binary choice, sliders, etc.       ║    "activation": ConversationPhase.ACTIVATION,
+
+logger = logging.getLogger(__name__)
+
+    AgentTier,
+
+
+
+# Phase to ConversationPhase mapping    RoutingPattern,║  └──────┬──────┘  └────────┬─────────┘                                        ║}
+
+PHASE_TO_CONVERSATION_PHASE = {
+
+    GenesisPhase.AWAKENING: ConversationPhase.AWAKENING,    PacketPriority,
+
+    GenesisPhase.EXCAVATION: ConversationPhase.EXCAVATION,
+
+    GenesisPhase.MAPPING: ConversationPhase.MAPPING,    MessageStatus,║         │                  │                                                   ║
+
+    GenesisPhase.SYNTHESIS: ConversationPhase.SYNTHESIS,
+
+    GenesisPhase.ACTIVATION: ConversationPhase.ACTIVATION,)
+
+}
+
+from ..shared.protocol import (║         │ The SCOUT:       │                                                   ║@dataclass
+
+# Voice selection per phase for optimal resonance
+
+PHASE_VOICE_MAP = {    SovereignPacket,
+
+    GenesisPhase.AWAKENING: "oracle",
+
+    GenesisPhase.EXCAVATION: "mirror",    InsightType,║         │ Silent pattern   │                                                   ║class ProfilerState:
+
+    GenesisPhase.MAPPING: "sage",
+
+    GenesisPhase.SYNTHESIS: "oracle",    TargetLayer,
+
+    GenesisPhase.ACTIVATION: "challenger",
+
+}    ProbeType,║         │ detection        │                                                   ║    """Enhanced profiler state with memory and voice tracking."""
+
+
+
+    create_packet,
+
+@dataclass
+
+class IntegratedSession:    create_hypothesis_packet,║         │                  │                                                   ║    phase: GenesisPhaseStr = "awakening"
+
+    """
+
+    Complete session state integrating ALL fractal components.    create_insight_packet,
+
+    
+
+    This holds:)║    ┌────┴──────────────────┴────┐                                             ║    question_index: int = 0
+
+    - The GenesisState (phase, rubric, memory, responses)
+
+    - The FaceOrchestrator (voice selection, system prompts)
+
+    - The GenesisCore (conversation generation, profiler, hypothesis)
+
+    - Cross-domain insights from Master agents# Import the COMPLETE Genesis fractal system║    │       ProfileRubric        │◄─── The MEMORY: Digital Twin storage        ║    responses: list[dict] = field(default_factory=list)
+
+    """
+
+    session_id: strfrom .genesis import (
+
+    created_at: datetime = field(default_factory=datetime.utcnow)
+
+    last_activity: datetime = field(default_factory=datetime.utcnow)    GenesisCore,║    │        (state.py)          │     HD, Jungian, Somatic traits             ║    digital_twin: dict = field(default_factory=dict)
+
+    
+
+    # Fractal Components    GenesisResponse,
+
+    genesis_state: GenesisState = None
+
+    face: FaceOrchestrator = None    GenesisProfiler,║    └────────────────────────────┘                                             ║    insights: list[str] = field(default_factory=list)
+
+    core: GenesisCore = None
+
+        Signal,
+
+    # Cross-Domain Intelligence (from SwarmBus)
+
+    master_hypothesis_insights: list = field(default_factory=list)    HypothesisEngine,║                                                                               ║    
+
+    master_scout_insights: list = field(default_factory=list)
+
+    orchestrator_directives: list = field(default_factory=list)    Hypothesis,
+
+    
+
+    # Pending packets for async processing    GenesisState,║    ┌────────────────────────────┐                                             ║    # Session memory for conversation history
+
+    pending_packets: list = field(default_factory=list)
+
+        GenesisPhase,
+
+    # Session metrics
+
+    total_signals_detected: int = 0    ProfileRubric,║    │    Face / VoiceSystem      │◄─── The EXPRESSION: Oracle, Sage, etc.      ║    memory: SessionMemory = field(default_factory=SessionMemory)
+
+    total_hypotheses_created: int = 0
+
+    total_probes_sent: int = 0    DetectedTrait,
+
+    
+
+    def __post_init__(self):    SessionMemory,║    │       (face/)              │     Dynamic voice selection                 ║    
+
+        """Initialize fractal components if not provided."""
+
+        if self.genesis_state is None:    ActiveSignal,
+
+            self.genesis_state = GenesisState(session_id=self.session_id)
+
+        if self.face is None:    create_genesis_graph,║    └────────────────────────────┘                                             ║    # Track current voice being used
+
+            self.face = FaceFactory.create_default()
+
+        if self.core is None:    get_genesis_graph,
+
+            self.core = GenesisCore()
+
+        run_genesis_turn,║                                                                               ║    current_voice_id: str = "oracle"
+
+    def touch(self) -> None:
+
+        """Update last activity timestamp.""")
+
+        self.last_activity = datetime.utcnow()
+
+    from .genesis.face import (╚═══════════════════════════════════════════════════════════════════════════════╝    
+
+    def get_master_context(self) -> str:
+
+        """Get formatted context from Master agents for LLM prompts."""    FaceOrchestrator,
+
+        lines = []
+
+            FaceFactory,    # Timestamps
+
+        if self.master_hypothesis_insights:
+
+            recent = self.master_hypothesis_insights[-3:]    VoiceSelectionMode,
+
+            for insight in recent:
+
+                if insight.get("payload"):    ConversationPhase,SwarmBus Integration:    created_at: datetime = field(default_factory=datetime.utcnow)
+
+                    lines.append("[MasterHypothesis] " + insight["payload"].get("insight", ""))
+
+            Voice,
+
+        if self.master_scout_insights:
+
+            recent = self.master_scout_insights[-3:])─────────────────────    last_activity: datetime = field(default_factory=datetime.utcnow)
+
+            for insight in recent:
+
+                if insight.get("payload"):
+
+                    lines.append("[MasterScout] " + insight["payload"].get("pattern", ""))
+
+        logger = logging.getLogger(__name__)- Subscribes as 'genesis.profiler' at DOMAIN tier    
+
+        return "\n".join(lines) if lines else ""
+
+    
+
+    def to_summary(self) -> dict:
+
+        """Export session summary for logging/debugging."""- Escalates hypotheses to MasterHypothesisEngine    def add_message(self, role: str, content: str):
+
+        return {
+
+            "session_id": self.session_id,# Phase to ConversationPhase mapping
+
+            "phase": self.genesis_state.phase.value,
+
+            "turn": self.genesis_state.conversation_turn,PHASE_TO_CONVERSATION_PHASE = {- Sends pattern signals to MasterScout        """Add message to memory."""
+
+            "completion": self.genesis_state.rubric.get_completion_percentage(),
+
+            "signals_detected": self.total_signals_detected,    GenesisPhase.AWAKENING: ConversationPhase.AWAKENING,
+
+            "hypotheses_created": self.total_hypotheses_created,
+
+            "probes_sent": self.total_probes_sent,    GenesisPhase.EXCAVATION: ConversationPhase.EXCAVATION,- Receives cross-domain insights for profile enrichment        self.memory.add_message(role, content)
+
+            "master_insights": {
+
+                "hypothesis": len(self.master_hypothesis_insights),    GenesisPhase.MAPPING: ConversationPhase.MAPPING,
+
+                "scout": len(self.master_scout_insights),
+
+            },    GenesisPhase.SYNTHESIS: ConversationPhase.SYNTHESIS,        self.last_activity = datetime.utcnow()
+
+            "age_seconds": (datetime.utcnow() - self.created_at).total_seconds(),
+
+        }    GenesisPhase.ACTIVATION: ConversationPhase.ACTIVATION,
+
+
+
+}The 5 Phases:    
+
+class GenesisProfilerAgent(BaseAgent):
+
+    """
+
+    Full-Featured Genesis Profiler with Complete Fractal Integration.
+
+    # Voice selection per phase for optimal resonance─────────────    def get_conversation_context(self) -> str:
+
+    This agent orchestrates:
+
+    1. INTELLIGENT QUESTIONING - Adaptive questions based on patternsPHASE_VOICE_MAP = {
+
+    2. REAL-TIME PATTERN DETECTION - Silent analysis on every message
+
+    3. HYPOTHESIS-DRIVEN PROBING - Confidence-based verification    GenesisPhase.AWAKENING: "oracle",1. AWAKENING   - Initial contact, rapport building, sensing energy        """Get formatted conversation context for LLM."""
+
+    4. GENERATIVE UI COMPONENTS - Dynamic component generation
+
+    5. SOPHISTICATED PROFILE ENGINE - ProfileRubric with 20+ categories    GenesisPhase.EXCAVATION: "mirror",
+
+    6. SWARM COMMUNICATION - Master agent integration
+
+        GenesisPhase.MAPPING: "sage",2. EXCAVATION  - Deep shadow work, pattern hunting, wound discovery          recent = self.memory.get_last_n(10)
+
+    Version: 3.0.0 - Full Fractal Integration
+
+    """    GenesisPhase.SYNTHESIS: "oracle",
+
+    
+
+    name = "Genesis Profiler"    GenesisPhase.ACTIVATION: "challenger",3. MAPPING     - Type determination, function stacking, binary probes        if not recent:
+
+    description = "Deep profiling agent building the Digital Twin through intelligent questioning"
+
+    frameworks = ["human-design", "gene-keys", "jungian", "somatic", "enneagram"]}
+
+    version = "3.0.0"
+
+    capabilities = [4. SYNTHESIS   - Pattern weaving, insight integration, narrative building            return "(First interaction - no history yet)"
+
+        "profiling",
+
+        "generative-ui",
+
+        "multi-phase",
+
+        "voice-selection",@dataclass5. ACTIVATION  - Digital Twin delivery, next steps, empowerment        
+
+        "pattern-detection",
+
+        "hypothesis-probing",class IntegratedSession:
+
+        "swarm-communication",
+
+        "session-persistence",    """        lines = []
+
+        "cross-domain-intelligence",
+
+    ]    Complete session state integrating ALL fractal components.
+
+    requires_hrm = False
+
+        Author: Project Sovereign        for msg in recent:
+
+    def __init__(self):
+
+        """Initialize the Genesis Profiler with all subsystems."""    This holds:
+
+        self._sessions: dict[str, IntegratedSession] = {}
+
+        self._bus_subscribed: bool = False    - The GenesisState (phase, rubric, memory, responses)Version: 3.0.0 - Full Fractal Integration            role = msg.get("role", "unknown").upper()
+
+        self._llm: Optional[Any] = None
+
+        self._bus: Optional[SwarmBus] = None    - The FaceOrchestrator (voice selection, system prompts)
+
+        
+
+        self._setup_llm()    - The GenesisCore (conversation generation, profiler, hypothesis)"""            content = msg.get("content", "")[:200]  # Truncate
+
+        logger.info("[GenesisProfiler] Initialized with fractal integration v3.0.0")
+
+        - Cross-domain insights from Master agents
+
+    def _setup_llm(self) -> None:
+
+        """Initialize the LangChain LLM for dynamic generation."""    """            lines.append(f"{role}: {content}")
+
+        if not settings.GOOGLE_API_KEY:
+
+            logger.warning("[GenesisProfiler] No API key - running in limited mode")    session_id: str
+
+            return
+
+            created_at: datetime = field(default_factory=datetime.utcnow)from typing import Optional, Any, Literal        
+
+        try:
+
+            from langchain_google_genai import ChatGoogleGenerativeAI    last_activity: datetime = field(default_factory=datetime.utcnow)
+
+            
+
+            self._llm = ChatGoogleGenerativeAI(    from dataclasses import dataclass, field        return "\n".join(lines)
+
+                model=settings.LLM_MODEL,
+
+                temperature=0.9,    # Fractal Components
+
+                google_api_key=settings.GOOGLE_API_KEY,
+
+            )    genesis_state: GenesisState = Nonefrom datetime import datetime
+
+            logger.info("[GenesisProfiler] LLM initialized: " + settings.LLM_MODEL)
+
+        except Exception as e:    face: FaceOrchestrator = None
+
+            logger.error("[GenesisProfiler] LLM initialization failed: " + str(e))
+
+        core: GenesisCore = Nonefrom uuid import uuid4PHASE_QUESTIONS = {
+
+    # =========================================================================
+
+    # SWARM BUS INTEGRATION    
+
+    # =========================================================================
+
+        # Cross-Domain Intelligence (from SwarmBus)import asyncio    "awakening": [
+
+    async def _ensure_bus_subscription(self) -> None:
+
+        """Subscribe to SwarmBus for Master agent communication."""    master_hypothesis_insights: list = field(default_factory=list)
+
+        if self._bus_subscribed:
+
+            return    master_scout_insights: list = field(default_factory=list)import logging        "What brings you here today? What are you seeking to understand about yourself?",
+
+        
+
+        try:    orchestrator_directives: list = field(default_factory=list)
+
+            self._bus = await SwarmBus.get_instance()
+
+                import json        "Describe a moment when you felt completely alive and aligned. What were you doing?",
+
+            await self._bus.subscribe(
+
+                agent_id="genesis.profiler",    # Pending packets for async processing
+
+                handler=self._handle_swarm_message,
+
+                agent_tier=AgentTier.DOMAIN,    pending_packets: list = field(default_factory=list)        "What pattern in your life keeps recurring, perhaps appearing as both challenge and gift?",
+
+                domain="genesis",
+
+                capability="profiling",    
+
+            )
+
+                # Session metricsfrom .base import BaseAgent    ],
+
+            self._bus_subscribed = True
+
+            logger.info("[GenesisProfiler] Subscribed to SwarmBus as genesis.profiler")    total_signals_detected: int = 0
+
+        except Exception as e:
+
+            logger.warning("[GenesisProfiler] SwarmBus subscription failed: " + str(e))    total_hypotheses_created: int = 0from ..core.schemas import AgentInput, AgentOutput, UniversalProtocolMessage    "excavation": [
+
+    
+
+    async def _handle_swarm_message(self, envelope: SwarmEnvelope) -> Optional[dict]:    total_probes_sent: int = 0
+
+        """Handle incoming messages from SwarmBus."""
+
+        payload = envelope.payload    from ..core.config import settings        "What truth about yourself have you been avoiding?",
+
+        source = envelope.source_agent_id
+
+        session_id = payload.get("session_id")    def __post_init__(self):
+
+        
+
+        logger.info("[GenesisProfiler] SwarmBus message from " + source)        """Initialize fractal components if not provided."""from ..core.hrm import get_hrm        "Describe your relationship with rest and activity. When do you feel depleted?",
+
+        
+
+        if session_id and session_id in self._sessions:        if self.genesis_state is None:
+
+            session = self._sessions[session_id]
+
+                        self.genesis_state = GenesisState(session_id=self.session_id)from ..core.swarm_bus import (        "What emotions do you tend to suppress, and which ones flow freely?",
+
+            insight_record = {
+
+                "source": source,        if self.face is None:
+
+                "payload": payload,
+
+                "timestamp": datetime.utcnow().isoformat(),            self.face = FaceFactory.create_default()    SwarmBus,     ],
+
+                "envelope_id": envelope.id,
+
+            }        if self.core is None:
+
+            
+
+            if "master.hypothesis" in source:            self.core = GenesisCore()    SwarmEnvelope,     "mapping": [
+
+                session.master_hypothesis_insights.append(insight_record)
+
+            elif "master.scout" in source:    
+
+                session.master_scout_insights.append(insight_record)
+
+            elif "orchestrator" in source:    def touch(self) -> None:    AgentTier,         "How do you typically make important decisions - through logic, emotion, or intuition?",
+
+                session.orchestrator_directives.append(insight_record)
+
+                """Update last activity timestamp."""
+
+        return {"acknowledged": True, "agent": "genesis.profiler"}
+
+            self.last_activity = datetime.utcnow()    RoutingPattern,         "Describe your ideal environment for deep work and reflection.",
+
+    async def _notify_master_hypothesis(
+
+        self,    
+
+        session: IntegratedSession,
+
+        hypotheses: list,    def get_master_context(self) -> str:    PacketPriority,        "What role do you naturally assume in group dynamics?",
+
+    ) -> None:
+
+        """Send hypotheses to MasterHypothesisEngine."""        """Get formatted context from Master agents for LLM prompts."""
+
+        if not self._bus or not hypotheses:
+
+            return        lines = []    MessageStatus,    ],
+
+        
+
+        try:        
+
+            await self._bus.send(
+
+                source_agent_id="genesis.profiler",        if self.master_hypothesis_insights:)    "synthesis": [
+
+                target_capability="hypothesis_aggregation",
+
+                payload={            recent = self.master_hypothesis_insights[-3:]
+
+                    "session_id": session.session_id,
+
+                    "hypotheses": [h.to_dict() for h in hypotheses],            for insight in recent:from ..shared.protocol import (        "Looking at the patterns we've uncovered, what theme emerges most strongly?",
+
+                    "phase": session.genesis_state.phase.value,
+
+                    "completion": session.genesis_state.rubric.get_completion_percentage(),                if insight.get("payload"):
+
+                    "turn": session.genesis_state.conversation_turn,
+
+                },                    lines.append(f"[MasterHypothesis] {insight['payload'].get('insight', '')}")    SovereignPacket,        "How might your challenges actually be pointing toward your gifts?",
+
+                priority=PacketPriority.NORMAL,
+
+            )        
+
+            logger.info("[GenesisProfiler] Sent " + str(len(hypotheses)) + " hypotheses to Master")
+
+        except Exception as e:        if self.master_scout_insights:    InsightType,        "What wisdom from your past self would serve you now?",
+
+            logger.warning("[GenesisProfiler] Failed to notify MasterHypothesis: " + str(e))
+
+                recent = self.master_scout_insights[-3:]
+
+    async def _notify_master_scout(
+
+        self,            for insight in recent:    TargetLayer,    ],
+
+        session: IntegratedSession,
+
+        signals: list,                if insight.get("payload"):
+
+    ) -> None:
+
+        """Send detected signals to MasterScout."""                    lines.append(f"[MasterScout] {insight['payload'].get('pattern', '')}")    ProbeType,    "activation": [
+
+        if not self._bus or not signals:
+
+            return        
+
+        
+
+        try:        return "\n".join(lines) if lines else ""    create_packet,        "What one practice could you begin today that honors your true design?",
+
+            await self._bus.send(
+
+                source_agent_id="genesis.profiler",    
+
+                target_capability="profile_aggregation",
+
+                payload={    def to_summary(self) -> dict:    create_hypothesis_packet,        "How will you know when you're living in alignment with your authentic self?",
+
+                    "session_id": session.session_id,
+
+                    "signals": [s.to_dict() for s in signals],        """Export session summary for logging/debugging."""
+
+                    "rubric": session.genesis_state.rubric.to_dict(),
+
+                    "phase": session.genesis_state.phase.value,        return {    create_insight_packet,        "What is the next brave step your soul is calling you toward?",
+
+                    "high_confidence_traits": [
+
+                        t.to_dict() for t in session.genesis_state.rubric.get_high_confidence_traits()            "session_id": self.session_id,
+
+                    ],
+
+                },            "phase": self.genesis_state.phase.value,)    ],
+
+                priority=PacketPriority.NORMAL,
+
+            )            "turn": self.genesis_state.conversation_turn,
+
+            logger.info("[GenesisProfiler] Sent " + str(len(signals)) + " signals to MasterScout")
+
+        except Exception as e:            "completion": self.genesis_state.rubric.get_completion_percentage(),}
+
+            logger.warning("[GenesisProfiler] Failed to notify MasterScout: " + str(e))
+
+                "signals_detected": self.total_signals_detected,
+
+    # =========================================================================
+
+    # SESSION MANAGEMENT            "hypotheses_created": self.total_hypotheses_created,# Import the COMPLETE Genesis fractal system
+
+    # =========================================================================
+
+                "probes_sent": self.total_probes_sent,
+
+    def _get_session(self, session_id: str) -> IntegratedSession:
+
+        """Get or create an integrated session with all fractal components."""            "master_insights": {from .genesis import (class GenesisProfilerAgent(BaseAgent):
+
+        if session_id not in self._sessions:
+
+            session = IntegratedSession(session_id=session_id)                "hypothesis": len(self.master_hypothesis_insights),
+
+            self._sessions[session_id] = session
+
+            logger.info("[GenesisProfiler] Created session: " + session_id)                "scout": len(self.master_scout_insights),    # Core - The Face    name = "Genesis Profiler"
+
+        
+
+        return self._sessions[session_id]            },
+
+    
+
+    def clear_session(self, session_id: str) -> bool:            "age_seconds": (datetime.utcnow() - self.created_at).total_seconds(),    GenesisCore,    description = "Deep profiling agent that builds the user's Digital Twin through penetrating questions"
+
+        """Clear all state for a session - complete reset."""
+
+        if session_id in self._sessions:        }
+
+            del self._sessions[session_id]
+
+            logger.info("[GenesisProfiler] Cleared session: " + session_id)    GenesisResponse,    frameworks = ["human-design", "gene-keys", "jungian", "somatic"]
+
+            return True
+
+        return False
+
+    
+
+    def get_session_summary(self, session_id: str) -> Optional[dict]:class GenesisProfilerAgent(BaseAgent):    # Profiler - The Scout    version = "2.0.0"  # Updated with Face/Voice system
+
+        """Get session summary for debugging/monitoring."""
+
+        if session_id in self._sessions:    """
+
+            return self._sessions[session_id].to_summary()
+
+        return None    Full-Featured Genesis Profiler with Complete Fractal Integration.    GenesisProfiler,    capabilities = ["profiling", "generative-ui", "multi-phase", "voice-selection"]
+
+    
+
+    # =========================================================================    
+
+    # MESSAGE CLASSIFICATION
+
+    # =========================================================================    This agent orchestrates:    Signal,    requires_hrm = False  # Disabled for testing - HRM can be enabled separately
+
+    
+
+    def _is_init_message(self, message: str) -> bool:    1. INTELLIGENT QUESTIONING - Adaptive questions based on patterns
+
+        """Check if this is a system initialization message."""
+
+        if not message or not message.strip():    2. REAL-TIME PATTERN DETECTION - Silent analysis on every message    # Hypothesis - The Logic    
+
+            return True
+
+            3. HYPOTHESIS-DRIVEN PROBING - Confidence-based verification
+
+        init_keywords = [
+
+            "begin the genesis",    4. GENERATIVE UI COMPONENTS - Dynamic component generation    HypothesisEngine,    def __init__(self):
+
+            "introduce yourself",
+
+            "first interaction",    5. SOPHISTICATED PROFILE ENGINE - ProfileRubric with 20+ categories
+
+            "start the profiling",
+
+            "initiate genesis",    6. SWARM COMMUNICATION - Master agent integration    Hypothesis,        self._states: dict[str, ProfilerState] = {}
+
+            "begin profiling",
+
+            "generate the next",    
+
+            "very first interaction",
+
+            "start the journey",    Version: 3.0.0 - Full Fractal Integration    # State - The Memory        self._faces: dict[str, FaceOrchestrator] = {}  # Per-session Face instances
+
+            "begin our exploration",
+
+        ]    """
+
+        message_lower = message.lower().strip()
+
+        return any(keyword in message_lower for keyword in init_keywords)        GenesisState,        self._llm = None
+
+    
+
+    # =========================================================================    name = "Genesis Profiler"
+
+    # FRACTAL PROCESSING PIPELINE
+
+    # =========================================================================    description = "Deep profiling agent building the Digital Twin through intelligent questioning"    GenesisPhase,        self._setup_llm()
+
+    
+
+    async def _run_profiler_analysis(    frameworks = ["human-design", "gene-keys", "jungian", "somatic", "enneagram"]
+
+        self,
+
+        session: IntegratedSession,    version = "3.0.0"    ProfileRubric,    
+
+        user_message: str,
+
+    ) -> list:    capabilities = [
+
+        """Run the Profiler (Scout) to silently detect patterns."""
+
+        profiler = session.core.profiler        "profiling",    DetectedTrait,    def _setup_llm(self) -> None:
+
+        signals = profiler.analyze_message(user_message, session.genesis_state)
+
+                "generative-ui",
+
+        session.total_signals_detected += len(signals)
+
+                "multi-phase",    SessionMemory,        if not settings.GOOGLE_API_KEY:
+
+        if signals:
+
+            logger.info("[GenesisProfiler] Profiler detected " + str(len(signals)) + " signals")        "voice-selection",
+
+            for signal in signals:
+
+                logger.debug("  - " + str(signal.signal_type) + ": " + str(signal.suggested_traits))        "pattern-detection",    ActiveSignal,            return
+
+        
+
+        return signals        "hypothesis-probing",
+
+    
+
+    def _convert_signals_to_hypotheses(        "swarm-communication",    # Graph - The Wiring        
+
+        self,
+
+        session: IntegratedSession,        "session-persistence",
+
+        signals: list,
+
+    ) -> list:        "cross-domain-intelligence",    create_genesis_graph,        try:
+
+        """Convert detected signals into hypotheses for verification."""
+
+        hypothesis_engine = session.core.hypothesis_engine    ]
+
+        
+
+        for signal in signals:    requires_hrm = False    get_genesis_graph,            from langchain_google_genai import ChatGoogleGenerativeAI
+
+            for trait_name, value in signal.suggested_traits.items():
+
+                hypothesis_engine.add_hypothesis(    
+
+                    trait_name=trait_name,
+
+                    suspected_value=value,    def __init__(self):    run_genesis_turn,            self._llm = ChatGoogleGenerativeAI(
+
+                    confidence=signal.confidence * 0.7,
+
+                    evidence=[signal.content[:200]],        """Initialize the Genesis Profiler with all subsystems."""
+
+                )
+
+                self._sessions: dict[str, IntegratedSession] = {})                model=settings.LLM_MODEL,
+
+        active = hypothesis_engine.get_top_hypotheses(limit=5)
+
+        session.total_hypotheses_created = len(hypothesis_engine.hypotheses)        self._bus_subscribed: bool = False
+
+        
+
+        return active        self._llm: Optional[Any] = Nonefrom .genesis.face import (                temperature=0.9,
+
+    
+
+    def _should_probe(self, session: IntegratedSession, hypotheses: list) -> bool:        self._bus: Optional[SwarmBus] = None
+
+        """Decide whether to generate a probe question."""
+
+        if not hypotheses:            FaceOrchestrator,                 google_api_key=settings.GOOGLE_API_KEY,
+
+            return False
+
+                self._setup_llm()
+
+        state = session.genesis_state
+
+                logger.info("[GenesisProfiler] Initialized with fractal integration v3.0.0")    FaceFactory,             )
+
+        # Always probe more in MAPPING phase
+
+        if state.phase == GenesisPhase.MAPPING:    
+
+            return True
+
+            def _setup_llm(self) -> None:    VoiceSelectionMode,         except ImportError:
+
+        # Probe every 3rd turn in other phases
+
+        if state.conversation_turn > 0 and state.conversation_turn % 3 == 0:        """Initialize the LangChain LLM for dynamic generation."""
+
+            return True
+
+                if not settings.GOOGLE_API_KEY:    ConversationPhase,            pass
+
+        # Probe if we have a high-priority hypothesis
+
+        top_hypothesis = hypotheses[0] if hypotheses else None            logger.warning("[GenesisProfiler] No API key - running in limited mode")
+
+        if top_hypothesis and top_hypothesis.priority > 0.8:
+
+            return True            return    Voice,        except Exception as e:
+
+        
+
+        return False        
+
+    
+
+    async def _generate_probe(        try:)            print(f"[GenesisProfiler] LLM init error: {e}")
+
+        self,
+
+        session: IntegratedSession,            from langchain_google_genai import ChatGoogleGenerativeAI
+
+        hypotheses: list,
+
+    ) -> tuple:                
+
+        """Generate a probe question using the HypothesisEngine."""
+
+        hypothesis_engine = session.core.hypothesis_engine            self._llm = ChatGoogleGenerativeAI(
+
+        
+
+        probe_packet = hypothesis_engine.generate_probe(session.genesis_state)                model=settings.LLM_MODEL,logger = logging.getLogger(__name__)    def clear_session(self, session_id: str) -> bool:
+
+        
+
+        if not probe_packet:                temperature=0.9,
+
+            return await self._generate_conversational_response(session, "")
+
+                        google_api_key=settings.GOOGLE_API_KEY,        """Clear all state for a session - used when frontend resets."""
+
+        probe_data = probe_packet.payload.get("probe", {})
+
+        prompt = probe_data.get("prompt", "Tell me more about that...")            )
+
+        probe_type = probe_data.get("probe_type", "confirmation")
+
+        options = probe_data.get("options", [])            logger.info(f"[GenesisProfiler] LLM initialized: {settings.LLM_MODEL}")        cleared = False
+
+        
+
+        session.total_probes_sent += 1        except Exception as e:
+
+        
+
+        components = [            logger.error(f"[GenesisProfiler] LLM initialization failed: {e}")# =============================================================================        if session_id in self._states:
+
+            {"type": "text", "content": prompt, "variant": "question"},
+
+        ]    
+
+        
+
+        if probe_type == "binary_choice" and len(options) >= 2:    # =========================================================================# PHASE MAPPING            del self._states[session_id]
+
+            components.append({
+
+                "type": "choice_cards",    # SWARM BUS INTEGRATION
+
+                "options": [
+
+                    {"id": "a", "label": options[0], "icon": "wave"},    # =========================================================================# =============================================================================            cleared = True
+
+                    {"id": "b", "label": options[1], "icon": "bolt"},
+
+                ],    
+
+                "allowMultiple": False,
+
+            })    async def _ensure_bus_subscription(self) -> None:            print(f"[GenesisProfiler] Cleared state for session: {session_id}")
+
+        elif probe_type == "slider":
+
+            components.append({        """Subscribe to SwarmBus for Master agent communication."""
+
+                "type": "slider",
+
+                "min": 1,        if self._bus_subscribed:PHASE_TO_CONVERSATION_PHASE = {        if session_id in self._faces:
+
+                "max": 10,
+
+                "defaultValue": 5,            return
+
+                "label": "How strongly does this resonate?",
+
+            })            GenesisPhase.AWAKENING: ConversationPhase.AWAKENING,            del self._faces[session_id]
+
+        elif probe_type == "card_selection":
+
+            components.append({        try:
+
+                "type": "choice_cards",
+
+                "options": [{"id": str(i), "label": opt} for i, opt in enumerate(options)],            self._bus = await SwarmBus.get_instance()    GenesisPhase.EXCAVATION: ConversationPhase.EXCAVATION,            print(f"[GenesisProfiler] Cleared face for session: {session_id}")
+
+                "allowMultiple": True,
+
+            })            
+
+        else:
+
+            components.append({            await self._bus.subscribe(    GenesisPhase.MAPPING: ConversationPhase.MAPPING,        return cleared
+
+                "type": "input",
+
+                "variant": "freeform",                agent_id="genesis.profiler",
+
+                "placeholder": "Share what comes to mind...",
+
+            })                handler=self._handle_swarm_message,    GenesisPhase.SYNTHESIS: ConversationPhase.SYNTHESIS,    
+
+        
+
+        return prompt, components                agent_tier=AgentTier.DOMAIN,
+
+    
+
+    async def _generate_conversational_response(                domain="genesis",    GenesisPhase.ACTIVATION: ConversationPhase.ACTIVATION,    def _get_state(self, session_id: str) -> ProfilerState:
+
+        self,
+
+        session: IntegratedSession,                capability="profiling",
+
+        user_message: str,
+
+    ) -> tuple:            )}        if session_id not in self._states:
+
+        """Generate a conversational response using the Core + Face systems."""
+
+        state = session.genesis_state            
+
+        face = session.face
+
+                    self._bus_subscribed = True            self._states[session_id] = ProfilerState()
+
+        # Get the appropriate voice for this phase
+
+        optimal_voice = PHASE_VOICE_MAP.get(state.phase, "oracle")            logger.info("[GenesisProfiler] Subscribed to SwarmBus as genesis.profiler")
+
+        face.set_manual_voice(optimal_voice)
+
+                except Exception as e:# Voice selection per phase for optimal resonance            print(f"[GenesisProfiler] Created new state for session: {session_id}")
+
+        # Get conversation phase for voice system
+
+        conv_phase = PHASE_TO_CONVERSATION_PHASE.get(state.phase, ConversationPhase.AWAKENING)            logger.warning(f"[GenesisProfiler] SwarmBus subscription failed: {e}")
+
+        
+
+        # Build the system prompt with voice + context    PHASE_VOICE_MAP = {        return self._states[session_id]
+
+        voice_prompt = face.get_system_prompt(
+
+            context={"phase": state.phase.value},    async def _handle_swarm_message(self, envelope: SwarmEnvelope) -> Optional[dict]:
+
+            history=state.memory.get_last_n(10),
+
+            phase=conv_phase,        """Handle incoming messages from SwarmBus."""    GenesisPhase.AWAKENING: "oracle",      # Mysterious, inviting    
+
+        )
+
+                payload = envelope.payload
+
+        # Gather cross-domain intelligence from Master agents
+
+        master_context = session.get_master_context()        source = envelope.source_agent_id    GenesisPhase.EXCAVATION: "mirror",     # Reflective, echoing    def _get_face(self, session_id: str) -> FaceOrchestrator:
+
+        
+
+        # Build profile summary        session_id = payload.get("session_id")
+
+        high_conf_traits = state.rubric.get_high_confidence_traits()
+
+        profile_lines = []            GenesisPhase.MAPPING: "sage",          # Calm, analytical        """Get or create Face orchestrator for this session."""
+
+        for t in high_conf_traits[:5]:
+
+            conf_pct = int(t.confidence * 100)        logger.info(f"[GenesisProfiler] SwarmBus message from {source}")
+
+            profile_lines.append("- " + t.name + ": " + str(t.value) + " (" + str(conf_pct) + "% confident)")
+
+        profile_summary = "\n".join(profile_lines) if profile_lines else "(Still forming initial impressions)"            GenesisPhase.SYNTHESIS: "oracle",      # Weaving, profound        if session_id not in self._faces:
+
+        
+
+        # Build hypotheses summary        if session_id and session_id in self._sessions:
+
+        active_hypotheses = session.core.hypothesis_engine.get_top_hypotheses(limit=3)
+
+        hyp_lines = []            session = self._sessions[session_id]    GenesisPhase.ACTIVATION: "challenger", # Empowering, direct            # Create a default Face with dynamic voice selection
+
+        for h in active_hypotheses:
+
+            conf_pct = int(h.confidence * 100)            
+
+            hyp_lines.append("- " + h.trait_name + " might be " + str(h.suspected_value) + " (" + str(conf_pct) + "%)")
+
+        hypotheses_summary = "\n".join(hyp_lines) if hyp_lines else "(Gathering more signals)"            insight_record = {}            self._faces[session_id] = FaceFactory.create_default()
+
+        
+
+        # Use LLM to generate response                "source": source,
+
+        if self._llm:
+
+            try:                "payload": payload,            print(f"[GenesisProfiler] Created new Face for session: {session_id}")
+
+                completion_pct = int(state.rubric.get_completion_percentage())
+
+                prompt = voice_prompt + """                "timestamp": datetime.utcnow().isoformat(),
+
+
+
+PROFILING CONTEXT:                "envelope_id": envelope.id,        return self._faces[session_id]
+
+Current Phase: """ + state.phase.value.upper() + """
+
+Turn Number: """ + str(state.conversation_turn + 1) + """            }
+
+Profile Completion: """ + str(completion_pct) + """%
+
+            # =============================================================================    
+
+HIGH-CONFIDENCE TRAITS:
+
+""" + profile_summary + """            if "master.hypothesis" in source:
+
+
+
+ACTIVE HYPOTHESES:                session.master_hypothesis_insights.append(insight_record)# INTEGRATED SESSION - All Fractal Components United    def _get_voice_for_phase(self, phase: GenesisPhaseStr) -> str:
+
+""" + hypotheses_summary + """
+
+            elif "master.scout" in source:
+
+CONVERSATION HISTORY:
+
+""" + self._format_conversation_history(state.memory.get_last_n(8)) + """                session.master_scout_insights.append(insight_record)# =============================================================================        """Map phase to optimal voice."""
+
+
+
+""" + ("MASTER AGENT INSIGHTS: " + master_context if master_context else "") + """            elif "orchestrator" in source:
+
+
+
+USER'S MESSAGE: \"""" + (user_message if user_message else "(Initial contact)") + """\"                session.orchestrator_directives.append(insight_record)        voice_map = {
+
+
+
+Generate a natural, flowing response that:        
+
+1. Acknowledges what they shared with genuine presence
+
+2. Weaves in pattern observations naturally (not clinical)        return {"acknowledged": True, "agent": "genesis.profiler"}@dataclass            "awakening": "oracle",     # Mysterious, inviting
+
+3. Asks ONE penetrating follow-up question that opens depth
+
+4. Maintains your voice persona (""" + optimal_voice.upper() + """)    
+
+5. Stays concise (2-4 sentences max)
+
+    async def _notify_master_hypothesis(class IntegratedSession:            "excavation": "mirror",    # Reflective, minimal
+
+Respond with ONLY the message text - no JSON, no formatting."""
+
+        self,
+
+                response = await self._llm.ainvoke(prompt)
+
+                response_text = response.content if hasattr(response, "content") else str(response)        session: IntegratedSession,    """            "mapping": "sage",         # Calm, analytical
+
+                
+
+            except Exception as e:        hypotheses: list,
+
+                logger.error("[GenesisProfiler] LLM error: " + str(e))
+
+                response_text = self._get_fallback_question(state)    ) -> None:    Complete session state integrating ALL fractal components.            "synthesis": "oracle",     # Weaving patterns
+
+        else:
+
+            response_text = self._get_fallback_question(state)        """Send hypotheses to MasterHypothesisEngine."""
+
+        
+
+        # Build UI components        if not self._bus or not hypotheses:                "activation": "challenger", # Empowering
+
+        components = [
+
+            {"type": "text", "content": response_text, "variant": "question"},            return
+
+            {
+
+                "type": "input",            This is the "God Object" for a Genesis session - it holds:        }
+
+                "variant": "freeform",
+
+                "placeholder": self._get_input_placeholder(state.phase),        try:
+
+                "minLength": 10,
+
+            },            await self._bus.send(    - The GenesisState (phase, rubric, memory, responses)        return voice_map.get(phase, "oracle")
+
+        ]
+
+                        source_agent_id="genesis.profiler",
+
+        return response_text, components
+
+                    target_capability="hypothesis_aggregation",    - The FaceOrchestrator (voice selection, system prompts)    
+
+    def _format_conversation_history(self, messages: list) -> str:
+
+        """Format conversation history for LLM context."""                payload={
+
+        if not messages:
+
+            return "(First interaction - no history)"                    "session_id": session.session_id,    - The GenesisCore (conversation generation, profiler, hypothesis)    def _advance_phase(self, state: ProfilerState) -> None:
+
+        
+
+        lines = []                    "hypotheses": [h.to_dict() for h in hypotheses],
+
+        for msg in messages:
+
+            role = msg.get("role", "unknown").upper()                    "phase": session.genesis_state.phase.value,    - Cross-domain insights from Master agents        phases: list[GenesisPhaseStr] = ["awakening", "excavation", "mapping", "synthesis", "activation"]
+
+            content = msg.get("content", "")[:300]
+
+            lines.append(role + ": " + content)                    "completion": session.genesis_state.rubric.get_completion_percentage(),
+
+        
+
+        return "\n".join(lines)                    "turn": session.genesis_state.conversation_turn,    - Pending SwarmBus packets        current_idx = phases.index(state.phase)
+
+    
+
+    def _get_input_placeholder(self, phase: GenesisPhase) -> str:                },
+
+        """Get phase-appropriate input placeholder."""
+
+        placeholders = {                priority=PacketPriority.NORMAL,    """        
+
+            GenesisPhase.AWAKENING: "Share what calls to you...",
+
+            GenesisPhase.EXCAVATION: "Speak what lies beneath...",            )
+
+            GenesisPhase.MAPPING: "Describe how this shows up...",
+
+            GenesisPhase.SYNTHESIS: "Reflect on the patterns...",            logger.info(f"[GenesisProfiler] Sent {len(hypotheses)} hypotheses to Master")    # Core Identity        questions_in_phase = len(PHASE_QUESTIONS[state.phase])
+
+            GenesisPhase.ACTIVATION: "Declare your next step...",
+
+        }        except Exception as e:
+
+        return placeholders.get(phase, "Speak your truth...")
+
+                logger.warning(f"[GenesisProfiler] Failed to notify MasterHypothesis: {e}")    session_id: str        if state.question_index >= questions_in_phase - 1:
+
+    def _get_fallback_question(self, state: GenesisState) -> str:
+
+        """Get a fallback question when LLM fails."""    
+
+        fallbacks = {
+
+            GenesisPhase.AWAKENING: [    async def _notify_master_scout(    created_at: datetime = field(default_factory=datetime.utcnow)            if current_idx < len(phases) - 1:
+
+                "What draws you to this moment of self-discovery?",
+
+                "Describe a time when you felt completely aligned with yourself.",        self,
+
+                "What truth are you seeking about your nature?",
+
+            ],        session: IntegratedSession,    last_activity: datetime = field(default_factory=datetime.utcnow)                state.phase = phases[current_idx + 1]
+
+            GenesisPhase.EXCAVATION: [
+
+                "What pattern keeps repeating in your life, even when you try to change it?",        signals: list,
+
+                "When do you feel most depleted, and what restores you?",
+
+                "What truth about yourself have you been avoiding?",    ) -> None:                    state.question_index = 0
+
+            ],
+
+            GenesisPhase.MAPPING: [        """Send detected signals to MasterScout."""
+
+                "When faced with a major decision, what do you trust most - gut, heart, or logic?",
+
+                "Do you feel more energized working alone or collaborating with others?",        if not self._bus or not signals:    # Fractal Components        else:
+
+                "Are you someone who waits for the right moment, or do you make things happen?",
+
+            ],            return
+
+            GenesisPhase.SYNTHESIS: [
+
+                "Looking at all we have explored, what pattern emerges most clearly?",            genesis_state: GenesisState = None            state.question_index += 1
+
+                "How might your deepest challenge be pointing toward your greatest gift?",
+
+                "What would change if you fully trusted your unique design?",        try:
+
+            ],
+
+            GenesisPhase.ACTIVATION: [            await self._bus.send(    face: FaceOrchestrator = None    
+
+                "What is one practice you could begin today that honors your true nature?",
+
+                "What is the next brave step your soul is calling for?",                source_agent_id="genesis.profiler",
+
+                "How will you remember who you are when the world tries to make you forget?",
+
+            ],                target_capability="profile_aggregation",    core: GenesisCore = None    async def _generate_dynamic_question(
+
+        }
+
+        questions = fallbacks.get(state.phase, fallbacks[GenesisPhase.AWAKENING])                payload={
+
+        idx = state.conversation_turn % len(questions)
+
+        return questions[idx]                    "session_id": session.session_id,            self,
+
+    
+
+    # =========================================================================                    "signals": [s.to_dict() for s in signals],
+
+    # UI COMPONENT BUILDING
+
+    # =========================================================================                    "rubric": session.genesis_state.rubric.to_dict(),    # Cross-Domain Intelligence (from SwarmBus)        state: ProfilerState,
+
+    
+
+    def _build_ui_payload(                    "phase": session.genesis_state.phase.value,
+
+        self,
+
+        session: IntegratedSession,                    "high_confidence_traits": [    master_hypothesis_insights: list[dict] = field(default_factory=list)        user_response: Optional[str],
+
+        response_text: str,
+
+        components: list,                        t.to_dict() for t in session.genesis_state.rubric.get_high_confidence_traits()
+
+        signals: list,
+
+        hypotheses: list,                    ],    master_scout_insights: list[dict] = field(default_factory=list)        llm = None,
+
+    ) -> dict:
+
+        """Build the complete UI payload for the frontend."""                },
+
+        state = session.genesis_state
+
+                        priority=PacketPriority.NORMAL,    orchestrator_directives: list[dict] = field(default_factory=list)        session_id: str = None
+
+        # Get phase visual theme
+
+        theme = state.phase.theme            )
+
+        
+
+        # Get current voice info            logger.info(f"[GenesisProfiler] Sent {len(signals)} signals to MasterScout")        ) -> str:
+
+        current_voice = session.face.current_voice
+
+        voice_identity = current_voice.identity        except Exception as e:
+
+        
+
+        return {            logger.warning(f"[GenesisProfiler] Failed to notify MasterScout: {e}")    # Pending packets for async processing        base_question = PHASE_QUESTIONS[state.phase][state.question_index]
+
+            "type": "profiler_step",
+
+            "phase": state.phase.value,    
+
+            "style": {
+
+                "theme": theme.get("animation", "pulse"),    # =========================================================================    pending_packets: list[SovereignPacket] = field(default_factory=list)        
+
+                "color": theme.get("color", "#6B21A8"),
+
+                "accent": theme.get("accent", "#A855F7"),    # SESSION MANAGEMENT
+
+                "animation": theme.get("animation", "pulse"),
+
+                "icon": theme.get("icon", "eye"),    # =========================================================================            active_llm = llm or self._llm
+
+            },
+
+            "components": components + [    
+
+                {
+
+                    "type": "progress",    def _get_session(self, session_id: str) -> IntegratedSession:    # Session metrics        if not active_llm or not user_response:
+
+                    "current": state.conversation_turn + 1,
+
+                    "phase": state.phase.value,        """Get or create an integrated session with all fractal components."""
+
+                    "phaseDescription": theme.get("description", ""),
+
+                    "completion": state.rubric.get_completion_percentage(),        if session_id not in self._sessions:    total_signals_detected: int = 0            return base_question
+
+                }
+
+            ],            session = IntegratedSession(session_id=session_id)
+
+            "intelligence": {
+
+                "signalsDetected": len(signals),            self._sessions[session_id] = session    total_hypotheses_created: int = 0        
+
+                "activeHypotheses": len(hypotheses),
+
+                "highConfidenceTraits": len(state.rubric.get_high_confidence_traits()),            logger.info(f"[GenesisProfiler] Created session: {session_id}")
+
+                "totalTraits": len(state.rubric.get_all_traits()),
+
+            },            total_probes_sent: int = 0        try:
+
+            "voice": {
+
+                "id": voice_identity.id,        return self._sessions[session_id]
+
+                "name": voice_identity.name,
+
+                "icon": voice_identity.icon,                    # Get Face and Voice for this session
+
+                "description": voice_identity.description,
+
+            },    def clear_session(self, session_id: str) -> bool:
+
+            "masterInsights": {
+
+                "hypothesis": len(session.master_hypothesis_insights),        """Clear all state for a session - complete reset."""    def __post_init__(self):            face = self._get_face(session_id or "default")
+
+                "scout": len(session.master_scout_insights),
+
+            },        if session_id in self._sessions:
+
+            "sessionId": session.session_id,
+
+            "turn": state.conversation_turn,            del self._sessions[session_id]        """Initialize fractal components if not provided."""            conversation_phase = PHASE_TO_CONVERSATION_PHASE.get(state.phase, ConversationPhase.EXPLORATION)
+
+        }
+
+                logger.info(f"[GenesisProfiler] Cleared session: {session_id}")
+
+    # =========================================================================
+
+    # MAIN EXECUTION ENTRY POINT            return True        if self.genesis_state is None:            
+
+    # =========================================================================
+
+            return False
+
+    async def execute(
+
+        self,                self.genesis_state = GenesisState(session_id=self.session_id)            # Get voice system prompt for personality/tone
+
+        agent_input: AgentInput,
+
+        model: str = None,    def get_session_summary(self, session_id: str) -> Optional[dict]:
+
+        session_id: str = None,
+
+    ) -> AgentOutput:        """Get session summary for debugging/monitoring."""        if self.face is None:            voice_system_prompt = face.get_system_prompt(
+
+        """
+
+        Main execution entry point - processes user input through the complete fractal.        if session_id in self._sessions:
+
+        
+
+        Pipeline:            return self._sessions[session_id].to_summary()            self.face = FaceFactory.create_default()                context={"phase": state.phase},
+
+        1. Ensure SwarmBus subscription
+
+        2. Get/create integrated session        return None
+
+        3. Run Profiler for pattern detection
+
+        4. Convert signals to hypotheses            if self.core is None:                history=state.memory.get_last_n(5),
+
+        5. Decide: probe or converse?
+
+        6. Generate response    # =========================================================================
+
+        7. Notify Master agents (async)
+
+        8. Update session state    # MESSAGE CLASSIFICATION            self.core = GenesisCore()                phase=conversation_phase,
+
+        9. Return structured output
+
+        """    # =========================================================================
+
+        # Ensure SwarmBus subscription
+
+        await self._ensure_bus_subscription()                    )
+
+        
+
+        # Get or create session    def _is_init_message(self, message: str) -> bool:
+
+        effective_session_id = session_id or str(uuid4())
+
+        session = self._get_session(effective_session_id)        """Check if this is a system initialization message."""    def touch(self) -> None:            
+
+        session.touch()
+
+                if not message or not message.strip():
+
+        state = session.genesis_state
+
+        user_message = agent_input.context.userQuery or ""            return True        """Update last activity timestamp."""            # Get conversation context from memory
+
+        
+
+        # Check if this is init or real user input        
+
+        is_init = self._is_init_message(user_message)
+
+                init_keywords = [        self.last_activity = datetime.utcnow()            conversation_context = state.get_conversation_context()
+
+        # Record user message if it's real input
+
+        if not is_init and user_message.strip():            "begin the genesis",
+
+            state.memory.add_message("user", user_message)
+
+            prev_question = "Initial"            "introduce yourself",                
+
+            if len(state.memory.messages) > 1:
+
+                prev_question = state.memory.messages[-2]["content"]            "first interaction",
+
+            state.add_response(
+
+                question=prev_question,            "start the profiling",    def get_master_context(self) -> str:            # Build context from recent responses
+
+                response=user_message,
+
+            )            "initiate genesis",
+
+            logger.info("[GenesisProfiler] Recorded response #" + str(len(state.responses)))
+
+                    "begin profiling",        """Get formatted context from Master agents for LLM prompts."""            response_context = "\n".join([
+
+        # === PROFILER: Silent Pattern Detection ===
+
+        signals = await self._run_profiler_analysis(session, user_message)            "generate the next",
+
+        
+
+        # === HYPOTHESIS ENGINE: Convert Signals ===            "very first interaction",        lines = []                f"Q: {r.get('question', '')[:100]}... → A: {r.get('response', '')[:100]}..."
+
+        hypotheses = self._convert_signals_to_hypotheses(session, signals)
+
+                    "start the journey",
+
+        # === DECISION: Probe or Converse? ===
+
+        should_probe = self._should_probe(session, hypotheses)            "begin our exploration",                        for r in state.responses[-3:]
+
+        
+
+        # === GENERATE RESPONSE ===        ]
+
+        if should_probe:
+
+            response_text, components = await self._generate_probe(session, hypotheses)        message_lower = message.lower().strip()        if self.master_hypothesis_insights:            ])
+
+        else:
+
+            response_text, components = await self._generate_conversational_response(session, user_message)        return any(keyword in message_lower for keyword in init_keywords)
+
+        
+
+        # Record assistant response in memory                recent = self.master_hypothesis_insights[-3:]            
+
+        state.memory.add_message("assistant", response_text)
+
+            # =========================================================================
+
+        # === NOTIFY MASTER AGENTS (async, non-blocking) ===
+
+        if signals:    # FRACTAL PROCESSING PIPELINE            for insight in recent:            prompt = f"""{voice_system_prompt}
+
+            asyncio.create_task(self._notify_master_scout(session, signals))
+
+        if hypotheses:    # =========================================================================
+
+            asyncio.create_task(self._notify_master_hypothesis(session, hypotheses))
+
+                            if insight.get("payload"):
+
+        # === BUILD UI PAYLOAD ===
+
+        ui_payload = self._build_ui_payload(session, response_text, components, signals, hypotheses)    async def _run_profiler_analysis(
+
+        
+
+        # === BUILD INTERPRETATION ===        self,                    lines.append(f"[MasterHypothesis] {insight['payload'].get('insight', '')}")═══════════════════════════════════════════════════════════════════
+
+        completion = state.rubric.get_completion_percentage()
+
+        completion_int = int(completion)        session: IntegratedSession,
+
+        high_conf_count = len(state.rubric.get_high_confidence_traits())
+
+                user_message: str,        CURRENT TASK: Generate the next profiling question
+
+        interpretation = "Phase: " + state.phase.value.upper() + "\n\n"
+
+        interpretation += response_text + "\n\n"    ) -> list:
+
+        interpretation += "Digital Twin Progress: " + str(completion_int) + "%\n"
+
+        interpretation += "Patterns Detected: " + str(len(signals)) + " this turn | " + str(session.total_signals_detected) + " total\n"        """Run the Profiler (Scout) to silently detect patterns."""        if self.master_scout_insights:═══════════════════════════════════════════════════════════════════
+
+        interpretation += "Active Investigations: " + str(len(hypotheses)) + " hypotheses\n"
+
+        interpretation += "High-Confidence Traits: " + str(high_conf_count)        profiler = session.core.profiler
+
+
+
+        # Calculate confidence based on completion        signals = profiler.analyze_message(user_message, session.genesis_state)            recent = self.master_scout_insights[-3:]
+
+        confidence = min(0.95, 0.4 + (completion / 150))
+
+                
+
+        return AgentOutput(
+
+            calculation={        session.total_signals_detected += len(signals)            for insight in recent:Current Phase: {state.phase.upper()}
+
+                "phase": state.phase.value,
+
+                "turn": state.conversation_turn,        
+
+                "totalResponses": len(state.responses),
+
+                "completion": completion,        if signals:                if insight.get("payload"):Question {state.question_index + 1} of {len(PHASE_QUESTIONS[state.phase])}
+
+                "detectedSignals": len(signals),
+
+                "totalSignals": session.total_signals_detected,            logger.info(f"[GenesisProfiler] Profiler detected {len(signals)} signals")
+
+                "activeHypotheses": len(hypotheses),
+
+                "totalHypotheses": session.total_hypotheses_created,            for signal in signals:                    lines.append(f"[MasterScout] {insight['payload'].get('pattern', '')}")
+
+                "highConfidenceTraits": high_conf_count,
+
+                "probesSent": session.total_probes_sent,                logger.debug(f"  - {signal.signal_type}: {signal.suggested_traits}")
+
+                "sessionId": effective_session_id,
+
+                "isProbing": should_probe,                Base Question (adapt this): {base_question}
+
+            },
+
+            correlations=[t.name for t in state.rubric.get_high_confidence_traits()[:5]],        return signals
+
+            interpretationSeed=interpretation,
+
+            visualizationData=ui_payload,            return "\n".join(lines) if lines else ""
+
+            method="genesis-fractal-v3",
+
+            confidence=confidence,    def _convert_signals_to_hypotheses(
+
+        )
+
+            self,    CONVERSATION HISTORY:
+
+    # =========================================================================
+
+    # PROTOCOL MESSAGE CREATION        session: IntegratedSession,
+
+    # =========================================================================
+
+            signals: list,    def to_summary(self) -> dict:{conversation_context}
+
+    def create_protocol_message(
+
+        self,    ) -> list:
+
+        insight_type: str,
+
+        payload: dict,        """Convert detected signals into hypotheses for verification."""        """Export session summary for logging/debugging."""
+
+        confidence: float,
+
+        hrm_validated: bool = False,        hypothesis_engine = session.core.hypothesis_engine
+
+    ) -> UniversalProtocolMessage:
+
+        """Create a protocol message for cross-agent communication."""                return {RECENT RESPONSES:
+
+        return UniversalProtocolMessage(
+
+            source_agent=self.name,        for signal in signals:
+
+            target_layer="Orchestrator",
+
+            insight_type=insight_type,            for trait_name, value in signal.suggested_traits.items():            "session_id": self.session_id,{response_context}
+
+            confidence_score=confidence,
+
+            payload=payload,                hypothesis_engine.add_hypothesis(
+
+            hrm_validated=hrm_validated,
+
+        )                    trait_name=trait_name,            "phase": self.genesis_state.phase.value,
+
+
+                    suspected_value=value,
+
+                    confidence=signal.confidence * 0.7,            "turn": self.genesis_state.conversation_turn,User's latest response: "{user_response}"
+
+                    evidence=[signal.content[:200]],
+
+                )            "completion": self.genesis_state.rubric.get_completion_percentage(),
+
+        
+
+        active = hypothesis_engine.get_top_hypotheses(limit=5)            "signals_detected": self.total_signals_detected,═══════════════════════════════════════════════════════════════════
+
+        session.total_hypotheses_created = len(hypothesis_engine.hypotheses)
+
+                    "hypotheses_created": self.total_hypotheses_created,INSTRUCTIONS:
+
+        return active
+
+                "probes_sent": self.total_probes_sent,1. Adapt the base question to flow naturally from what they just shared
+
+    def _should_probe(self, session: IntegratedSession, hypotheses: list) -> bool:
+
+        """Decide whether to generate a probe question."""            "master_insights": {2. Use your voice's personality and tone
+
+        if not hypotheses:
+
+            return False                "hypothesis": len(self.master_hypothesis_insights),3. Make it deeply personal but respectful
+
+        
+
+        state = session.genesis_state                "scout": len(self.master_scout_insights),4. Probe toward their authentic self
+
+        
+
+        # Always probe more in MAPPING phase            },5. Stay aligned with the {state.phase} phase's purpose
+
+        if state.phase == GenesisPhase.MAPPING:
+
+            return True            "age_seconds": (datetime.utcnow() - self.created_at).total_seconds(),
+
+        
+
+        # Probe every 3rd turn in other phases        }Respond with ONLY the adapted question. No preamble, no explanation."""
+
+        if state.conversation_turn > 0 and state.conversation_turn % 3 == 0:
+
+            return True
+
+        
+
+        # Probe if we have a high-priority hypothesis            response = await active_llm.ainvoke(prompt)
+
+        top_hypothesis = hypotheses[0] if hypotheses else None
+
+        if top_hypothesis and top_hypothesis.priority > 0.8:# =============================================================================            return response.content if hasattr(response, 'content') else base_question
+
+            return True
+
+        # THE GENESIS PROFILER AGENT        
+
+        return False
+
+    # =============================================================================        except Exception as e:
+
+    async def _generate_probe(
+
+        self,            print(f"[GenesisProfiler] Dynamic question error: {e}")
+
+        session: IntegratedSession,
+
+        hypotheses: list,class GenesisProfilerAgent(BaseAgent):            return base_question
+
+    ) -> tuple:
+
+        """Generate a probe question using the HypothesisEngine."""    """    
+
+        hypothesis_engine = session.core.hypothesis_engine
+
+            Full-Featured Genesis Profiler with Complete Fractal Integration.    async def _extract_insights(self, state: ProfilerState, llm = None) -> list[str]:
+
+        probe_packet = hypothesis_engine.generate_probe(session.genesis_state)
+
+                    active_llm = llm or self._llm
+
+        if not probe_packet:
+
+            return await self._generate_conversational_response(session, "")    This agent is the crown jewel of Project Sovereign's profiling system.        if not active_llm or len(state.responses) < 3:
+
+        
+
+        probe_data = probe_packet.payload.get("probe", {})    It orchestrates:            return []
+
+        prompt = probe_data.get("prompt", "Tell me more about that...")
+
+        probe_type = probe_data.get("probe_type", "confirmation")            
+
+        options = probe_data.get("options", [])
+
+            1. INTELLIGENT QUESTIONING        try:
+
+        session.total_probes_sent += 1
+
+               - Adaptive questions based on detected patterns            responses_text = "\n".join([
+
+        components = [
+
+            {"type": "text", "content": prompt, "variant": "question"},       - Phase-appropriate inquiry styles                f"Q: {r.get('question', '')}\nA: {r.get('response', '')}"
+
+        ]
+
+               - Dynamic voice persona selection                for r in state.responses
+
+        if probe_type == "binary_choice" and len(options) >= 2:
+
+            components.append({                ])
+
+                "type": "choice_cards",
+
+                "options": [    2. REAL-TIME PATTERN DETECTION              
+
+                    {"id": "a", "label": options[0], "icon": "🌊"},
+
+                    {"id": "b", "label": options[1], "icon": "⚡"},       - Silent analysis on every user message            prompt = f"""Analyze these profiling responses and extract key insights about the person.
+
+                ],
+
+                "allowMultiple": False,       - Regex + LLM pattern matching
+
+            })
+
+        elif probe_type == "slider":       - HD Type, Jungian function, energy pattern signalsPhase: {state.phase}
+
+            components.append({
+
+                "type": "slider",    Responses:
+
+                "min": 1,
+
+                "max": 10,    3. HYPOTHESIS-DRIVEN PROBING{responses_text}
+
+                "defaultValue": 5,
+
+                "label": "How strongly does this resonate?",       - Confidence-based trait verification
+
+            })
+
+        elif probe_type == "card_selection":       - Multiple probe types (binary, slider, cards, etc.)Extract 3-5 key insights about:
+
+            components.append({
+
+                "type": "choice_cards",       - Maximum 3 probes per hypothesis1. Their energetic patterns (Generator, Projector, etc. tendencies)
+
+                "options": [{"id": str(i), "label": opt} for i, opt in enumerate(options)],
+
+                "allowMultiple": True,    2. Their emotional landscape
+
+            })
+
+        else:    4. GENERATIVE UI COMPONENTS3. Their decision-making style
+
+            components.append({
+
+                "type": "input",       - Dynamic component generation per phase4. Their shadow patterns
+
+                "variant": "freeform",
+
+                "placeholder": "Share what comes to mind...",       - Text, inputs, sliders, choice cards, progress5. Their gifts and strengths
+
+            })
+
+               - Phase-aware visual theming
+
+        return prompt, components
+
+        Format as a simple list of insights, one per line."""
+
+    async def _generate_conversational_response(
+
+        self,    5. SOPHISTICATED PROFILE ENGINE
+
+        session: IntegratedSession,
+
+        user_message: str,       - ProfileRubric with 20+ trait categories            response = await active_llm.ainvoke(prompt)
+
+    ) -> tuple:
+
+        """Generate a conversational response using the Core + Face systems."""       - Confidence tracking per trait            content = response.content if hasattr(response, 'content') else ""
+
+        state = session.genesis_state
+
+        face = session.face       - Cross-framework correlation            return [line.strip() for line in content.split("\n") if line.strip()]
+
+        
+
+        # Get the appropriate voice for this phase            
+
+        optimal_voice = PHASE_VOICE_MAP.get(state.phase, "oracle")
+
+        face.set_manual_voice(optimal_voice)    6. SWARM COMMUNICATION        except Exception as e:
+
+        
+
+        # Get conversation phase for voice system       - Escalates hypotheses to MasterHypothesisEngine            print(f"[GenesisProfiler] Insight extraction error: {e}")
+
+        conv_phase = PHASE_TO_CONVERSATION_PHASE.get(state.phase, ConversationPhase.AWAKENING)
+
+               - Sends patterns to MasterScout            return []
+
+        # Build the system prompt with voice + context
+
+        voice_prompt = face.get_system_prompt(       - Receives cross-domain insights    
+
+            context={"phase": state.phase.value},
+
+            history=state.memory.get_last_n(10),        def _generate_ui_component(self, state: ProfilerState, question: str) -> dict:
+
+            phase=conv_phase,
+
+        )    Version: 3.0.0 - Full Fractal Integration        phase_styles = {
+
+        
+
+        # Gather cross-domain intelligence from Master agents    """            "awakening": {"theme": "void", "animation": "pulse", "color": "#6B21A8"},
+
+        master_context = session.get_master_context()
+
+                        "excavation": {"theme": "earth", "animation": "dig", "color": "#92400E"},
+
+        # Build profile summary
+
+        high_conf_traits = state.rubric.get_high_confidence_traits()    name = "Genesis Profiler"            "mapping": {"theme": "constellation", "animation": "connect", "color": "#0891B2"},
+
+        profile_summary = "\n".join([
+
+            f"- {t.name}: {t.value} ({t.confidence:.0%} confident)"    description = "Deep profiling agent building the Digital Twin through intelligent, adaptive questioning with full fractal integration"            "synthesis": {"theme": "weave", "animation": "spiral", "color": "#7C3AED"},
+
+            for t in high_conf_traits[:5]
+
+        ]) if high_conf_traits else "(Still forming initial impressions)"    frameworks = ["human-design", "gene-keys", "jungian", "somatic", "enneagram"]            "activation": {"theme": "fire", "animation": "ignite", "color": "#DC2626"},
+
+        
+
+        # Build hypotheses summary    version = "3.0.0"        }
+
+        active_hypotheses = session.core.hypothesis_engine.get_top_hypotheses(limit=3)
+
+        hypotheses_summary = "\n".join([    capabilities = [        
+
+            f"- {h.trait_name} might be {h.suspected_value} ({h.confidence:.0%})"
+
+            for h in active_hypotheses        "profiling",        style = phase_styles.get(state.phase, phase_styles["awakening"])
+
+        ]) if active_hypotheses else "(Gathering more signals)"
+
+                "generative-ui",         
+
+        # Use LLM to generate response
+
+        if self._llm:        "multi-phase",        return {
+
+            try:
+
+                prompt = f"""{voice_prompt}        "voice-selection",            "type": "profiler_question",
+
+
+
+PROFILING CONTEXT:        "pattern-detection",            "phase": state.phase,
+
+Current Phase: {state.phase.value.upper()}
+
+Turn Number: {state.conversation_turn + 1}        "hypothesis-probing",            "question": question,
+
+Profile Completion: {state.rubric.get_completion_percentage():.0f}%
+
+        "swarm-communication",            "questionIndex": state.question_index,
+
+HIGH-CONFIDENCE TRAITS:
+
+{profile_summary}        "session-persistence",            "totalQuestions": len(PHASE_QUESTIONS[state.phase]),
+
+
+
+ACTIVE HYPOTHESES:        "cross-domain-intelligence",            "style": style,
+
+{hypotheses_summary}
+
+    ]            "components": [
+
+CONVERSATION HISTORY:
+
+{self._format_conversation_history(state.memory.get_last_n(8))}    requires_hrm = False                {
+
+
+
+{f"MASTER AGENT INSIGHTS: {master_context}" if master_context else ""}                        "type": "text",
+
+
+
+USER'S MESSAGE: "{user_message if user_message else '(Initial contact)'}"    def __init__(self):                    "content": question,
+
+
+
+Generate a natural, flowing response that:        """Initialize the Genesis Profiler with all subsystems."""                    "variant": "question",
+
+1. Acknowledges what they shared with genuine presence
+
+2. Weaves in pattern observations naturally (not clinical)        self._sessions: dict[str, IntegratedSession] = {}                },
+
+3. Asks ONE penetrating follow-up question that opens depth
+
+4. Maintains your voice persona ({optimal_voice.upper()})        self._bus_subscribed: bool = False                {
+
+5. Stays concise (2-4 sentences max)
+
+        self._llm: Optional[Any] = None                    "type": "input",
+
+Respond with ONLY the message text - no JSON, no formatting."""
+
+        self._bus: Optional[SwarmBus] = None                    "variant": "freeform",
+
+                response = await self._llm.ainvoke(prompt)
+
+                response_text = response.content if hasattr(response, 'content') else str(response)                            "placeholder": "Speak your truth...",
+
+                
+
+            except Exception as e:        # Initialize LLM                    "minLength": 20,
+
+                logger.error(f"[GenesisProfiler] LLM error: {e}")
+
+                response_text = self._get_fallback_question(state)        self._setup_llm()                },
+
+        else:
+
+            response_text = self._get_fallback_question(state)                        {
+
+        
+
+        # Build UI components        logger.info("[GenesisProfiler] Initialized with fractal integration v3.0.0")                    "type": "progress",
+
+        components = [
+
+            {"type": "text", "content": response_text, "variant": "question"},                        "current": state.question_index + 1,
+
+            {
+
+                "type": "input",    def _setup_llm(self) -> None:                    "total": len(PHASE_QUESTIONS[state.phase]),
+
+                "variant": "freeform",
+
+                "placeholder": self._get_input_placeholder(state.phase),        """Initialize the LangChain LLM for dynamic generation."""                    "phase": state.phase,
+
+                "minLength": 10,
+
+            },        if not settings.GOOGLE_API_KEY:                }
+
+        ]
+
+                    logger.warning("[GenesisProfiler] No API key - running in limited mode")            ],
+
+        return response_text, components
+
+                return            "insights": state.insights[-3:] if state.insights else [],
+
+    def _format_conversation_history(self, messages: list) -> str:
+
+        """Format conversation history for LLM context."""                }
+
+        if not messages:
+
+            return "(First interaction - no history)"        try:    
+
+        
+
+        lines = []            from langchain_google_genai import ChatGoogleGenerativeAI    def _get_llm_for_model(self, model: str):
+
+        for msg in messages:
+
+            role = msg.get("role", "unknown").upper()                    """Get or create LLM instance for specific model"""
+
+            content = msg.get("content", "")[:300]
+
+            lines.append(f"{role}: {content}")            self._llm = ChatGoogleGenerativeAI(        if not settings.GOOGLE_API_KEY:
+
+        
+
+        return "\n".join(lines)                model=settings.LLM_MODEL,            return None
+
+    
+
+    def _get_input_placeholder(self, phase: GenesisPhase) -> str:                temperature=0.9,  # High creativity for Oracle persona        
+
+        """Get phase-appropriate input placeholder."""
+
+        placeholders = {                google_api_key=settings.GOOGLE_API_KEY,        try:
+
+            GenesisPhase.AWAKENING: "Share what calls to you...",
+
+            GenesisPhase.EXCAVATION: "Speak what lies beneath...",            )            from langchain_google_genai import ChatGoogleGenerativeAI
+
+            GenesisPhase.MAPPING: "Describe how this shows up...",
+
+            GenesisPhase.SYNTHESIS: "Reflect on the patterns...",            logger.info(f"[GenesisProfiler] LLM initialized: {settings.LLM_MODEL}")            return ChatGoogleGenerativeAI(
+
+            GenesisPhase.ACTIVATION: "Declare your next step...",
+
+        }        except Exception as e:                model=model,
+
+        return placeholders.get(phase, "Speak your truth...")
+
+                logger.error(f"[GenesisProfiler] LLM initialization failed: {e}")                temperature=0.9,
+
+    def _get_fallback_question(self, state: GenesisState) -> str:
+
+        """Get a fallback question when LLM fails."""                    google_api_key=settings.GOOGLE_API_KEY,
+
+        fallbacks = {
+
+            GenesisPhase.AWAKENING: [    # =========================================================================            )
+
+                "What draws you to this moment of self-discovery?",
+
+                "Describe a time when you felt completely aligned with yourself.",    # SWARM BUS INTEGRATION        except Exception as e:
+
+                "What truth are you seeking about your nature?",
+
+            ],    # =========================================================================            print(f"[GenesisProfiler] LLM init error for {model}: {e}")
+
+            GenesisPhase.EXCAVATION: [
+
+                "What pattern keeps repeating in your life, even when you try to change it?",                return None
+
+                "When do you feel most depleted, and what restores you?",
+
+                "What truth about yourself have you been avoiding?",    async def _ensure_bus_subscription(self) -> None:    
+
+            ],
+
+            GenesisPhase.MAPPING: [        """Subscribe to SwarmBus for Master agent communication."""    async def execute(self, agent_input: AgentInput, model: str = None, session_id: str = None) -> AgentOutput:
+
+                "When faced with a major decision, what do you trust most - gut, heart, or logic?",
+
+                "Do you feel more energized working alone or collaborating with others?",        if self._bus_subscribed:        # Use provided model or fall back to default
+
+                "Are you someone who waits for the right moment, or do you make things happen?",
+
+            ],            return        active_model = model or settings.LLM_MODEL
+
+            GenesisPhase.SYNTHESIS: [
+
+                "Looking at all we've explored, what pattern emerges most clearly?",                llm = self._get_llm_for_model(active_model) if model else self._llm
+
+                "How might your deepest challenge be pointing toward your greatest gift?",
+
+                "What would change if you fully trusted your unique design?",        try:        
+
+            ],
+
+            GenesisPhase.ACTIVATION: [            self._bus = await SwarmBus.get_instance()        # Use provided session_id or generate one (NOT based on message hash!)
+
+                "What is one practice you could begin today that honors your true nature?",
+
+                "What is the next brave step your soul is calling for?",                    effective_session_id = session_id or "default"
+
+                "How will you remember who you are when the world tries to make you forget?",
+
+            ],            # Subscribe as a DOMAIN-level agent        print(f"[GenesisProfiler] Using session_id: {effective_session_id}")
+
+        }
+
+        questions = fallbacks.get(state.phase, fallbacks[GenesisPhase.AWAKENING])            await self._bus.subscribe(        
+
+        idx = state.conversation_turn % len(questions)
+
+        return questions[idx]                agent_id="genesis.profiler",        state = self._get_state(effective_session_id)
+
+    
+
+    # =========================================================================                handler=self._handle_swarm_message,        user_response = agent_input.context.userQuery
+
+    # UI COMPONENT BUILDING
+
+    # =========================================================================                agent_tier=AgentTier.DOMAIN,        
+
+    
+
+    def _build_ui_payload(                domain="genesis",        # Check if this is an initialization/system message (not a real user response)
+
+        self,
+
+        session: IntegratedSession,                capability="profiling",        init_keywords = [
+
+        response_text: str,
+
+        components: list,            )            "begin the genesis",
+
+        signals: list,
+
+        hypotheses: list,                        "introduce yourself",
+
+    ) -> dict:
+
+        """Build the complete UI payload for the frontend."""            self._bus_subscribed = True            "first interaction",
+
+        state = session.genesis_state
+
+                    logger.info("[GenesisProfiler] Subscribed to SwarmBus as genesis.profiler")            "start the profiling",
+
+        # Get phase visual theme
+
+        theme = state.phase.theme        except Exception as e:            "initiate genesis",
+
+        
+
+        # Get current voice info            logger.warning(f"[GenesisProfiler] SwarmBus subscription failed: {e}")            "begin profiling",
+
+        current_voice = session.face.current_voice
+
+        voice_identity = current_voice.identity            ]
+
+        
+
+        return {    async def _handle_swarm_message(self, envelope: SwarmEnvelope) -> Optional[dict]:        is_init_message = user_response and any(
+
+            "type": "profiler_step",
+
+            "phase": state.phase.value,        """            keyword in user_response.lower() for keyword in init_keywords
+
+            "style": {
+
+                "theme": theme.get("animation", "pulse"),        Handle incoming messages from SwarmBus.        )
+
+                "color": theme.get("color", "#6B21A8"),
+
+                "accent": theme.get("accent", "#A855F7"),                
+
+                "animation": theme.get("animation", "pulse"),
+
+                "icon": theme.get("icon", "eye"),        Expected sources:        # Get Face for this session
+
+            },
+
+            "components": components + [        - MasterHypothesisEngine: Cross-domain hypothesis correlations        face = self._get_face(effective_session_id)
+
+                {
+
+                    "type": "progress",        - MasterScout: Digital Twin aggregation insights        
+
+                    "current": state.conversation_turn + 1,
+
+                    "phase": state.phase.value,        - Orchestrator: High-level directives        # Only record actual user responses (not system init messages)
+
+                    "phaseDescription": theme.get("description", ""),
+
+                    "completion": state.rubric.get_completion_percentage(),        """        if user_response and user_response.strip() and not is_init_message:
+
+                }
+
+            ],        payload = envelope.payload            current_question = PHASE_QUESTIONS[state.phase][state.question_index]
+
+            "intelligence": {
+
+                "signalsDetected": len(signals),        source = envelope.source_agent_id            
+
+                "activeHypotheses": len(hypotheses),
+
+                "highConfidenceTraits": len(state.rubric.get_high_confidence_traits()),        session_id = payload.get("session_id")            # Add to session memory for conversation context
+
+                "totalTraits": len(state.rubric.get_all_traits()),
+
+            },                    state.add_message("user", user_response)
+
+            "voice": {
+
+                "id": voice_identity.id,        logger.info(f"[GenesisProfiler] SwarmBus message from {source}")            
+
+                "name": voice_identity.name,
+
+                "icon": voice_identity.icon,                    state.responses.append({
+
+                "description": voice_identity.description,
+
+            },        if session_id and session_id in self._sessions:                "phase": state.phase,
+
+            "masterInsights": {
+
+                "hypothesis": len(session.master_hypothesis_insights),            session = self._sessions[session_id]                "question": current_question,
+
+                "scout": len(session.master_scout_insights),
+
+            },                            "response": user_response,
+
+            "sessionId": session.session_id,
+
+            "turn": state.conversation_turn,            # Store insights by source type                "timestamp": datetime.utcnow().isoformat(),
+
+        }
+
+                insight_record = {            })
+
+    # =========================================================================
+
+    # MAIN EXECUTION ENTRY POINT                "source": source,            
+
+    # =========================================================================
+
+                    "payload": payload,            print(f"[GenesisProfiler] Recorded response {len(state.responses)}: phase={state.phase}, q_idx={state.question_index}")
+
+    async def execute(
+
+        self,                "timestamp": datetime.utcnow().isoformat(),            
+
+        agent_input: AgentInput,
+
+        model: str = None,                "envelope_id": envelope.id,            if len(state.responses) % 3 == 0:
+
+        session_id: str = None,
+
+    ) -> AgentOutput:            }                new_insights = await self._extract_insights(state, llm=llm)
+
+        """
+
+        Main execution entry point - processes user input through the complete fractal.                            state.insights.extend(new_insights)
+
+        
+
+        Pipeline:            if "master.hypothesis" in source:            
+
+        1. Ensure SwarmBus subscription
+
+        2. Get/create integrated session                session.master_hypothesis_insights.append(insight_record)            self._advance_phase(state)
+
+        3. Run Profiler for pattern detection
+
+        4. Convert signals to hypotheses                logger.info(f"[GenesisProfiler] Stored MasterHypothesis insight")        elif is_init_message:
+
+        5. Decide: probe or converse?
+
+        6. Generate response            elif "master.scout" in source:            print(f"[GenesisProfiler] Detected init message, not advancing. Current question_index: {state.question_index}")
+
+        7. Notify Master agents (async)
+
+        8. Update session state                session.master_scout_insights.append(insight_record)        
+
+        9. Return structured output
+
+        """                logger.info(f"[GenesisProfiler] Stored MasterScout insight")        hrm = get_hrm()
+
+        # Ensure SwarmBus subscription
+
+        await self._ensure_bus_subscription()            elif "orchestrator" in source:        if self.requires_hrm and hrm.enabled and user_response:
+
+        
+
+        # Get or create session                session.orchestrator_directives.append(insight_record)            hrm_result = await hrm.reason(
+
+        effective_session_id = session_id or str(uuid4())
+
+        session = self._get_session(effective_session_id)                logger.info(f"[GenesisProfiler] Stored Orchestrator directive")                f"Based on this response: '{user_response}', what deeper patterns might we explore?"
+
+        session.touch()
+
+                            )
+
+        state = session.genesis_state
+
+        user_message = agent_input.context.userQuery or ""        return {"acknowledged": True, "agent": "genesis.profiler"}            if hrm_result.get("answer"):
+
+        
+
+        # Check if this is init or real user input                    state.insights.append(hrm_result["answer"][:200])
+
+        is_init = self._is_init_message(user_message)
+
+            async def _notify_master_hypothesis(        
+
+        # Record user message if it's real input
+
+        if not is_init and user_message.strip():        self,        # Generate next question using Face system
+
+            state.memory.add_message("user", user_message)
+
+            state.add_response(        session: IntegratedSession,        next_question = await self._generate_dynamic_question(
+
+                question=state.memory.messages[-2]["content"] if len(state.memory.messages) > 1 else "Initial",
+
+                response=user_message,        hypotheses: list[Hypothesis],            state, user_response, llm=llm, session_id=effective_session_id
+
+            )
+
+            logger.info(f"[GenesisProfiler] Recorded response #{len(state.responses)}")    ) -> None:        )
+
+        
+
+        # === PROFILER: Silent Pattern Detection ===        """Send hypotheses to MasterHypothesisEngine for cross-domain correlation."""        
+
+        signals = await self._run_profiler_analysis(session, user_message)
+
+                if not self._bus or not hypotheses:        # Add AI response to memory
+
+        # === HYPOTHESIS ENGINE: Convert Signals ===
+
+        hypotheses = self._convert_signals_to_hypotheses(session, signals)            return        state.add_message("assistant", next_question)
+
+        
+
+        # === DECISION: Probe or Converse? ===                
+
+        should_probe = self._should_probe(session, hypotheses)
+
+                try:        # Update voice based on phase
+
+        # === GENERATE RESPONSE ===
+
+        if should_probe:            await self._bus.send(        optimal_voice = self._get_voice_for_phase(state.phase)
+
+            response_text, components = await self._generate_probe(session, hypotheses)
+
+        else:                source_agent_id="genesis.profiler",        if state.current_voice_id != optimal_voice:
+
+            response_text, components = await self._generate_conversational_response(session, user_message)
+
+                        target_capability="hypothesis_aggregation",            face.set_manual_voice(optimal_voice)
+
+        # Record assistant response in memory
+
+        state.memory.add_message("assistant", response_text)                payload={            state.current_voice_id = optimal_voice
+
+        
+
+        # === NOTIFY MASTER AGENTS (async, non-blocking) ===                    "session_id": session.session_id,            print(f"[GenesisProfiler] Switched voice to: {optimal_voice}")
+
+        if signals:
+
+            asyncio.create_task(self._notify_master_scout(session, signals))                    "hypotheses": [h.to_dict() for h in hypotheses],        
+
+        if hypotheses:
+
+            asyncio.create_task(self._notify_master_hypothesis(session, hypotheses))                    "phase": session.genesis_state.phase.value,        ui_component = self._generate_ui_component(state, next_question)
+
+        
+
+        # === BUILD UI PAYLOAD ===                    "completion": session.genesis_state.rubric.get_completion_percentage(),        
+
+        ui_payload = self._build_ui_payload(session, response_text, components, signals, hypotheses)
+
+                            "turn": session.genesis_state.conversation_turn,        # Include voice information in the output
+
+        # === BUILD INTERPRETATION ===
+
+        completion = state.rubric.get_completion_percentage()                },        current_voice = face.current_voice
+
+        interpretation = f"""Phase: {state.phase.value.upper()}
+
+                priority=PacketPriority.NORMAL,        ui_component["voice"] = {
+
+{response_text}
+
+            )            "id": current_voice.identity.id,
+
+Digital Twin Progress: {completion:.0f}%
+
+Patterns Detected: {len(signals)} this turn | {session.total_signals_detected} total            logger.info(f"[GenesisProfiler] Sent {len(hypotheses)} hypotheses to Master")            "name": current_voice.identity.name,
+
+Active Investigations: {len(hypotheses)} hypotheses
+
+High-Confidence Traits: {len(state.rubric.get_high_confidence_traits())}"""        except Exception as e:            "icon": current_voice.identity.icon,
+
+
+
+        # Calculate confidence based on completion            logger.warning(f"[GenesisProfiler] Failed to notify MasterHypothesis: {e}")        }
+
+        confidence = min(0.95, 0.4 + (completion / 150))
+
+                    
+
+        return AgentOutput(
+
+            calculation={    async def _notify_master_scout(        interpretation = f"""Phase: {state.phase.upper()}
+
+                "phase": state.phase.value,
+
+                "turn": state.conversation_turn,        self,
+
+                "totalResponses": len(state.responses),
+
+                "completion": completion,        session: IntegratedSession,{next_question}
+
+                "detectedSignals": len(signals),
+
+                "totalSignals": session.total_signals_detected,        signals: list[Signal],
+
+                "activeHypotheses": len(hypotheses),
+
+                "totalHypotheses": session.total_hypotheses_created,    ) -> None:Your responses are building a comprehensive Digital Twin - a deep map of your authentic self.
+
+                "highConfidenceTraits": len(state.rubric.get_high_confidence_traits()),
+
+                "probesSent": session.total_probes_sent,        """Send detected signals to MasterScout for Digital Twin aggregation."""{f'Insights discovered: {len(state.insights)}' if state.insights else ''}"""
+
+                "sessionId": effective_session_id,
+
+                "isProbing": should_probe,        if not self._bus or not signals:
+
+            },
+
+            correlations=[t.name for t in state.rubric.get_high_confidence_traits()[:5]],            return        return AgentOutput(
+
+            interpretationSeed=interpretation,
+
+            visualizationData=ui_payload,                    calculation={
+
+            method="genesis-fractal-v3",
+
+            confidence=confidence,        try:                "phase": state.phase,
+
+        )
+
+                await self._bus.send(                "questionIndex": state.question_index,
+
+    # =========================================================================
+
+    # PROTOCOL MESSAGE CREATION                source_agent_id="genesis.profiler",                "totalResponses": len(state.responses),
+
+    # =========================================================================
+
+                    target_capability="profile_aggregation",                "insightsCount": len(state.insights),
+
+    def create_protocol_message(
+
+        self,                payload={                "voiceId": state.current_voice_id,
+
+        insight_type: str,
+
+        payload: dict,                    "session_id": session.session_id,                "sessionId": effective_session_id,
+
+        confidence: float,
+
+        hrm_validated: bool = False,                    "signals": [s.to_dict() for s in signals],            },
+
+    ) -> UniversalProtocolMessage:
+
+        """Create a protocol message for cross-agent communication."""                    "rubric": session.genesis_state.rubric.to_dict(),            correlations=state.insights[-5:] if state.insights else None,
+
+        return UniversalProtocolMessage(
+
+            source_agent=self.name,                    "phase": session.genesis_state.phase.value,            interpretationSeed=interpretation,
+
+            target_layer="Orchestrator",
+
+            insight_type=insight_type,                    "high_confidence_traits": [            visualizationData=ui_component,
+
+            confidence_score=confidence,
+
+            payload=payload,                        t.to_dict() for t in session.genesis_state.rubric.get_high_confidence_traits()            method="genesis-profiling",
+
+            hrm_validated=hrm_validated,
+
+        )                    ],            confidence=0.85 if state.insights else 0.7,
+
+
+                },        )
+
+                priority=PacketPriority.NORMAL,    
+
+            )    def create_protocol_message(
+
+            logger.info(f"[GenesisProfiler] Sent {len(signals)} signals to MasterScout")        self,
+
+        except Exception as e:        insight_type: str,
+
+            logger.warning(f"[GenesisProfiler] Failed to notify MasterScout: {e}")        payload: dict,
+
+            confidence: float,
+
+    # =========================================================================        hrm_validated: bool = False,
+
+    # SESSION MANAGEMENT    ) -> UniversalProtocolMessage:
+
+    # =========================================================================        return UniversalProtocolMessage(
+
+                source_agent=self.name,
+
+    def _get_session(self, session_id: str) -> IntegratedSession:            target_layer="Orchestrator",
+
+        """Get or create an integrated session with all fractal components."""            insight_type=insight_type,
+
+        if session_id not in self._sessions:            confidence_score=confidence,
+
+            session = IntegratedSession(session_id=session_id)            payload=payload,
+
+            self._sessions[session_id] = session            hrm_validated=hrm_validated,
+
+            logger.info(f"[GenesisProfiler] Created session: {session_id}")        )
+
+        
+        return self._sessions[session_id]
+    
+    def clear_session(self, session_id: str) -> bool:
+        """Clear all state for a session - complete reset."""
+        if session_id in self._sessions:
+            del self._sessions[session_id]
+            logger.info(f"[GenesisProfiler] Cleared session: {session_id}")
+            return True
+        return False
+    
+    def get_session_summary(self, session_id: str) -> Optional[dict]:
+        """Get session summary for debugging/monitoring."""
+        if session_id in self._sessions:
+            return self._sessions[session_id].to_summary()
+        return None
+    
+    # =========================================================================
+    # MESSAGE CLASSIFICATION
+    # =========================================================================
+    
+    def _is_init_message(self, message: str) -> bool:
+        """Check if this is a system initialization message (not real user input)."""
+        if not message or not message.strip():
+            return True
+        
+        init_keywords = [
+            "begin the genesis",
+            "introduce yourself",
+            "first interaction",
+            "start the profiling",
+            "initiate genesis",
+            "begin profiling",
+            "generate the next",
+            "very first interaction",
+            "start the journey",
+            "begin our exploration",
+        ]
+        message_lower = message.lower().strip()
+        return any(keyword in message_lower for keyword in init_keywords)
+    
+    # =========================================================================
+    # FRACTAL PROCESSING PIPELINE
+    # =========================================================================
+    
+    async def _run_profiler_analysis(
+        self,
+        session: IntegratedSession,
+        user_message: str,
+    ) -> list[Signal]:
+        """
+        Run the Profiler (Scout) to silently detect patterns.
+        
+        The Profiler scans for:
+        - HD Type indicators (Generator, Projector, etc.)
+        - Jungian function markers (Ni, Ne, Ti, etc.)
+        - Energy pattern signals (sustainable, burst, wave)
+        - Somatic/nervous system cues
+        """
+        profiler = session.core.profiler
+        signals = profiler.analyze_message(user_message, session.genesis_state)
+        
+        # Update session metrics
+        session.total_signals_detected += len(signals)
+        
+        if signals:
+            logger.info(f"[GenesisProfiler] Profiler detected {len(signals)} signals")
+            for signal in signals:
+                logger.debug(f"  - {signal.signal_type}: {signal.suggested_traits}")
+        
+        return signals
+    
+    def _convert_signals_to_hypotheses(
+        self,
+        session: IntegratedSession,
+        signals: list[Signal],
+    ) -> list[Hypothesis]:
+        """Convert detected signals into hypotheses for verification."""
+        hypothesis_engine = session.core.hypothesis_engine
+        
+        for signal in signals:
+            for trait_name, value in signal.suggested_traits.items():
+                hypothesis_engine.add_hypothesis(
+                    trait_name=trait_name,
+                    suspected_value=value,
+                    confidence=signal.confidence * 0.7,  # Discount initial confidence
+                    evidence=[signal.content[:200]],  # Truncated evidence
+                )
+        
+        # Get active hypotheses sorted by priority
+        active = hypothesis_engine.get_top_hypotheses(limit=5)
+        session.total_hypotheses_created = len(hypothesis_engine.hypotheses)
+        
+        return active
+    
+    def _should_probe(self, session: IntegratedSession, hypotheses: list[Hypothesis]) -> bool:
+        """Decide whether to generate a probe question vs. conversational response."""
+        if not hypotheses:
+            return False
+        
+        state = session.genesis_state
+        
+        # Always probe more in MAPPING phase
+        if state.phase == GenesisPhase.MAPPING:
+            return True
+        
+        # Probe every 3rd turn in other phases
+        if state.conversation_turn > 0 and state.conversation_turn % 3 == 0:
+            return True
+        
+        # Probe if we have a high-priority hypothesis
+        top_hypothesis = hypotheses[0] if hypotheses else None
+        if top_hypothesis and top_hypothesis.priority > 0.8:
+            return True
+        
+        return False
+    
+    async def _generate_probe(
+        self,
+        session: IntegratedSession,
+        hypotheses: list[Hypothesis],
+    ) -> tuple[str, list[dict]]:
+        """Generate a probe question using the HypothesisEngine."""
+        hypothesis_engine = session.core.hypothesis_engine
+        
+        probe_packet = hypothesis_engine.generate_probe(session.genesis_state)
+        
+        if not probe_packet:
+            # Fallback to conversational response
+            return await self._generate_conversational_response(session, "")
+        
+        probe_data = probe_packet.payload.get("probe", {})
+        prompt = probe_data.get("prompt", "Tell me more about that...")
+        probe_type = probe_data.get("probe_type", "confirmation")
+        options = probe_data.get("options", [])
+        hypothesis_id = probe_data.get("hypothesis_id")
+        
+        # Update metrics
+        session.total_probes_sent += 1
+        
+        # Build UI components based on probe type
+        components = [
+            {"type": "text", "content": prompt, "variant": "question"},
+        ]
+        
+        if probe_type == "binary_choice" and len(options) >= 2:
+            components.append({
+                "type": "choice_cards",
+                "options": [
+                    {"id": "a", "label": options[0], "icon": "🌊"},
+                    {"id": "b", "label": options[1], "icon": "⚡"},
+                ],
+                "allowMultiple": False,
+            })
+        elif probe_type == "slider":
+            components.append({
+                "type": "slider",
+                "min": 1,
+                "max": 10,
+                "defaultValue": 5,
+                "label": "How strongly does this resonate?",
+            })
+        elif probe_type == "card_selection":
+            components.append({
+                "type": "choice_cards",
+                "options": [{"id": str(i), "label": opt} for i, opt in enumerate(options)],
+                "allowMultiple": True,
+            })
+        else:
+            # Confirmation or reflection - just text input
+            components.append({
+                "type": "input",
+                "variant": "freeform",
+                "placeholder": "Share what comes to mind...",
+            })
+        
+        return prompt, components
+    
+    async def _generate_conversational_response(
+        self,
+        session: IntegratedSession,
+        user_message: str,
+    ) -> tuple[str, list[dict]]:
+        """Generate a conversational response using the Core + Face systems."""
+        state = session.genesis_state
+        face = session.face
+        
+        # Get the appropriate voice for this phase
+        optimal_voice = PHASE_VOICE_MAP.get(state.phase, "oracle")
+        face.set_manual_voice(optimal_voice)
+        
+        # Get conversation phase for voice system
+        conv_phase = PHASE_TO_CONVERSATION_PHASE.get(state.phase, ConversationPhase.AWAKENING)
+        
+        # Build the system prompt with voice + context
+        voice_prompt = face.get_system_prompt(
+            context={"phase": state.phase.value},
+            history=state.memory.get_last_n(10),
+            phase=conv_phase,
+        )
+        
+        # Gather cross-domain intelligence from Master agents
+        master_context = session.get_master_context()
+        
+        # Build profile summary
+        high_conf_traits = state.rubric.get_high_confidence_traits()
+        profile_summary = "\n".join([
+            f"- {t.name}: {t.value} ({t.confidence:.0%} confident)"
+            for t in high_conf_traits[:5]
+        ]) if high_conf_traits else "(Still forming initial impressions)"
+        
+        # Build hypotheses summary
+        active_hypotheses = session.core.hypothesis_engine.get_top_hypotheses(limit=3)
+        hypotheses_summary = "\n".join([
+            f"- {h.trait_name} might be {h.suspected_value} ({h.confidence:.0%})"
+            for h in active_hypotheses
+        ]) if active_hypotheses else "(Gathering more signals)"
+        
+        # Use LLM to generate response
+        if self._llm:
+            try:
+                prompt = f"""{voice_prompt}
+
+═══════════════════════════════════════════════════════════════════════════════
+                              PROFILING CONTEXT
+═══════════════════════════════════════════════════════════════════════════════
+
+Current Phase: {state.phase.value.upper()}
+Turn Number: {state.conversation_turn + 1}
+Profile Completion: {state.rubric.get_completion_percentage():.0f}%
+
+HIGH-CONFIDENCE TRAITS:
+{profile_summary}
+
+ACTIVE HYPOTHESES:
+{hypotheses_summary}
+
+CONVERSATION HISTORY:
+{self._format_conversation_history(state.memory.get_last_n(8))}
+
+{f"MASTER AGENT INSIGHTS:{chr(10)}{master_context}" if master_context else ""}
+
+═══════════════════════════════════════════════════════════════════════════════
+USER'S MESSAGE: "{user_message if user_message else '(Initial contact)'}"
+═══════════════════════════════════════════════════════════════════════════════
+
+Generate a natural, flowing response that:
+1. Acknowledges what they shared with genuine presence
+2. Weaves in pattern observations naturally (not clinical)
+3. Asks ONE penetrating follow-up question that opens depth
+4. Maintains your voice persona ({optimal_voice.upper()})
+5. Stays concise (2-4 sentences max)
+
+Respond with ONLY the message text - no JSON, no formatting."""
+
+                response = await self._llm.ainvoke(prompt)
+                response_text = response.content if hasattr(response, 'content') else str(response)
+                
+            except Exception as e:
+                logger.error(f"[GenesisProfiler] LLM error: {e}")
+                response_text = self._get_fallback_question(state)
+        else:
+            response_text = self._get_fallback_question(state)
+        
+        # Build UI components
+        components = [
+            {"type": "text", "content": response_text, "variant": "question"},
+            {
+                "type": "input",
+                "variant": "freeform",
+                "placeholder": self._get_input_placeholder(state.phase),
+                "minLength": 10,
+            },
+        ]
+        
+        return response_text, components
+    
+    def _format_conversation_history(self, messages: list[dict]) -> str:
+        """Format conversation history for LLM context."""
+        if not messages:
+            return "(First interaction - no history)"
+        
+        lines = []
+        for msg in messages:
+            role = msg.get("role", "unknown").upper()
+            content = msg.get("content", "")[:300]  # Truncate long messages
+            lines.append(f"{role}: {content}")
+        
+        return "\n".join(lines)
+    
+    def _get_input_placeholder(self, phase: GenesisPhase) -> str:
+        """Get phase-appropriate input placeholder."""
+        placeholders = {
+            GenesisPhase.AWAKENING: "Share what calls to you...",
+            GenesisPhase.EXCAVATION: "Speak what lies beneath...",
+            GenesisPhase.MAPPING: "Describe how this shows up...",
+            GenesisPhase.SYNTHESIS: "Reflect on the patterns...",
+            GenesisPhase.ACTIVATION: "Declare your next step...",
+        }
+        return placeholders.get(phase, "Speak your truth...")
+    
+    def _get_fallback_question(self, state: GenesisState) -> str:
+        """Get a fallback question when LLM fails."""
+        fallbacks = {
+            GenesisPhase.AWAKENING: [
+                "What draws you to this moment of self-discovery?",
+                "Describe a time when you felt completely aligned with yourself.",
+                "What truth are you seeking about your nature?",
+            ],
+            GenesisPhase.EXCAVATION: [
+                "What pattern keeps repeating in your life, even when you try to change it?",
+                "When do you feel most depleted, and what restores you?",
+                "What truth about yourself have you been avoiding?",
+            ],
+            GenesisPhase.MAPPING: [
+                "When faced with a major decision, what do you trust most - your gut, your heart, or your logic?",
+                "Do you feel more energized when working alone or collaborating with others?",
+                "Are you someone who waits for the right moment, or do you make things happen?",
+            ],
+            GenesisPhase.SYNTHESIS: [
+                "Looking at all we've explored, what pattern emerges most clearly?",
+                "How might your deepest challenge be pointing toward your greatest gift?",
+                "What would change if you fully trusted your unique design?",
+            ],
+            GenesisPhase.ACTIVATION: [
+                "What is one practice you could begin today that honors your true nature?",
+                "What is the next brave step your soul is calling for?",
+                "How will you remember who you are when the world tries to make you forget?",
+            ],
+        }
+        questions = fallbacks.get(state.phase, fallbacks[GenesisPhase.AWAKENING])
+        idx = state.conversation_turn % len(questions)
+        return questions[idx]
+    
+    # =========================================================================
+    # UI COMPONENT BUILDING
+    # =========================================================================
+    
+    def _build_ui_payload(
+        self,
+        session: IntegratedSession,
+        response_text: str,
+        components: list[dict],
+        signals: list[Signal],
+        hypotheses: list[Hypothesis],
+    ) -> dict:
+        """Build the complete UI payload for the frontend."""
+        state = session.genesis_state
+        
+        # Get phase visual theme
+        theme = state.phase.theme
+        
+        # Get current voice info
+        current_voice = session.face.current_voice
+        voice_identity = current_voice.identity
+        
+        return {
+            "type": "profiler_step",
+            "phase": state.phase.value,
+            "style": {
+                "theme": theme.get("animation", "pulse"),
+                "color": theme.get("color", "#6B21A8"),
+                "accent": theme.get("accent", "#A855F7"),
+                "animation": theme.get("animation", "pulse"),
+                "icon": theme.get("icon", "eye"),
+            },
+            "components": components + [
+                {
+                    "type": "progress",
+                    "current": state.conversation_turn + 1,
+                    "phase": state.phase.value,
+                    "phaseDescription": theme.get("description", ""),
+                    "completion": state.rubric.get_completion_percentage(),
+                }
+            ],
+            # Intelligence summary
+            "intelligence": {
+                "signalsDetected": len(signals),
+                "activeHypotheses": len(hypotheses),
+                "highConfidenceTraits": len(state.rubric.get_high_confidence_traits()),
+                "totalTraits": len(state.rubric.get_all_traits()),
+            },
+            # Voice info
+            "voice": {
+                "id": voice_identity.id,
+                "name": voice_identity.name,
+                "icon": voice_identity.icon,
+                "description": voice_identity.description,
+            },
+            # Master agent insights count
+            "masterInsights": {
+                "hypothesis": len(session.master_hypothesis_insights),
+                "scout": len(session.master_scout_insights),
+            },
+            # Session metadata
+            "sessionId": session.session_id,
+            "turn": state.conversation_turn,
+        }
+    
+    # =========================================================================
+    # MAIN EXECUTION ENTRY POINT
+    # =========================================================================
+    
+    async def execute(
+        self,
+        agent_input: AgentInput,
+        model: str = None,
+        session_id: str = None,
+    ) -> AgentOutput:
+        """
+        Main execution entry point - processes user input through the complete fractal.
+        
+        Pipeline:
+        1. Ensure SwarmBus subscription
+        2. Get/create integrated session
+        3. Run Profiler for pattern detection
+        4. Convert signals to hypotheses
+        5. Decide: probe or converse?
+        6. Generate response
+        7. Notify Master agents (async)
+        8. Update session state
+        9. Return structured output
+        
+        Args:
+            agent_input: The AgentInput with context and userQuery
+            model: Optional model override
+            session_id: Session identifier
+        
+        Returns:
+            AgentOutput with calculation, interpretation, and UI components
+        """
+        # Ensure SwarmBus subscription
+        await self._ensure_bus_subscription()
+        
+        # Get or create session
+        effective_session_id = session_id or str(uuid4())
+        session = self._get_session(effective_session_id)
+        session.touch()
+        
+        state = session.genesis_state
+        user_message = agent_input.context.userQuery or ""
+        
+        # Check if this is init or real user input
+        is_init = self._is_init_message(user_message)
+        
+        # Record user message if it's real input
+        if not is_init and user_message.strip():
+            state.memory.add_message("user", user_message)
+            state.add_response(
+                question=state.memory.messages[-2]["content"] if len(state.memory.messages) > 1 else "Initial",
+                response=user_message,
+            )
+            logger.info(f"[GenesisProfiler] Recorded response #{len(state.responses)} for turn {state.conversation_turn}")
+        
+        # === PROFILER: Silent Pattern Detection ===
+        signals = await self._run_profiler_analysis(session, user_message)
+        
+        # === HYPOTHESIS ENGINE: Convert Signals ===
+        hypotheses = self._convert_signals_to_hypotheses(session, signals)
+        
+        # === DECISION: Probe or Converse? ===
+        should_probe = self._should_probe(session, hypotheses)
+        
+        # === GENERATE RESPONSE ===
+        if should_probe:
+            response_text, components = await self._generate_probe(session, hypotheses)
+        else:
+            response_text, components = await self._generate_conversational_response(session, user_message)
+        
+        # Record assistant response in memory
+        state.memory.add_message("assistant", response_text)
+        
+        # === NOTIFY MASTER AGENTS (async, non-blocking) ===
+        if signals:
+            asyncio.create_task(self._notify_master_scout(session, signals))
+        if hypotheses:
+            asyncio.create_task(self._notify_master_hypothesis(session, hypotheses))
+        
+        # === BUILD UI PAYLOAD ===
+        ui_payload = self._build_ui_payload(session, response_text, components, signals, hypotheses)
+        
+        # === BUILD INTERPRETATION ===
+        completion = state.rubric.get_completion_percentage()
+        interpretation = f"""Phase: {state.phase.value.upper()}
+
+{response_text}
+
+═══════════════════════════════════════════════════════════════════════════════
+Digital Twin Progress: {completion:.0f}%
+Patterns Detected: {len(signals)} this turn | {session.total_signals_detected} total
+Active Investigations: {len(hypotheses)} hypotheses
+High-Confidence Traits: {len(state.rubric.get_high_confidence_traits())}
+═══════════════════════════════════════════════════════════════════════════════"""
+
+        # Calculate confidence based on completion
+        confidence = min(0.95, 0.4 + (completion / 150))
+        
+        return AgentOutput(
+            calculation={
+                "phase": state.phase.value,
+                "turn": state.conversation_turn,
+                "totalResponses": len(state.responses),
+                "completion": completion,
+                "detectedSignals": len(signals),
+                "totalSignals": session.total_signals_detected,
+                "activeHypotheses": len(hypotheses),
+                "totalHypotheses": session.total_hypotheses_created,
+                "highConfidenceTraits": len(state.rubric.get_high_confidence_traits()),
+                "probesSent": session.total_probes_sent,
+                "sessionId": effective_session_id,
+                "isProbing": should_probe,
+            },
+            correlations=[t.name for t in state.rubric.get_high_confidence_traits()[:5]],
+            interpretationSeed=interpretation,
+            visualizationData=ui_payload,
+            method="genesis-fractal-v3",
+            confidence=confidence,
+        )
+    
+    # =========================================================================
+    # PROTOCOL MESSAGE CREATION
+    # =========================================================================
+    
+    def create_protocol_message(
+        self,
+        insight_type: str,
+        payload: dict,
+        confidence: float,
+        hrm_validated: bool = False,
+    ) -> UniversalProtocolMessage:
+        """Create a protocol message for cross-agent communication."""
+        return UniversalProtocolMessage(
+            source_agent=self.name,
+            target_layer="Orchestrator",
+            insight_type=insight_type,
+            confidence_score=confidence,
+            payload=payload,
+            hrm_validated=hrm_validated,
+        )

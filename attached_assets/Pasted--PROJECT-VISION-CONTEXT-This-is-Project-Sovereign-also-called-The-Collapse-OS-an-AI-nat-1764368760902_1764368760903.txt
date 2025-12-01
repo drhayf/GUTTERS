@@ -1,0 +1,54 @@
+## PROJECT VISION & CONTEXT
+
+This is "Project Sovereign" (also called "The Collapse OS") - an AI-native mobile + web application for self-mastery and personal transformation.
+
+### Core Concept
+- Build a "Digital Twin" profile system that deeply understands the user
+- Combine multiple wisdom frameworks: Human Design, Gene Keys, Astrology, I Ching, Numerology
+- AI agents that are "sentient, curious, and relentless" in probing the user's psyche
+- Generative UI that adapts based on user responses and profile data
+
+### Key Agents to Implement
+
+1. **Genesis Profiler** - The initial onboarding agent that:
+   - Asks powerful, penetrating questions one at a time
+   - Builds the user's Digital Twin foundation
+   - Operates in phases: awakening → excavation → mapping → synthesis → activation
+   - Returns generative UI components (text, inputs, sliders, cards) dynamically
+
+2. **Human Design Calculator** - Already exists in frontend (lib/agents/human-design-agent.ts):
+   - Calculates HD chart from birth data (date, time, location)
+   - Determines Type, Strategy, Authority, Profile
+   - Maps defined/undefined centers, gates, channels
+   - The backend should mirror this functionality
+
+3. **Sovereign Orchestrator** - Master coordinator that:
+   - Routes requests to appropriate agents
+   - Manages cross-agent context and state
+   - Synthesizes insights from multiple frameworks
+
+### Technical Architecture Goals
+
+- **Generative UI**: Agents return UI component definitions that the frontend renders dynamically
+- **Stateful Conversations**: Use LangGraph for multi-turn profiling sessions with state management
+- **Cross-Platform**: Web (Expo/Next.js) uses API, Native can use local LangChain or API
+- **Streaming Support**: SSE for real-time AI responses
+
+### UI/UX Elements
+- Tamagui component library with purple/cyan theme
+- Platform-specific animations (Reanimated on native, CSS on web)
+- "Genesis Void" - A pulsing, mysterious entry point component
+- Adaptive interfaces that change based on profiling phase
+
+### Environment Requirements
+- Google Gemini API (gemini-1.5-flash, gemini-2.5-pro) via existing EXPO_PUBLIC_GOOGLE_API_KEY
+- Optional: Supabase for persistence
+- Optional: LangSmith for tracing
+
+### Quality Standards
+- Production-ready error handling
+- Graceful fallbacks when LLM unavailable
+- Type-safe contracts between frontend and backend
+- Security: No wildcard CORS with credentials, proper origin allowlists
+
+The goal is a sophisticated, deeply integrated system where the backend amplifies what the frontend already does - not replaces it. Every addition should feel like a natural extension of the existing architecture.

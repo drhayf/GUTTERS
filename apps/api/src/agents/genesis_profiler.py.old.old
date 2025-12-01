@@ -1,0 +1,452 @@
+from typing import Optional, Literal
+from dataclasses import dataclass, field
+from datetime import datetime
+
+from .base import BaseAgent
+from ..core.schemas import AgentInput, AgentOutput, UniversalProtocolMessage
+from ..core.config import settings
+from ..core.hrm import get_hrm
+
+# Import the fractal Face system
+from .genesis.face import FaceOrchestrator, FaceFactory, VoiceSelectionMode, ConversationPhase
+from .genesis.state import GenesisPhase, SessionMemory
+
+GenesisPhaseStr = Literal["awakening", "excavation", "mapping", "synthesis", "activation"]
+
+# Map string phases to ConversationPhase enum
+PHASE_TO_CONVERSATION_PHASE = {
+    "awakening": ConversationPhase.AWAKENING,
+    "excavation": ConversationPhase.EXCAVATION,
+    "mapping": ConversationPhase.MAPPING,
+    "synthesis": ConversationPhase.SYNTHESIS,
+    "activation": ConversationPhase.ACTIVATION,
+}
+
+@dataclass
+class ProfilerState:
+    """Enhanced profiler state with memory and voice tracking."""
+    phase: GenesisPhaseStr = "awakening"
+    question_index: int = 0
+    responses: list[dict] = field(default_factory=list)
+    digital_twin: dict = field(default_factory=dict)
+    insights: list[str] = field(default_factory=list)
+    
+    # Session memory for conversation history
+    memory: SessionMemory = field(default_factory=SessionMemory)
+    
+    # Track current voice being used
+    current_voice_id: str = "oracle"
+    
+    # Timestamps
+    created_at: datetime = field(default_factory=datetime.utcnow)
+    last_activity: datetime = field(default_factory=datetime.utcnow)
+    
+    def add_message(self, role: str, content: str):
+        """Add message to memory."""
+        self.memory.add_message(role, content)
+        self.last_activity = datetime.utcnow()
+    
+    def get_conversation_context(self) -> str:
+        """Get formatted conversation context for LLM."""
+        recent = self.memory.get_last_n(10)
+        if not recent:
+            return "(First interaction - no history yet)"
+        
+        lines = []
+        for msg in recent:
+            role = msg.get("role", "unknown").upper()
+            content = msg.get("content", "")[:200]  # Truncate
+            lines.append(f"{role}: {content}")
+        
+        return "\n".join(lines)
+
+PHASE_QUESTIONS = {
+    "awakening": [
+        "What brings you here today? What are you seeking to understand about yourself?",
+        "Describe a moment when you felt completely alive and aligned. What were you doing?",
+        "What pattern in your life keeps recurring, perhaps appearing as both challenge and gift?",
+    ],
+    "excavation": [
+        "What truth about yourself have you been avoiding?",
+        "Describe your relationship with rest and activity. When do you feel depleted?",
+        "What emotions do you tend to suppress, and which ones flow freely?",
+    ],
+    "mapping": [
+        "How do you typically make important decisions - through logic, emotion, or intuition?",
+        "Describe your ideal environment for deep work and reflection.",
+        "What role do you naturally assume in group dynamics?",
+    ],
+    "synthesis": [
+        "Looking at the patterns we've uncovered, what theme emerges most strongly?",
+        "How might your challenges actually be pointing toward your gifts?",
+        "What wisdom from your past self would serve you now?",
+    ],
+    "activation": [
+        "What one practice could you begin today that honors your true design?",
+        "How will you know when you're living in alignment with your authentic self?",
+        "What is the next brave step your soul is calling you toward?",
+    ],
+}
+
+class GenesisProfilerAgent(BaseAgent):
+    name = "Genesis Profiler"
+    description = "Deep profiling agent that builds the user's Digital Twin through penetrating questions"
+    frameworks = ["human-design", "gene-keys", "jungian", "somatic"]
+    version = "2.0.0"  # Updated with Face/Voice system
+    capabilities = ["profiling", "generative-ui", "multi-phase", "voice-selection"]
+    requires_hrm = False  # Disabled for testing - HRM can be enabled separately
+    
+    def __init__(self):
+        self._states: dict[str, ProfilerState] = {}
+        self._faces: dict[str, FaceOrchestrator] = {}  # Per-session Face instances
+        self._llm = None
+        self._setup_llm()
+    
+    def _setup_llm(self) -> None:
+        if not settings.GOOGLE_API_KEY:
+            return
+        
+        try:
+            from langchain_google_genai import ChatGoogleGenerativeAI
+            self._llm = ChatGoogleGenerativeAI(
+                model=settings.LLM_MODEL,
+                temperature=0.9,
+                google_api_key=settings.GOOGLE_API_KEY,
+            )
+        except ImportError:
+            pass
+        except Exception as e:
+            print(f"[GenesisProfiler] LLM init error: {e}")
+    
+    def clear_session(self, session_id: str) -> bool:
+        """Clear all state for a session - used when frontend resets."""
+        cleared = False
+        if session_id in self._states:
+            del self._states[session_id]
+            cleared = True
+            print(f"[GenesisProfiler] Cleared state for session: {session_id}")
+        if session_id in self._faces:
+            del self._faces[session_id]
+            print(f"[GenesisProfiler] Cleared face for session: {session_id}")
+        return cleared
+    
+    def _get_state(self, session_id: str) -> ProfilerState:
+        if session_id not in self._states:
+            self._states[session_id] = ProfilerState()
+            print(f"[GenesisProfiler] Created new state for session: {session_id}")
+        return self._states[session_id]
+    
+    def _get_face(self, session_id: str) -> FaceOrchestrator:
+        """Get or create Face orchestrator for this session."""
+        if session_id not in self._faces:
+            # Create a default Face with dynamic voice selection
+            self._faces[session_id] = FaceFactory.create_default()
+            print(f"[GenesisProfiler] Created new Face for session: {session_id}")
+        return self._faces[session_id]
+    
+    def _get_voice_for_phase(self, phase: GenesisPhaseStr) -> str:
+        """Map phase to optimal voice."""
+        voice_map = {
+            "awakening": "oracle",     # Mysterious, inviting
+            "excavation": "mirror",    # Reflective, minimal
+            "mapping": "sage",         # Calm, analytical
+            "synthesis": "oracle",     # Weaving patterns
+            "activation": "challenger", # Empowering
+        }
+        return voice_map.get(phase, "oracle")
+    
+    def _advance_phase(self, state: ProfilerState) -> None:
+        phases: list[GenesisPhaseStr] = ["awakening", "excavation", "mapping", "synthesis", "activation"]
+        current_idx = phases.index(state.phase)
+        
+        questions_in_phase = len(PHASE_QUESTIONS[state.phase])
+        if state.question_index >= questions_in_phase - 1:
+            if current_idx < len(phases) - 1:
+                state.phase = phases[current_idx + 1]
+                state.question_index = 0
+        else:
+            state.question_index += 1
+    
+    async def _generate_dynamic_question(
+        self,
+        state: ProfilerState,
+        user_response: Optional[str],
+        llm = None,
+        session_id: str = None
+    ) -> str:
+        base_question = PHASE_QUESTIONS[state.phase][state.question_index]
+        
+        active_llm = llm or self._llm
+        if not active_llm or not user_response:
+            return base_question
+        
+        try:
+            # Get Face and Voice for this session
+            face = self._get_face(session_id or "default")
+            conversation_phase = PHASE_TO_CONVERSATION_PHASE.get(state.phase, ConversationPhase.EXPLORATION)
+            
+            # Get voice system prompt for personality/tone
+            voice_system_prompt = face.get_system_prompt(
+                context={"phase": state.phase},
+                history=state.memory.get_last_n(5),
+                phase=conversation_phase,
+            )
+            
+            # Get conversation context from memory
+            conversation_context = state.get_conversation_context()
+            
+            # Build context from recent responses
+            response_context = "\n".join([
+                f"Q: {r.get('question', '')[:100]}... → A: {r.get('response', '')[:100]}..."
+                for r in state.responses[-3:]
+            ])
+            
+            prompt = f"""{voice_system_prompt}
+
+═══════════════════════════════════════════════════════════════════
+CURRENT TASK: Generate the next profiling question
+═══════════════════════════════════════════════════════════════════
+
+Current Phase: {state.phase.upper()}
+Question {state.question_index + 1} of {len(PHASE_QUESTIONS[state.phase])}
+
+Base Question (adapt this): {base_question}
+
+CONVERSATION HISTORY:
+{conversation_context}
+
+RECENT RESPONSES:
+{response_context}
+
+User's latest response: "{user_response}"
+
+═══════════════════════════════════════════════════════════════════
+INSTRUCTIONS:
+1. Adapt the base question to flow naturally from what they just shared
+2. Use your voice's personality and tone
+3. Make it deeply personal but respectful
+4. Probe toward their authentic self
+5. Stay aligned with the {state.phase} phase's purpose
+
+Respond with ONLY the adapted question. No preamble, no explanation."""
+
+            response = await active_llm.ainvoke(prompt)
+            return response.content if hasattr(response, 'content') else base_question
+        
+        except Exception as e:
+            print(f"[GenesisProfiler] Dynamic question error: {e}")
+            return base_question
+    
+    async def _extract_insights(self, state: ProfilerState, llm = None) -> list[str]:
+        active_llm = llm or self._llm
+        if not active_llm or len(state.responses) < 3:
+            return []
+        
+        try:
+            responses_text = "\n".join([
+                f"Q: {r.get('question', '')}\nA: {r.get('response', '')}"
+                for r in state.responses
+            ])
+            
+            prompt = f"""Analyze these profiling responses and extract key insights about the person.
+
+Phase: {state.phase}
+Responses:
+{responses_text}
+
+Extract 3-5 key insights about:
+1. Their energetic patterns (Generator, Projector, etc. tendencies)
+2. Their emotional landscape
+3. Their decision-making style
+4. Their shadow patterns
+5. Their gifts and strengths
+
+Format as a simple list of insights, one per line."""
+
+            response = await active_llm.ainvoke(prompt)
+            content = response.content if hasattr(response, 'content') else ""
+            return [line.strip() for line in content.split("\n") if line.strip()]
+        
+        except Exception as e:
+            print(f"[GenesisProfiler] Insight extraction error: {e}")
+            return []
+    
+    def _generate_ui_component(self, state: ProfilerState, question: str) -> dict:
+        phase_styles = {
+            "awakening": {"theme": "void", "animation": "pulse", "color": "#6B21A8"},
+            "excavation": {"theme": "earth", "animation": "dig", "color": "#92400E"},
+            "mapping": {"theme": "constellation", "animation": "connect", "color": "#0891B2"},
+            "synthesis": {"theme": "weave", "animation": "spiral", "color": "#7C3AED"},
+            "activation": {"theme": "fire", "animation": "ignite", "color": "#DC2626"},
+        }
+        
+        style = phase_styles.get(state.phase, phase_styles["awakening"])
+        
+        return {
+            "type": "profiler_question",
+            "phase": state.phase,
+            "question": question,
+            "questionIndex": state.question_index,
+            "totalQuestions": len(PHASE_QUESTIONS[state.phase]),
+            "style": style,
+            "components": [
+                {
+                    "type": "text",
+                    "content": question,
+                    "variant": "question",
+                },
+                {
+                    "type": "input",
+                    "variant": "freeform",
+                    "placeholder": "Speak your truth...",
+                    "minLength": 20,
+                },
+                {
+                    "type": "progress",
+                    "current": state.question_index + 1,
+                    "total": len(PHASE_QUESTIONS[state.phase]),
+                    "phase": state.phase,
+                }
+            ],
+            "insights": state.insights[-3:] if state.insights else [],
+        }
+    
+    def _get_llm_for_model(self, model: str):
+        """Get or create LLM instance for specific model"""
+        if not settings.GOOGLE_API_KEY:
+            return None
+        
+        try:
+            from langchain_google_genai import ChatGoogleGenerativeAI
+            return ChatGoogleGenerativeAI(
+                model=model,
+                temperature=0.9,
+                google_api_key=settings.GOOGLE_API_KEY,
+            )
+        except Exception as e:
+            print(f"[GenesisProfiler] LLM init error for {model}: {e}")
+            return None
+    
+    async def execute(self, agent_input: AgentInput, model: str = None, session_id: str = None) -> AgentOutput:
+        # Use provided model or fall back to default
+        active_model = model or settings.LLM_MODEL
+        llm = self._get_llm_for_model(active_model) if model else self._llm
+        
+        # Use provided session_id or generate one (NOT based on message hash!)
+        effective_session_id = session_id or "default"
+        print(f"[GenesisProfiler] Using session_id: {effective_session_id}")
+        
+        state = self._get_state(effective_session_id)
+        user_response = agent_input.context.userQuery
+        
+        # Check if this is an initialization/system message (not a real user response)
+        init_keywords = [
+            "begin the genesis",
+            "introduce yourself",
+            "first interaction",
+            "start the profiling",
+            "initiate genesis",
+            "begin profiling",
+        ]
+        is_init_message = user_response and any(
+            keyword in user_response.lower() for keyword in init_keywords
+        )
+        
+        # Get Face for this session
+        face = self._get_face(effective_session_id)
+        
+        # Only record actual user responses (not system init messages)
+        if user_response and user_response.strip() and not is_init_message:
+            current_question = PHASE_QUESTIONS[state.phase][state.question_index]
+            
+            # Add to session memory for conversation context
+            state.add_message("user", user_response)
+            
+            state.responses.append({
+                "phase": state.phase,
+                "question": current_question,
+                "response": user_response,
+                "timestamp": datetime.utcnow().isoformat(),
+            })
+            
+            print(f"[GenesisProfiler] Recorded response {len(state.responses)}: phase={state.phase}, q_idx={state.question_index}")
+            
+            if len(state.responses) % 3 == 0:
+                new_insights = await self._extract_insights(state, llm=llm)
+                state.insights.extend(new_insights)
+            
+            self._advance_phase(state)
+        elif is_init_message:
+            print(f"[GenesisProfiler] Detected init message, not advancing. Current question_index: {state.question_index}")
+        
+        hrm = get_hrm()
+        if self.requires_hrm and hrm.enabled and user_response:
+            hrm_result = await hrm.reason(
+                f"Based on this response: '{user_response}', what deeper patterns might we explore?"
+            )
+            if hrm_result.get("answer"):
+                state.insights.append(hrm_result["answer"][:200])
+        
+        # Generate next question using Face system
+        next_question = await self._generate_dynamic_question(
+            state, user_response, llm=llm, session_id=effective_session_id
+        )
+        
+        # Add AI response to memory
+        state.add_message("assistant", next_question)
+        
+        # Update voice based on phase
+        optimal_voice = self._get_voice_for_phase(state.phase)
+        if state.current_voice_id != optimal_voice:
+            face.set_manual_voice(optimal_voice)
+            state.current_voice_id = optimal_voice
+            print(f"[GenesisProfiler] Switched voice to: {optimal_voice}")
+        
+        ui_component = self._generate_ui_component(state, next_question)
+        
+        # Include voice information in the output
+        current_voice = face.current_voice
+        ui_component["voice"] = {
+            "id": current_voice.identity.id,
+            "name": current_voice.identity.name,
+            "icon": current_voice.identity.icon,
+        }
+        
+        interpretation = f"""Phase: {state.phase.upper()}
+
+{next_question}
+
+Your responses are building a comprehensive Digital Twin - a deep map of your authentic self.
+{f'Insights discovered: {len(state.insights)}' if state.insights else ''}"""
+
+        return AgentOutput(
+            calculation={
+                "phase": state.phase,
+                "questionIndex": state.question_index,
+                "totalResponses": len(state.responses),
+                "insightsCount": len(state.insights),
+                "voiceId": state.current_voice_id,
+                "sessionId": effective_session_id,
+            },
+            correlations=state.insights[-5:] if state.insights else None,
+            interpretationSeed=interpretation,
+            visualizationData=ui_component,
+            method="genesis-profiling",
+            confidence=0.85 if state.insights else 0.7,
+        )
+    
+    def create_protocol_message(
+        self,
+        insight_type: str,
+        payload: dict,
+        confidence: float,
+        hrm_validated: bool = False,
+    ) -> UniversalProtocolMessage:
+        return UniversalProtocolMessage(
+            source_agent=self.name,
+            target_layer="Orchestrator",
+            insight_type=insight_type,
+            confidence_score=confidence,
+            payload=payload,
+            hrm_validated=hrm_validated,
+        )

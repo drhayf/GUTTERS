@@ -1,0 +1,238 @@
+{
+  "session_id": "67668de9-78e0-49fe-8255-c4323c0e5a0a",
+  "saved_at": "2025-11-30T05:31:24.537046",
+  "session_state": {
+    "session_id": "67668de9-78e0-49fe-8255-c4323c0e5a0a",
+    "created_at": "2025-11-30T05:31:18.283458",
+    "last_activity": "2025-11-30T05:31:20.989050",
+    "phase": "excavation",
+    "question_index": 0,
+    "total_questions_asked": 7,
+    "responses": [
+      {
+        "phase": "awakening",
+        "question": "Hey there! So tell me - what's been on your mind lately?",
+        "response": "User's response to \"\": \"Not much ￼\"\n\nPrevious conversation:\n\n\nGenerate the next penetrating question based on their response.",
+        "timestamp": "2025-11-30T05:28:22.148281",
+        "turn": 0
+      },
+      {
+        "phase": "awakening",
+        "question": "Fair enough. Totally get that. Are you more of a head person or a heart person, would you say?",
+        "response": "User's response to \"\": \"Bit of both probably ￼\"\n\nPrevious conversation:\nQ: \nA: Not much ￼\n\nGenerate the next penetrating question based on their response.",
+        "timestamp": "2025-11-30T05:29:01.555102",
+        "turn": 1
+      },
+      {
+        "phase": "awakening",
+        "question": "Yeah, that makes sense. Do you find one kicks in more in certain situations?",
+        "response": "User's response to \"\": \"Not really\"\n\nPrevious conversation:\nQ: \nA: Not much ￼\n\nQ: \nA: Bit of both probably ￼\n\nGenerate the next penetrating question based on their response.",
+        "timestamp": "2025-11-30T05:29:20.080745",
+        "turn": 2
+      },
+      {
+        "phase": "excavation",
+        "question": "Hmm, okay. When you want something, do you usually go after it or wait to see if it comes to you?",
+        "response": "User's response to \"\": \"One or the other\"\n\nPrevious conversation:\nQ: \nA: Not much ￼\n\nQ: \nA: Bit of both probably ￼\n\nQ: \nA: Not really\n\nGenerate the next penetrating question based on their response.",
+        "timestamp": "2025-11-30T05:30:23.806404",
+        "turn": 3
+      },
+      {
+        "phase": "excavation",
+        "question": "Oh interesting. What usually decides which one it is?",
+        "response": "User's response to \"\": \"The situation sometimes the vibes even\"\n\nPrevious conversation:\nQ: \nA: Not much ￼\n\nQ: \nA: Bit of both probably ￼\n\nQ: \nA: Not really\n\nQ: \nA: One or the other\n\nGenerate the next penetrating question based on their response.",
+        "timestamp": "2025-11-30T05:30:39.156892",
+        "turn": 4
+      },
+      {
+        "phase": "excavation",
+        "question": "What do those vibes usually tell you?",
+        "response": "User's response to \"\": \"How to proceed accordingly and appropriately with maximum scrutiny and fidelity ￼\"\n\nPrevious conversation:\nQ: \nA: Not much ￼\n\nQ: \nA: Bit of both probably ￼\n\nQ: \nA: Not really\n\nQ: \nA: One or the other\n\nQ: \nA: The situation sometimes the vibes even\n\nGenerate the next penetrating question based on their response.",
+        "timestamp": "2025-11-30T05:31:02.898156",
+        "turn": 5
+      },
+      {
+        "phase": "excavation",
+        "question": "So those vibes are pretty serious guides for you then, huh?",
+        "response": "User's response to \"\": \"I guess you could say that\"\n\nPrevious conversation:\nQ: \nA: Not much ￼\n\nQ: \nA: Bit of both probably ￼\n\nQ: \nA: Not really\n\nQ: \nA: One or the other\n\nQ: \nA: The situation sometimes the vibes even\n\nQ: \nA: How to proceed accordingly and appropriately with maximum scrutiny and fidelity ￼\n\nGenerate the next penetrating question based on their response.",
+        "timestamp": "2025-11-30T05:31:20.989044",
+        "turn": 6
+      }
+    ],
+    "rubric": {
+      "hd_type": {
+        "name": "hd_type",
+        "value": "generator",
+        "confidence": 0.3,
+        "evidence": [
+          "response",
+          "response"
+        ],
+        "probed": false,
+        "detected_at": "2025-11-30T05:31:18.284331",
+        "framework": "human_design",
+        "category": "type"
+      }
+    },
+    "insights": [],
+    "pending_probes": [],
+    "profile_complete": false,
+    "conversation_turn": 7,
+    "current_question": "So, you pretty much always follow them?",
+    "completion_percentage": 0.0,
+    "memory": {
+      "messages": [
+        {
+          "role": "user",
+          "content": "User's response to \"\": \"Not much ￼\"\n\nPrevious conversation:\n\n\nGenerate the next penetrating question based on their response.",
+          "timestamp": "2025-11-30T05:28:22.148293",
+          "metadata": {
+            "phase": "awakening",
+            "signals": 1,
+            "sophistication": "casual",
+            "sophistication_score": 0.024
+          }
+        },
+        {
+          "role": "assistant",
+          "content": "Fair enough. Totally get that. Are you more of a head person or a heart person, would you say?",
+          "timestamp": "2025-11-30T05:28:26.725410",
+          "metadata": {
+            "phase": "awakening",
+            "voice": "natural",
+            "sophistication": "casual"
+          }
+        },
+        {
+          "role": "user",
+          "content": "User's response to \"\": \"Bit of both probably ￼\"\n\nPrevious conversation:\nQ: \nA: Not much ￼\n\nGenerate the next penetrating question based on their response.",
+          "timestamp": "2025-11-30T05:29:01.555116",
+          "metadata": {
+            "phase": "awakening",
+            "signals": 1,
+            "sophistication": "casual",
+            "sophistication_score": 0.054400000000000004
+          }
+        },
+        {
+          "role": "assistant",
+          "content": "Yeah, that makes sense. Do you find one kicks in more in certain situations?",
+          "timestamp": "2025-11-30T05:29:05.196881",
+          "metadata": {
+            "phase": "awakening",
+            "voice": "natural",
+            "sophistication": "casual"
+          }
+        },
+        {
+          "role": "user",
+          "content": "User's response to \"\": \"Not really\"\n\nPrevious conversation:\nQ: \nA: Not much ￼\n\nQ: \nA: Bit of both probably ￼\n\nGenerate the next penetrating question based on their response.",
+          "timestamp": "2025-11-30T05:29:20.080756",
+          "metadata": {
+            "phase": "awakening",
+            "signals": 1,
+            "sophistication": "casual",
+            "sophistication_score": 0.07264000000000001
+          }
+        },
+        {
+          "role": "assistant",
+          "content": "Hmm, okay. When you want something, do you usually go after it or wait to see if it comes to you?",
+          "timestamp": "2025-11-30T05:29:24.799828",
+          "metadata": {
+            "phase": "excavation",
+            "voice": "natural",
+            "sophistication": "casual"
+          }
+        },
+        {
+          "role": "user",
+          "content": "User's response to \"\": \"One or the other\"\n\nPrevious conversation:\nQ: \nA: Not much ￼\n\nQ: \nA: Bit of both probably ￼\n\nQ: \nA: Not really\n\nGenerate the next penetrating question based on their response.",
+          "timestamp": "2025-11-30T05:30:23.806415",
+          "metadata": {
+            "phase": "excavation",
+            "signals": 1,
+            "sophistication": "casual",
+            "sophistication_score": 0.083584
+          }
+        },
+        {
+          "role": "assistant",
+          "content": "Oh interesting. What usually decides which one it is?",
+          "timestamp": "2025-11-30T05:30:26.270982",
+          "metadata": {
+            "phase": "excavation",
+            "voice": "natural",
+            "sophistication": "casual"
+          }
+        },
+        {
+          "role": "user",
+          "content": "User's response to \"\": \"The situation sometimes the vibes even\"\n\nPrevious conversation:\nQ: \nA: Not much ￼\n\nQ: \nA: Bit of both probably ￼\n\nQ: \nA: Not really\n\nQ: \nA: One or the other\n\nGenerate the next penetrating question based on their response.",
+          "timestamp": "2025-11-30T05:30:39.156903",
+          "metadata": {
+            "phase": "excavation",
+            "signals": 1,
+            "sophistication": "casual",
+            "sophistication_score": 0.0901504
+          }
+        },
+        {
+          "role": "assistant",
+          "content": "What do those vibes usually tell you?",
+          "timestamp": "2025-11-30T05:30:42.545976",
+          "metadata": {
+            "phase": "excavation",
+            "voice": "natural",
+            "sophistication": "casual"
+          }
+        },
+        {
+          "role": "user",
+          "content": "User's response to \"\": \"How to proceed accordingly and appropriately with maximum scrutiny and fidelity ￼\"\n\nPrevious conversation:\nQ: \nA: Not much ￼\n\nQ: \nA: Bit of both probably ￼\n\nQ: \nA: Not really\n\nQ: \nA: One or the other\n\nQ: \nA: The situation sometimes the vibes even\n\nGenerate the next penetrating question based on their response.",
+          "timestamp": "2025-11-30T05:31:02.898167",
+          "metadata": {
+            "phase": "excavation",
+            "signals": 1,
+            "sophistication": "casual",
+            "sophistication_score": 0.11009023999999999
+          }
+        },
+        {
+          "role": "assistant",
+          "content": "So those vibes are pretty serious guides for you then, huh?",
+          "timestamp": "2025-11-30T05:31:08.092532",
+          "metadata": {
+            "phase": "excavation",
+            "voice": "natural",
+            "sophistication": "casual"
+          }
+        },
+        {
+          "role": "user",
+          "content": "User's response to \"\": \"I guess you could say that\"\n\nPrevious conversation:\nQ: \nA: Not much ￼\n\nQ: \nA: Bit of both probably ￼\n\nQ: \nA: Not really\n\nQ: \nA: One or the other\n\nQ: \nA: The situation sometimes the vibes even\n\nQ: \nA: How to proceed accordingly and appropriately with maximum scrutiny and fidelity ￼\n\nGenerate the next penetrating question based on their response.",
+          "timestamp": "2025-11-30T05:31:20.989055",
+          "metadata": {
+            "phase": "excavation",
+            "signals": 1,
+            "sophistication": "casual",
+            "sophistication_score": 0.12205414399999999
+          }
+        },
+        {
+          "role": "assistant",
+          "content": "So, you pretty much always follow them?",
+          "timestamp": "2025-11-30T05:31:24.536944",
+          "metadata": {
+            "phase": "excavation",
+            "voice": "natural",
+            "sophistication": "casual"
+          }
+        }
+      ],
+      "context": {}
+    },
+    "active_signals": [],
+    "current_hypotheses": []
+  }
+}
