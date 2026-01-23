@@ -1,0 +1,28 @@
+{
+    "name": "human_design",
+    "version": "1.0.0",
+    "layer": "calculation",
+    "description": "Human Design bodygraph calculation and interpretation",
+    "subscriptions": [
+        "USER_BIRTH_DATA_UPDATED"
+    ],
+    "provides": [
+        "type",
+        "strategy",
+        "authority",
+        "profile",
+        "centers",
+        "gates",
+        "channels",
+        "incarnation_cross"
+    ],
+    "dependencies": [
+        "kerykeion",
+        "pyswisseph"
+    ],
+    "llm_config": {
+        "model": "anthropic/claude-3.5-sonnet",
+        "temperature": 0.7,
+        "system_prompt": "You are a compassionate Human Design expert providing somatic, trauma-informed insights."
+    }
+}

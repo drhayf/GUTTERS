@@ -1,0 +1,40 @@
+{
+    "name": "astrology",
+    "version": "1.0.0",
+    "layer": "calculation",
+    "description": "Western tropical astrology calculations",
+    "capabilities": [
+        "natal_chart",
+        "transits",
+        "progressions"
+    ],
+    "subscriptions": [
+        "user.birth_data_updated"
+    ],
+    "config_schema": {
+        "orb_tolerance": {
+            "type": "float",
+            "default": 8.0,
+            "min": 0,
+            "max": 15,
+            "description": "Maximum orb in degrees for aspect detection"
+        },
+        "house_system": {
+            "type": "string",
+            "default": "placidus",
+            "options": [
+                "placidus",
+                "koch",
+                "whole_sign",
+                "equal",
+                "campanus"
+            ],
+            "description": "House system for chart calculation"
+        },
+        "include_asteroids": {
+            "type": "boolean",
+            "default": false,
+            "description": "Include asteroid positions (Chiron, Ceres, etc.)"
+        }
+    }
+}

@@ -1,0 +1,19 @@
+{
+    "name": "synthesis",
+    "version": "1.0.0",
+    "layer": "intelligence",
+    "description": "Synthesizes insights across all calculation modules into unified profile",
+    "subscriptions": [
+        "module.profile_calculated"
+    ],
+    "provides": [
+        "unified_profile",
+        "synthesis"
+    ],
+    "dependencies": [],
+    "llm_config": {
+        "default_model": "anthropic/claude-3.5-sonnet",
+        "temperature": 0.7,
+        "system_prompt": "You are a master synthesist who finds profound connections across wisdom traditions. Your insights are warm, practical, and deeply personal."
+    }
+}

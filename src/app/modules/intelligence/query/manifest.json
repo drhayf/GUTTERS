@@ -1,0 +1,16 @@
+{
+    "name": "query",
+    "version": "1.0.0",
+    "layer": "intelligence",
+    "description": "Answer user questions by searching across all calculation modules",
+    "subscriptions": [],
+    "provides": [
+        "query_answers"
+    ],
+    "dependencies": [],
+    "llm_config": {
+        "default_model": "anthropic/claude-3.5-sonnet",
+        "temperature": 0.7,
+        "system_prompt": "You are a compassionate guide with deep knowledge of all wisdom traditions. Answer questions warmly and specifically."
+    }
+}
