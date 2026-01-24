@@ -1,0 +1,180 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-9.0.2, pluggy-1.6.0 -- C:\dev\GUTTERS\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\dev\GUTTERS
+configfile: pyproject.toml
+plugins: anyio-4.12.1, Faker-37.3.0, langsmith-0.6.4, asyncio-1.3.0, mock-3.14.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 4 items
+
+tests/modules/features/test_multi_conversation.py::test_create_multiple_master_conversations FAILED [ 25%]
+tests/modules/features/test_multi_conversation.py::test_messages_stay_separate PASSED [ 50%]
+tests/modules/features/test_multi_conversation.py::test_cannot_delete_only_master_conversation FAILED [ 75%]
+tests/modules/features/test_multi_conversation.py::test_search_across_conversations PASSED [100%]
+
+================================== FAILURES ===================================
+__________________ test_create_multiple_master_conversations __________________
+
+seeded_user = 5
+db = <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x00000204B3D75F70>
+
+    @pytest.mark.asyncio
+    async def test_create_multiple_master_conversations(seeded_user, db):
+        """Test that multiple master conversations can be created."""
+        from src.app.modules.features.chat.session_manager import SessionManager
+    
+        manager = SessionManager()
+    
+        # Create default
+        default = await manager.get_default_master_conversation(seeded_user, db)
+        assert default.conversation_name == "General" or default.name == "General"
+    
+        # Create work conversation
+        work = await manager.create_master_conversation(seeded_user, "Work Planning", db)
+        assert work.conversation_name == "Work Planning"
+        assert work.session_type == SessionType.MASTER.value
+    
+        # Create health conversation
+        health = await manager.create_master_conversation(seeded_user, "Health & Wellness", db)
+        assert health.conversation_name == "Health & Wellness"
+    
+        # Verify all exist
+>       conversations = await manager.get_master_conversations(seeded_user, False, db)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\modules\features\test_multi_conversation.py:31: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <src.app.modules.features.chat.session_manager.SessionManager object at 0x00000204B3D750D0>
+user_id = 5, db = False
+include_archived = <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x00000204B3D75F70>
+
+    async def get_master_conversations(
+        self, user_id: int, db: AsyncSession, include_archived: bool = False
+    ) -> List[ChatSession]:
+        """
+        Get all Master Chat conversations for user.
+    
+        Args:
+            user_id: User ID
+            include_archived: Include archived conversations
+            db: Database session
+    
+        Returns:
+            List of master conversations, sorted by updated_at desc
+        """
+        query = select(ChatSession).where(
+            ChatSession.user_id == user_id, ChatSession.session_type == SessionType.MASTER.value
+        )
+    
+        if not include_archived:
+            # Filter out archived (check if key doesn't exist or is not true)
+            # Using astext casting for JSONB value comparison
+            query = query.where(
+                or_(ChatSession.meta["is_archived"].astext.is_(None), ChatSession.meta["is_archived"].astext != "true")
+            )
+    
+        query = query.order_by(ChatSession.updated_at.desc())
+    
+>       result = await db.execute(query)
+                       ^^^^^^^^^^
+E       AttributeError: 'bool' object has no attribute 'execute'
+
+src\app\modules\features\chat\session_manager.py:194: AttributeError
+_________________ test_cannot_delete_only_master_conversation _________________
+
+seeded_user = 5
+db = <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x00000204B3DEF8F0>
+
+    @pytest.mark.asyncio
+    async def test_cannot_delete_only_master_conversation(seeded_user, db):
+        """Test that you can't delete the only master conversation."""
+        from src.app.modules.features.chat.session_manager import SessionManager
+    
+        manager = SessionManager()
+    
+        # Get default (only master conversation)
+        # Ensure ensuring default creates one if it doesn't exist
+        default = await manager.get_default_master_conversation(seeded_user, db)
+    
+        # Try to delete
+>       with pytest.raises(ValueError, match="Cannot delete the only master conversation"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests\modules\features\test_multi_conversation.py:79: Failed
+============================== warnings summary ===============================
+src\app\modules\intelligence\synthesis\schemas.py:21
+  C:\dev\GUTTERS\src\app\modules\intelligence\synthesis\schemas.py:21: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class UnifiedProfile(BaseModel):
+
+src\app\modules\intelligence\query\schemas.py:9
+  C:\dev\GUTTERS\src\app\modules\intelligence\query\schemas.py:9: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class QueryRequest(BaseModel):
+
+src\app\modules\intelligence\hypothesis\models.py:32
+  C:\dev\GUTTERS\src\app\modules\intelligence\hypothesis\models.py:32: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class Hypothesis(BaseModel):
+
+tests/modules/features/test_multi_conversation.py::test_create_multiple_master_conversations
+tests/modules/features/test_multi_conversation.py::test_messages_stay_separate
+tests/modules/features/test_multi_conversation.py::test_cannot_delete_only_master_conversation
+tests/modules/features/test_multi_conversation.py::test_search_across_conversations
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:43: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    start_date = datetime.utcnow() - timedelta(days=days)
+
+tests/modules/features/test_multi_conversation.py: 244 warnings
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:47: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    while current_date < datetime.utcnow():
+
+tests/modules/features/test_multi_conversation.py::test_create_multiple_master_conversations
+tests/modules/features/test_multi_conversation.py::test_messages_stay_separate
+tests/modules/features/test_multi_conversation.py::test_cannot_delete_only_master_conversation
+tests/modules/features/test_multi_conversation.py::test_search_across_conversations
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:147: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat()
+
+tests/modules/features/test_multi_conversation.py::test_create_multiple_master_conversations
+tests/modules/features/test_multi_conversation.py::test_messages_stay_separate
+tests/modules/features/test_multi_conversation.py::test_cannot_delete_only_master_conversation
+tests/modules/features/test_multi_conversation.py::test_search_across_conversations
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:157: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat()
+
+tests/modules/features/test_multi_conversation.py::test_create_multiple_master_conversations
+tests/modules/features/test_multi_conversation.py::test_messages_stay_separate
+tests/modules/features/test_multi_conversation.py::test_cannot_delete_only_master_conversation
+tests/modules/features/test_multi_conversation.py::test_search_across_conversations
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:167: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat()
+
+tests/modules/features/test_multi_conversation.py::test_create_multiple_master_conversations
+tests/modules/features/test_multi_conversation.py::test_messages_stay_separate
+tests/modules/features/test_multi_conversation.py::test_cannot_delete_only_master_conversation
+tests/modules/features/test_multi_conversation.py::test_search_across_conversations
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:176: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat()
+
+tests/modules/features/test_multi_conversation.py::test_create_multiple_master_conversations
+tests/modules/features/test_multi_conversation.py::test_messages_stay_separate
+tests/modules/features/test_multi_conversation.py::test_cannot_delete_only_master_conversation
+tests/modules/features/test_multi_conversation.py::test_search_across_conversations
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:186: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat()
+
+tests/modules/features/test_multi_conversation.py::test_create_multiple_master_conversations
+tests/modules/features/test_multi_conversation.py::test_messages_stay_separate
+tests/modules/features/test_multi_conversation.py::test_cannot_delete_only_master_conversation
+tests/modules/features/test_multi_conversation.py::test_search_across_conversations
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:205: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    start_date = datetime.utcnow() - timedelta(days=days)
+
+tests/modules/features/test_multi_conversation.py: 245 warnings
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:209: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    while current_date < datetime.utcnow():
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/modules/features/test_multi_conversation.py::test_create_multiple_master_conversations
+FAILED tests/modules/features/test_multi_conversation.py::test_cannot_delete_only_master_conversation
+================== 2 failed, 2 passed, 520 warnings in 5.83s ==================

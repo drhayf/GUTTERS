@@ -53,6 +53,8 @@ uv run ruff format src/app
 ❌ **Bypass migrations** - ALWAYS generate after model changes  
 ❌ **Hardcode orbs, thresholds, parameters** - Database JSONB configs  
 ❌ **Commit secrets** - Use `.env` (gitignored)
+❌ **Use naive datetimes** - ALWAYS use `timezone.utc` for comparisons and storage
+❌ **Open new DB sessions in module logic** - ALWAYS pass `db` session for test isolation
 
 ### ALWAYS (Non-Negotiable)
 
@@ -64,6 +66,8 @@ uv run ruff format src/app
 ✅ **Migration after models** - Review auto-generated SQL  
 ✅ **Dynamic everything** - No hardcoded magic numbers  
 ✅ **Production-ready** - Complete implementations, no shortcuts
+✅ **Aware datetimes** - Use `datetime.now(timezone.utc)`
+✅ **Session passing** - Pass `db` to modules to enable transaction scope in tests
 
 ## Module Development Pattern
 
@@ -178,6 +182,8 @@ async def test_calculation_accuracy():
 - Database: `skills/database-patterns/SKILL.md`
 - Events: `skills/event-communication/SKILL.md`
 - Testing: `skills/testing-standards/SKILL.md`
+- Tracking: `skills/tracking-module-patterns/SKILL.md`
+- High-Fidelity Tests: `skills/high-fidelity-testing/SKILL.md`
 
 ---
 

@@ -5,7 +5,7 @@ Typed Pydantic models for Genesis event payloads.
 These ensure type safety when publishing/consuming Genesis events.
 """
 
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -14,18 +14,17 @@ from pydantic import BaseModel, Field
 class GenesisUncertaintyPayload(BaseModel):
     """
     Payload for GENESIS_UNCERTAINTY_DECLARED event.
-    
+
     Published when a module declares uncertainties after calculation.
     """
+
     user_id: int = Field(description="User ID")
     session_id: str = Field(description="Conversation/session ID")
     module: str = Field(description="Module that declared uncertainties")
-    fields: list[dict[str, Any]] = Field(
-        description="Serialized UncertaintyField objects"
-    )
+    fields: list[dict[str, Any]] = Field(description="Serialized UncertaintyField objects")
     source_accuracy: str = Field(description="Source calculation accuracy level")
     declared_at: str = Field(description="ISO datetime when declared")
-    
+
     @classmethod
     def from_declaration(cls, declaration: Any) -> "GenesisUncertaintyPayload":
         """Create payload from UncertaintyDeclaration."""
@@ -42,9 +41,10 @@ class GenesisUncertaintyPayload(BaseModel):
 class GenesisRefinementRequestedPayload(BaseModel):
     """
     Payload for GENESIS_REFINEMENT_REQUESTED event.
-    
+
     Published when Genesis prepares a refinement probe for conversation.
     """
+
     user_id: int = Field(description="User ID")
     session_id: str = Field(description="Conversation/session ID")
     field: str = Field(description="Field being refined (e.g., 'rising_sign')")
@@ -56,9 +56,10 @@ class GenesisRefinementRequestedPayload(BaseModel):
 class GenesisConfidenceUpdatedPayload(BaseModel):
     """
     Payload for GENESIS_CONFIDENCE_UPDATED event.
-    
+
     Published when field confidence changes after refinement.
     """
+
     user_id: int = Field(description="User ID")
     session_id: str = Field(description="Conversation/session ID")
     field: str = Field(description="Field that was updated")
@@ -71,10 +72,11 @@ class GenesisConfidenceUpdatedPayload(BaseModel):
 class GenesisFieldConfirmedPayload(BaseModel):
     """
     Payload for GENESIS_FIELD_CONFIRMED event.
-    
+
     Published when a field reaches confirmation threshold.
     Modules should subscribe to this to trigger recalculation.
     """
+
     user_id: int = Field(description="User ID")
     session_id: str = Field(description="Conversation/session ID")
     field: str = Field(description="Field that was confirmed")
@@ -82,16 +84,11 @@ class GenesisFieldConfirmedPayload(BaseModel):
     confirmed_value: str = Field(description="The confirmed value")
     confidence: float = Field(ge=0.0, le=1.0, description="Confirmation confidence")
     trigger_recalculation: bool = Field(
-        default=True,
-        description="Whether modules should recalculate with confirmed data"
+        default=True, description="Whether modules should recalculate with confirmed data"
     )
-    
+
     # Additional context for recalculation
-    refinement_source: str = Field(
-        default="conversation",
-        description="How the confirmation was achieved"
-    )
+    refinement_source: str = Field(default="conversation", description="How the confirmation was achieved")
     confirmed_at: str = Field(
-        default_factory=lambda: datetime.utcnow().isoformat(),
-        description="ISO datetime of confirmation"
+        default_factory=lambda: datetime.now(UTC).isoformat(), description="ISO datetime of confirmation"
     )

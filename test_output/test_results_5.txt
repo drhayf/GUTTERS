@@ -1,0 +1,86 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-9.0.2, pluggy-1.6.0 -- C:\dev\GUTTERS\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\dev\GUTTERS
+configfile: pyproject.toml
+plugins: anyio-4.12.1, Faker-37.3.0, langsmith-0.6.4, asyncio-1.3.0, mock-3.14.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 4 items
+
+tests/modules/intelligence/test_observable_ai.py::test_query_generates_trace PASSED [ 25%]
+tests/modules/intelligence/test_observable_ai.py::test_vector_search_tracked_in_trace PASSED [ 50%]
+tests/modules/intelligence/test_observable_ai.py::test_trace_stored_in_message_metadata PASSED [ 75%]
+tests/modules/intelligence/test_observable_ai.py::test_trace_latency_calculation PASSED [100%]
+
+============================== warnings summary ===============================
+src\app\modules\intelligence\synthesis\schemas.py:21
+  C:\dev\GUTTERS\src\app\modules\intelligence\synthesis\schemas.py:21: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class UnifiedProfile(BaseModel):
+
+src\app\modules\intelligence\query\schemas.py:8
+  C:\dev\GUTTERS\src\app\modules\intelligence\query\schemas.py:8: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class QueryRequest(BaseModel):
+
+src\app\modules\intelligence\hypothesis\models.py:32
+  C:\dev\GUTTERS\src\app\modules\intelligence\hypothesis\models.py:32: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class Hypothesis(BaseModel):
+
+tests/modules/intelligence/test_observable_ai.py::test_query_generates_trace
+tests/modules/intelligence/test_observable_ai.py::test_vector_search_tracked_in_trace
+tests/modules/intelligence/test_observable_ai.py::test_trace_stored_in_message_metadata
+tests/modules/intelligence/test_observable_ai.py::test_trace_latency_calculation
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:43: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    start_date = datetime.utcnow() - timedelta(days=days)
+
+tests/modules/intelligence/test_observable_ai.py: 245 warnings
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:47: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    while current_date < datetime.utcnow():
+
+tests/modules/intelligence/test_observable_ai.py::test_query_generates_trace
+tests/modules/intelligence/test_observable_ai.py::test_vector_search_tracked_in_trace
+tests/modules/intelligence/test_observable_ai.py::test_trace_stored_in_message_metadata
+tests/modules/intelligence/test_observable_ai.py::test_trace_latency_calculation
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:147: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat()
+
+tests/modules/intelligence/test_observable_ai.py::test_query_generates_trace
+tests/modules/intelligence/test_observable_ai.py::test_vector_search_tracked_in_trace
+tests/modules/intelligence/test_observable_ai.py::test_trace_stored_in_message_metadata
+tests/modules/intelligence/test_observable_ai.py::test_trace_latency_calculation
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:157: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat()
+
+tests/modules/intelligence/test_observable_ai.py::test_query_generates_trace
+tests/modules/intelligence/test_observable_ai.py::test_vector_search_tracked_in_trace
+tests/modules/intelligence/test_observable_ai.py::test_trace_stored_in_message_metadata
+tests/modules/intelligence/test_observable_ai.py::test_trace_latency_calculation
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:167: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat()
+
+tests/modules/intelligence/test_observable_ai.py::test_query_generates_trace
+tests/modules/intelligence/test_observable_ai.py::test_vector_search_tracked_in_trace
+tests/modules/intelligence/test_observable_ai.py::test_trace_stored_in_message_metadata
+tests/modules/intelligence/test_observable_ai.py::test_trace_latency_calculation
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:176: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat()
+
+tests/modules/intelligence/test_observable_ai.py::test_query_generates_trace
+tests/modules/intelligence/test_observable_ai.py::test_vector_search_tracked_in_trace
+tests/modules/intelligence/test_observable_ai.py::test_trace_stored_in_message_metadata
+tests/modules/intelligence/test_observable_ai.py::test_trace_latency_calculation
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:186: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat()
+
+tests/modules/intelligence/test_observable_ai.py::test_query_generates_trace
+tests/modules/intelligence/test_observable_ai.py::test_vector_search_tracked_in_trace
+tests/modules/intelligence/test_observable_ai.py::test_trace_stored_in_message_metadata
+tests/modules/intelligence/test_observable_ai.py::test_trace_latency_calculation
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:205: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    start_date = datetime.utcnow() - timedelta(days=days)
+
+tests/modules/intelligence/test_observable_ai.py: 246 warnings
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:209: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    while current_date < datetime.utcnow():
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================= 4 passed, 522 warnings in 71.18s (0:01:11) ==================

@@ -18,7 +18,7 @@ class ModuleProfile(Base):
     __tablename__ = "module_profiles"
     
     # Primary key
-    id: Mapped[int] = mapped_column(primary_key=True, init=False)
+    id: Mapped[int] = mapped_column(primary_key=True)
     
     # Foreign key (indexed)
     user_id: Mapped[int] = mapped_column(
@@ -27,13 +27,13 @@ class ModuleProfile(Base):
     )
     
     # JSONB for flexible data (REQUIRED for profiles/configs)
-    data: Mapped[dict] = mapped_column(JSONB, default_factory=dict)
-    config: Mapped[dict] = mapped_column(JSONB, default_factory=dict)
+    data: Mapped[dict] = mapped_column(JSONB, default=dict)
+    config: Mapped[dict] = mapped_column(JSONB, default=dict)
     
     # Timestamps (ALWAYS include)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default_factory=lambda: datetime.now(UTC)
+        default=lambda: datetime.now(UTC)
     )
     updated_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
@@ -45,7 +45,7 @@ class ModuleProfile(Base):
 ```python
 # CORRECT - JSONB for flexibility
 natal_chart: Mapped[dict] = mapped_column(JSONB)
-config: Mapped[dict] = mapped_column(JSONB, default_factory=dict)
+config: Mapped[dict] = mapped_column(JSONB, default=dict)
 
 # Query JSONB
 result = await db.execute(
@@ -53,6 +53,41 @@ result = await db.execute(
         Profile.data["sun"]["sign"].astext == "Aries"
     )
 )
+```
+
+## pgvector and Semantic Search (Advanced)
+
+For semantic search, use `pgvector`. This requires a custom model and specific indexes.
+
+```python
+from pgvector.sqlalchemy import Vector
+from sqlalchemy import Index
+
+class Embedding(Base):
+    __tablename__ = "embeddings"
+    
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    content: Mapped[str] = mapped_column(Text)
+    
+    # 1536 is standard for OpenAI / text-embedding-3-small
+    embedding: Mapped[Vector] = mapped_column(Vector(1536))
+    
+    # Metadata for filtering
+    content_metadata: Mapped[dict] = mapped_column(JSONB, default=dict)
+    
+    __table_args__ = (
+        # Cosine similarity index for performance
+        Index(
+            'ix_embeddings_vector', 
+            'embedding', 
+            postgresql_using='ivfflat', # or 'hnsw'
+            postgresql_with={'lists': 100},
+            postgresql_ops={'embedding': 'vector_cosine_ops'}
+        ),
+        # GIN index for JSONB metadata filtering
+        Index('ix_embeddings_metadata', 'content_metadata', postgresql_using='gin'),
+    )
 ```
 
 ## Migration Workflow

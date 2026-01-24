@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install:*)",
+      "Bash(pip freeze:*)",
+      "Bash(alembic --help:*)",
+      "Bash(python -m alembic:*)",
+      "Bash(python:*)",
+      "Bash(where:*)",
+      "Bash(where pip:*)",
+      "Bash(echo:*)",
+      "Bash(pip show:*)",
+      "Bash(.venv/Scripts/python.exe:*)",
+      "Bash(.venv/Scripts/pip.exe:*)",
+      "Bash(source .venv/Scripts/activate)",
+      "Bash(alembic --version:*)",
+      "Bash(alembic revision:*)"
+    ]
+  }
+}

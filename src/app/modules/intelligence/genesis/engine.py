@@ -7,7 +7,7 @@ uncertainty → hypothesis → probe → confirmation → recalculation.
 
 import logging
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Optional
 
 from pydantic import BaseModel
 
@@ -562,6 +562,41 @@ class GenesisEngine:
             h for h in self._hypotheses.get(user_id, {}).values()
             if h.resolved and h.resolution_method == "confirmed"
         ]
+
+    async def get_hypothesis_for_field(
+        self,
+        user_id: int,
+        field: str
+    ) -> Optional["TheoryHypothesis"]:
+        """
+        Get best theory from Hypothesis module for uncertain field.
+        
+        This queries the Hypothesis module for high-level theories that can
+        inform Genesis's field-specific refinement strategies.
+        """
+        from ...hypothesis.storage import HypothesisStorage
+        from ...hypothesis.models import Hypothesis as TheoryHypothesis
+        
+        storage = HypothesisStorage()
+        hypotheses = await storage.get_hypotheses(user_id, min_confidence=0.60)
+        
+        # Map field to theory hypothesis type
+        field_map = {
+            "rising_sign": "rising_sign",
+            "birth_time": "birth_time"
+        }
+        
+        hypothesis_type = field_map.get(field)
+        if not hypothesis_type:
+            return None
+        
+        relevant = [h for h in hypotheses if h.hypothesis_type.value == hypothesis_type]
+        
+        if not relevant:
+            return None
+        
+        # Return highest confidence theory
+        return max(relevant, key=lambda h: h.confidence)
 
 
 # Singleton instance

@@ -7,6 +7,14 @@ description: Patterns for building intelligence layer modules (Synthesis, Query,
 
 Intelligence modules sit above calculation modules in the GUTTERS architecture. They consume, synthesize, and query data from multiple calculation modules.
 
+## The Intelligence Ecosystem
+
+The intelligence layer follows a clear functional hierarchy:
+1. **The Analyst (Observer)**: Detects raw patterns and correlations in historical data.
+2. **The Scientist (Hypothesis)**: Transforms findings into testable claims with a confidence lifecycle.
+3. **The Guide (Synthesis)**: Narrates confirmed theories into a unified profile.
+4. **The Oracle (Query)**: Answers direct questions using all of the above.
+
 ## Architecture Overview
 
 ```
@@ -97,60 +105,57 @@ Aggregates data from all calculation modules into unified profile.
   "subscriptions": ["module.profile_calculated"],
   "provides": ["unified_profile"],
   "llm": {
-    "default_model": "anthropic/claude-3.5-sonnet",
+    "default_tier": "premium",
     "temperature": 0.7
   }
 }
 ```
 
-### synthesizer.py Pattern
-```python
-from src.app.modules.registry import ModuleRegistry
-from src.app.core.ai.llm_factory import get_llm
+### synthesizer.py (Hierarchical Pattern)
 
-ALLOWED_MODELS = [
-    "anthropic/claude-3.5-sonnet",
-    "anthropic/claude-opus-4.5-20251101",
-    "qwen/qwen-2.5-72b-instruct:free",
-]
-DEFAULT_MODEL = ALLOWED_MODELS[0]
+Large intelligence modules should use a hierarchical or "Master/Worker" pattern to manage complexity.
+
+```python
+from src.app.core.llm.config import get_premium_llm, get_standard_llm, LLMTier
 
 class ProfileSynthesizer:
-    def __init__(self, model_id: str = DEFAULT_MODEL, temperature: float = 0.7):
-        self.model_id = model_id
-        self.temperature = temperature
-        self._llm = None  # Lazy load
+    def __init__(self, tier: LLMTier = LLMTier.PREMIUM):
+        self.tier = tier
+        self._llm = None
     
     @property
     def llm(self):
+        # Lazy load to avoid circular dependency at instantiation
         if self._llm is None:
-            self._llm = get_llm(self.model_id, self.temperature)
+            from src.app.core.llm.config import LLMConfig
+            self._llm = LLMConfig.get_llm(self.tier)
         return self._llm
-    
-    async def synthesize_profile(self, user_id: int, db: AsyncSession):
-        # 1. Get calculated modules for this user
-        calculated = await ModuleRegistry.get_calculated_modules_for_user(user_id, db)
+
+    async def synthesize_profile(self, user_id, db):
+        # 🚩 CRITICAL: Deferred imports to avoid circular dependencies
+        from .module_synthesis import ModuleSynthesizer
+        from app.modules.registry import ModuleRegistry
+        from app.core.memory.active_memory import get_active_memory
         
-        if not calculated:
-            return self._empty_synthesis()
+        # 1. Initialize workers
+        worker = ModuleSynthesizer(self.llm)
+        memory = get_active_memory()
+        await memory.initialize()
         
-        # 2. Gather data from each module
-        module_data = {}
-        for module_name in calculated:
-            data = await ModuleRegistry.get_user_profile_data(user_id, db, module_name)
-            module_data[module_name] = data
+        # 2. Gather diverse data (Parallel possible)
+        astro_data = await memory.get_module_output(user_id, "astrology")
+        hd_data = await memory.get_module_output(user_id, "human_design")
         
-        # 3. Extract insights per module
-        insights = {name: self._extract_insights(name, data) 
-                   for name, data in module_data.items()}
+        # 3. Layered synthesis
+        astro_insights = await worker.synthesize_astrology(astro_data)
         
-        # 4. Build LLM prompt and call
-        try:
-            prompt = self._build_synthesis_prompt(insights)
-            response = await self.llm.ainvoke([...])
-            return self._parse_response(response)
-        except Exception:
-            return self._fallback_synthesis(insights)
+        # 4. Master synthesis pass
+        prompt = self._build_master_prompt(astro_insights, ...)
+        synthesis = await self.llm.ainvoke(prompt)
+        
+        # 5. Cache & Publish
+        await memory.set_master_synthesis(user_id, synthesis)
+        return synthesis
 ```
 
 ---
@@ -194,7 +199,60 @@ class QueryEngine:
         except Exception:
             # Fallback: consult all
             return ["astrology", "human_design", "numerology"]
+
+---
+
+## Pattern Detection & Correlation Pattern (The Observer)
+
+Intelligence modules that detect trends across time and cosmic events.
+
+### Statistical Tools
+These modules typically use `scipy` and `numpy` for correlation analysis:
+```python
+import numpy as np
+from scipy import stats
+
+# Calculate Pearson correlation between Kp index and reported headache
+correlation, p_value = stats.pearsonr(kp_values, symptom_scores)
 ```
+
+### Finding Storage
+Findings are stored in `UserProfile.data['observer_findings']` and cached in Redis for fast access during synthesis.
+```
+
+---
+
+## Hypothesis & Theory Pattern (The Scientist)
+
+The "Scientist" pattern takes anonymous findings from the Observer and turns them into testable self-knowlege theories.
+
+### The Theory Lifecycle
+```mermaid
+graph LR
+    F[Forming] --> T[Testing]
+    T --> C[Confirmed]
+    T --> R[Rejected]
+    T --> S[Stale]
+```
+
+1. **Forming**: Generated from Observer findings (Confidence 0.4 - 0.6).
+2. **Testing**: Accumulating evidence from journal entries or cosmic events (Confidence 0.6 - 0.85).
+3. **Confirmed**: High confidence (0.85+), becomes part of the permanent Profile.
+4. **Rejected**: Contradicted by data (Confidence < 0.4 + contradictions).
+5. **Stale**: No new evidence in 60 days.
+
+### Confidence Update Rule
+Use a simple weighted update to avoid over-sensitivity:
+```python
+# Supporting evidence (+5%)
+hypothesis.confidence = min(hypothesis.confidence + 0.05, 1.0)
+# Contradictory evidence (-10%)
+hypothesis.confidence = max(hypothesis.confidence - 0.10, 0.0)
+```
+
+### Integration Points
+- **Genesis Refinement**: Hypotheses can be queried to provide "Refinement Hints" (e.g., "The user may be a 4:30 AM birth based on solar sensitivity").
+- **StateTracker**: Hypotheses contribute to the "Self-Discovery" domain progress.
 
 ---
 
@@ -209,7 +267,7 @@ Store and retrieve user's preferred LLM model.
     "astrology": {...},
     "human_design": {...},
     "preferences": {
-        "llm_model": "anthropic/claude-3.5-sonnet"
+        "llm_model": "anthropic/claude-sonnet-4.5"
     }
 }
 ```
@@ -299,6 +357,8 @@ async def trigger_synthesis(
 - [ ] Stores user preferences in `UserProfile.data['preferences']`
 - [ ] API endpoints have auth dependencies
 - [ ] Tests patch `get_llm` at module import location
+- [ ] **Circular Safety:** Uses deferred imports inside `synthesize_profile` or similar core methods
+- [ ] **High Fidelity:** Tested with deterministic seed data via `SeedDataGenerator`
 
 ---
 
@@ -308,6 +368,6 @@ async def trigger_synthesis(
 # Always use src.app prefix from project root
 from src.app.modules.registry import ModuleRegistry
 from src.app.modules.base import BaseModule
-from src.app.core.ai.llm_factory import get_llm
+from src.app.core.llm.config import get_premium_llm, get_standard_llm
 from src.app.models.user_profile import UserProfile
 ```

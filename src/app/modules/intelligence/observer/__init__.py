@@ -1,6 +1,2 @@
-"""
-GUTTERS - Observer Module
-
-Pattern observation and learning system that identifies correlations
-between cosmic conditions and user experiences.
-"""
+from .module import ObserverModule
+from .observer import Observer

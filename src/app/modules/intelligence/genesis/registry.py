@@ -162,10 +162,12 @@ class UncertaintyRegistry:
         from .declarations import (
             AstrologyUncertaintyExtractor,
             HumanDesignUncertaintyExtractor,
+            SynthesisUncertaintyExtractor,
         )
         
         cls.register(AstrologyUncertaintyExtractor())
         cls.register(HumanDesignUncertaintyExtractor())
+        cls.register(SynthesisUncertaintyExtractor())
         # Numerology has no uncertainties (doesn't use birth time)
         
         cls._initialized = True

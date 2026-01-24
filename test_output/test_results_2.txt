@@ -1,0 +1,520 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-9.0.2, pluggy-1.6.0 -- C:\dev\GUTTERS\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\dev\GUTTERS
+configfile: pyproject.toml
+plugins: anyio-4.12.1, Faker-37.3.0, langsmith-0.6.4, asyncio-1.3.0, mock-3.14.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 4 items
+
+tests/modules/intelligence/test_observable_ai.py::test_query_generates_trace PASSED [ 25%]
+tests/modules/intelligence/test_observable_ai.py::test_vector_search_tracked_in_trace FAILED [ 50%]
+tests/modules/intelligence/test_observable_ai.py::test_trace_stored_in_message_metadata FAILED [ 75%]
+tests/modules/intelligence/test_observable_ai.py::test_trace_latency_calculation PASSED [100%]
+
+================================== FAILURES ===================================
+_____________________ test_vector_search_tracked_in_trace _____________________
+
+self = <sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_cursor object at 0x0000024D4F3E9C60>
+operation = 'INSERT INTO embeddings (user_id, content, embedding, created_at, updated_at) VALUES ($1::INTEGER, $2::VARCHAR, $3, $4::TIMESTAMP WITH TIME ZONE, $5::TIMESTAMP WITH TIME ZONE) RETURNING embeddings.id'
+parameters = (5, 'Test journal entry', '[-0.01369080413132906,-0.006273414473980665,0.018864525482058525,-0.029846690595149994,-0.0...701535, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 1, 24, 0, 34, 26, 701535, tzinfo=datetime.timezone.utc))
+
+    async def _prepare_and_execute(self, operation, parameters):
+        adapt_connection = self._adapt_connection
+    
+        async with adapt_connection._execute_mutex:
+            if not adapt_connection._started:
+                await adapt_connection._start_transaction()
+    
+            if parameters is None:
+                parameters = ()
+    
+            try:
+                prepared_stmt, attributes = await adapt_connection._prepare(
+                    operation, self._invalidate_schema_cache_asof
+                )
+    
+                if attributes:
+                    self.description = [
+                        (
+                            attr.name,
+                            attr.type.oid,
+                            None,
+                            None,
+                            None,
+                            None,
+                            None,
+                        )
+                        for attr in attributes
+                    ]
+                else:
+                    self.description = None
+    
+                if self.server_side:
+                    self._cursor = await prepared_stmt.cursor(*parameters)
+                    self.rowcount = -1
+                else:
+>                   self._rows = deque(await prepared_stmt.fetch(*parameters))
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:550: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv\Lib\site-packages\asyncpg\prepared_stmt.py:176: in fetch
+    data = await self.__bind_execute(args, 0, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\asyncpg\prepared_stmt.py:267: in __bind_execute
+    data, status, _ = await self.__do_execute(
+.venv\Lib\site-packages\asyncpg\prepared_stmt.py:256: in __do_execute
+    return await executor(protocol)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+>   ???
+E   asyncpg.exceptions.NotNullViolationError: null value in column "content_metadata" of relation "embeddings" violates not-null constraint
+E   DETAIL:  Failing row contains (93, 5, Test journal entry, [-0.013690804,-0.0062734145,0.018864525,-0.02984669,-0.015927091..., null, 2026-01-24 00:34:26.701535+00, 2026-01-24 00:34:26.701535+00).
+
+asyncpg\\protocol\\protocol.pyx:206: NotNullViolationError
+
+The above exception was the direct cause of the following exception:
+
+self = <sqlalchemy.engine.base.Connection object at 0x0000024D4F1ED280>
+dialect = <sqlalchemy.dialects.postgresql.asyncpg.PGDialect_asyncpg object at 0x0000024D192474D0>
+context = <sqlalchemy.dialects.postgresql.asyncpg.PGExecutionContext_asyncpg object at 0x0000024D4F1EF050>
+statement = <sqlalchemy.dialects.postgresql.asyncpg.PGCompiler_asyncpg object at 0x0000024D4F1EFC80>
+parameters = [(5, 'Test journal entry', '[-0.01369080413132906,-0.006273414473980665,0.018864525482058525,-0.029846690595149994,-0....01535, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 1, 24, 0, 34, 26, 701535, tzinfo=datetime.timezone.utc))]
+
+    def _exec_single_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+        statement: Union[str, Compiled],
+        parameters: Optional[_AnyMultiExecuteParams],
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for a single DBAPI
+        cursor.execute() or cursor.executemany() call.
+    
+        """
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+    
+            if generic_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor, generic_setinputsizes, context
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e, str(statement), parameters, None, context
+                    )
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters: Optional[_AnyExecuteParams]
+    
+        if not context.executemany:
+            effective_parameters = parameters[0]
+        else:
+            effective_parameters = parameters
+    
+        if self._has_events or self.engine._has_events:
+            for fn in self.dispatch.before_cursor_execute:
+                str_statement, effective_parameters = fn(
+                    self,
+                    cursor,
+                    str_statement,
+                    effective_parameters,
+                    context,
+                    context.executemany,
+                )
+    
+        if self._echo:
+            self._log_info(str_statement)
+    
+            stats = context._get_cache_stats()
+    
+            if not self.engine.hide_parameters:
+                self._log_info(
+                    "[%s] %r",
+                    stats,
+                    sql_util._repr_params(
+                        effective_parameters,
+                        batches=10,
+                        ismulti=context.executemany,
+                    ),
+                )
+            else:
+                self._log_info(
+                    "[%s] [SQL parameters hidden due to hide_parameters=True]",
+                    stats,
+                )
+    
+        evt_handled: bool = False
+        try:
+            if context.execute_style is ExecuteStyle.EXECUTEMANY:
+                effective_parameters = cast(
+                    "_CoreMultiExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_executemany:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_executemany(
+                        cursor,
+                        str_statement,
+                        effective_parameters,
+                        context,
+                    )
+            elif not effective_parameters and context.no_parameters:
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute_no_params:
+                        if fn(cursor, str_statement, context):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_execute_no_params(
+                        cursor, str_statement, context
+                    )
+            else:
+                effective_parameters = cast(
+                    "_CoreSingleExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+>                   self.dialect.do_execute(
+                        cursor, str_statement, effective_parameters, context
+                    )
+
+.venv\Lib\site-packages\sqlalchemy\engine\base.py:1967: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv\Lib\site-packages\sqlalchemy\engine\default.py:952: in do_execute
+    cursor.execute(statement, parameters)
+.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:585: in execute
+    self._adapt_connection.await_(
+.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py:132: in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py:196: in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:563: in _prepare_and_execute
+    self._handle_exception(error)
+.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:513: in _handle_exception
+    self._adapt_connection._handle_exception(error)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <AdaptedConnection <asyncpg.connection.Connection object at 0x0000024D4F2324E0>>
+error = NotNullViolationError('null value in column "content_metadata" of relation "embeddings" violates not-null constraint')
+
+    def _handle_exception(self, error):
+        if self._connection.is_closed():
+            self._transaction = None
+            self._started = False
+    
+        if not isinstance(error, AsyncAdapt_asyncpg_dbapi.Error):
+            exception_mapping = self.dbapi._asyncpg_error_translate
+    
+            for super_ in type(error).__mro__:
+                if super_ in exception_mapping:
+                    translated_error = exception_mapping[super_](
+                        "%s: %s" % (type(error), error)
+                    )
+                    translated_error.pgcode = translated_error.sqlstate = (
+                        getattr(error, "sqlstate", None)
+                    )
+>                   raise translated_error from error
+E                   sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi.IntegrityError: <class 'asyncpg.exceptions.NotNullViolationError'>: null value in column "content_metadata" of relation "embeddings" violates not-null constraint
+E                   DETAIL:  Failing row contains (93, 5, Test journal entry, [-0.013690804,-0.0062734145,0.018864525,-0.02984669,-0.015927091..., null, 2026-01-24 00:34:26.701535+00, 2026-01-24 00:34:26.701535+00).
+
+.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:797: IntegrityError
+
+The above exception was the direct cause of the following exception:
+
+seeded_user = 5
+db = <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x0000024D4F1ED4C0>
+
+    @pytest.mark.asyncio
+    async def test_vector_search_tracked_in_trace(seeded_user, db):
+        """
+        Test that vector search operations appear in trace.
+        """
+        from src.app.modules.intelligence.vector.embedding_service import EmbeddingService
+        from src.app.models.embedding import Embedding
+        from src.app.models.user_profile import UserProfile
+        from src.app.core.config import settings
+    
+        # Ensure user profile exists
+        result = await db.execute(select(UserProfile).where(UserProfile.user_id == seeded_user))
+        profile = result.scalar_one_or_none()
+        if not profile:
+            db.add(
+                UserProfile(
+                    user_id=seeded_user, data={"journal_entries": [{"content": "I feel tired", "date": "2024-01-24"}]}
+                )
+            )
+            await db.commit()
+    
+        service = EmbeddingService(settings.OPENROUTER_API_KEY.get_secret_value())
+    
+        # Seed an embedding manually to ensure count > 0
+        # Use real embedding service if possible, or mock search if necessary.
+        # But mandate says NO mocks for core logic.
+        embedding_data = await service.embed_text("Test journal entry")
+        db.add(
+            Embedding(
+                user_id=seeded_user, content="Test journal entry", embedding=embedding_data, metadata={"source": "test"}
+            )
+        )
+>       await db.commit()
+
+tests\modules\intelligence\test_observable_ai.py:89: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv\Lib\site-packages\sqlalchemy\ext\asyncio\session.py:1000: in commit
+    await greenlet_spawn(self.sync_session.commit)
+.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py:203: in greenlet_spawn
+    result = context.switch(value)
+             ^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sqlalchemy\orm\session.py:2030: in commit
+    trans.commit(_to_root=True)
+<string>:2: in commit
+    ???
+.venv\Lib\site-packages\sqlalchemy\orm\state_changes.py:137: in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sqlalchemy\orm\session.py:1311: in commit
+    self._prepare_impl()
+<string>:2: in _prepare_impl
+    ???
+.venv\Lib\site-packages\sqlalchemy\orm\state_changes.py:137: in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sqlalchemy\orm\session.py:1286: in _prepare_impl
+    self.session.flush()
+.venv\Lib\site-packages\sqlalchemy\orm\session.py:4331: in flush
+    self._flush(objects)
+.venv\Lib\site-packages\sqlalchemy\orm\session.py:4466: in _flush
+    with util.safe_reraise():
+         ^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sqlalchemy\util\langhelpers.py:224: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv\Lib\site-packages\sqlalchemy\orm\session.py:4427: in _flush
+    flush_context.execute()
+.venv\Lib\site-packages\sqlalchemy\orm\unitofwork.py:466: in execute
+    rec.execute(self)
+.venv\Lib\site-packages\sqlalchemy\orm\unitofwork.py:642: in execute
+    util.preloaded.orm_persistence.save_obj(
+.venv\Lib\site-packages\sqlalchemy\orm\persistence.py:93: in save_obj
+    _emit_insert_statements(
+.venv\Lib\site-packages\sqlalchemy\orm\persistence.py:1233: in _emit_insert_statements
+    result = connection.execute(
+.venv\Lib\site-packages\sqlalchemy\engine\base.py:1419: in execute
+    return meth(
+.venv\Lib\site-packages\sqlalchemy\sql\elements.py:527: in _execute_on_connection
+    return connection._execute_clauseelement(
+.venv\Lib\site-packages\sqlalchemy\engine\base.py:1641: in _execute_clauseelement
+    ret = self._execute_context(
+.venv\Lib\site-packages\sqlalchemy\engine\base.py:1846: in _execute_context
+    return self._exec_single_context(
+.venv\Lib\site-packages\sqlalchemy\engine\base.py:1986: in _exec_single_context
+    self._handle_dbapi_exception(
+.venv\Lib\site-packages\sqlalchemy\engine\base.py:2363: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+.venv\Lib\site-packages\sqlalchemy\engine\base.py:1967: in _exec_single_context
+    self.dialect.do_execute(
+.venv\Lib\site-packages\sqlalchemy\engine\default.py:952: in do_execute
+    cursor.execute(statement, parameters)
+.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:585: in execute
+    self._adapt_connection.await_(
+.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py:132: in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py:196: in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:563: in _prepare_and_execute
+    self._handle_exception(error)
+.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:513: in _handle_exception
+    self._adapt_connection._handle_exception(error)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <AdaptedConnection <asyncpg.connection.Connection object at 0x0000024D4F2324E0>>
+error = NotNullViolationError('null value in column "content_metadata" of relation "embeddings" violates not-null constraint')
+
+    def _handle_exception(self, error):
+        if self._connection.is_closed():
+            self._transaction = None
+            self._started = False
+    
+        if not isinstance(error, AsyncAdapt_asyncpg_dbapi.Error):
+            exception_mapping = self.dbapi._asyncpg_error_translate
+    
+            for super_ in type(error).__mro__:
+                if super_ in exception_mapping:
+                    translated_error = exception_mapping[super_](
+                        "%s: %s" % (type(error), error)
+                    )
+                    translated_error.pgcode = translated_error.sqlstate = (
+                        getattr(error, "sqlstate", None)
+                    )
+>                   raise translated_error from error
+E                   sqlalchemy.exc.IntegrityError: (sqlalchemy.dialects.postgresql.asyncpg.IntegrityError) <class 'asyncpg.exceptions.NotNullViolationError'>: null value in column "content_metadata" of relation "embeddings" violates not-null constraint
+E                   DETAIL:  Failing row contains (93, 5, Test journal entry, [-0.013690804,-0.0062734145,0.018864525,-0.02984669,-0.015927091..., null, 2026-01-24 00:34:26.701535+00, 2026-01-24 00:34:26.701535+00).
+E                   [SQL: INSERT INTO embeddings (user_id, content, embedding, created_at, updated_at) VALUES ($1::INTEGER, $2::VARCHAR, $3, $4::TIMESTAMP WITH TIME ZONE, $5::TIMESTAMP WITH TIME ZONE) RETURNING embeddings.id]
+E                   [parameters: (5, 'Test journal entry', '[-0.01369080413132906,-0.006273414473980665,0.018864525482058525,-0.029846690595149994,-0.015927091240882874,0.000911951472517103,-0.0014539560070261 ... (32386 characters truncated) ... 0.01791982352733612,-0.030909480527043343,0.003503886517137289,-0.020576799288392067,-0.03217892348766327,0.007845458574593067,-0.004531619139015675]', datetime.datetime(2026, 1, 24, 0, 34, 26, 701535, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 1, 24, 0, 34, 26, 701535, tzinfo=datetime.timezone.utc))]
+E                   (Background on this error at: https://sqlalche.me/e/20/gkpj)
+
+.venv\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:797: IntegrityError
+---------------------------- Captured stderr call -----------------------------
+[2m2026-01-24T00:34:26.325635Z[0m [[32m[1minfo     [0m] [1mHTTP Request: POST https://openrouter.ai/api/v1/embeddings "HTTP/1.1 200 OK"[0m [[0m[1m[34mhttpx[0m][0m
+------------------------------ Captured log call ------------------------------
+INFO     httpx:_client.py:1740 HTTP Request: POST https://openrouter.ai/api/v1/embeddings "HTTP/1.1 200 OK"
+____________________ test_trace_stored_in_message_metadata ____________________
+
+seeded_user = 5
+db = <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x0000024D4F1FA6F0>
+
+    @pytest.mark.asyncio
+    async def test_trace_stored_in_message_metadata(seeded_user, db):
+        """
+        Test that trace is stored in ChatMessage.metadata.
+        """
+        memory = get_active_memory()
+        await memory.initialize()
+    
+        query_engine = QueryEngine()
+        handler = MasterChatHandler(query_engine)
+    
+        response = await handler.send_message(seeded_user, "What should I do today?", db)
+    
+        # Verify trace in response
+        assert "trace" in response
+        assert response["trace"] is not None
+    
+        # Get message from database
+        from src.app.models.chat_session import ChatMessage, ChatSession
+    
+        # Find master session for user
+        sess_result = await db.execute(
+            select(ChatSession).where(ChatSession.user_id == seeded_user, ChatSession.session_type == "master")
+        )
+        session = sess_result.scalar_one()
+    
+        result = await db.execute(
+            select(ChatMessage)
+            .where(ChatMessage.session_id == session.id, ChatMessage.role == "assistant")
+            .order_by(ChatMessage.created_at.desc())
+        )
+        latest_message = result.scalar_one()
+    
+        # Verify trace in metadata
+>       assert "trace" in latest_message.metadata
+E       AssertionError: assert 'trace' in MetaData()
+E        +  where MetaData() = <src.app.models.chat_session.ChatMessage object at 0x0000024D4F182B10>.metadata
+
+tests\modules\intelligence\test_observable_ai.py:143: AssertionError
+---------------------------- Captured stderr call -----------------------------
+[2m2026-01-24T00:34:29.726576Z[0m [[32m[1minfo     [0m] [1mHTTP Request: POST https://openrouter.ai/api/v1/embeddings "HTTP/1.1 200 OK"[0m [[0m[1m[34mhttpx[0m][0m
+[2m2026-01-24T00:34:30.340513Z[0m [[33m[1mwarning  [0m] [1mClassification failed, using all modules: Event loop is closed[0m [[0m[1m[34msrc.app.modules.intelligence.query.engine[0m][0m
+[2m2026-01-24T00:34:30.467849Z[0m [[32m[1minfo     [0m] [1mRetrying request to /chat/completions in 0.460292 seconds[0m [[0m[1m[34mopenai._base_client[0m][0m
+[2m2026-01-24T00:34:33.039492Z[0m [[32m[1minfo     [0m] [1mHTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"[0m [[0m[1m[34mhttpx[0m][0m
+[2m2026-01-24T00:34:46.220993Z[0m [[33m[1mwarning  [0m] [1mFailed to store conversation history: name 'datetime' is not defined[0m [[0m[1m[34msrc.app.modules.intelligence.query.engine[0m][0m
+------------------------------ Captured log call ------------------------------
+INFO     httpx:_client.py:1740 HTTP Request: POST https://openrouter.ai/api/v1/embeddings "HTTP/1.1 200 OK"
+WARNING  src.app.modules.intelligence.query.engine:engine.py:421 Classification failed, using all modules: Event loop is closed
+INFO     openai._base_client:_base_client.py:1672 Retrying request to /chat/completions in 0.460292 seconds
+INFO     httpx:_client.py:1740 HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING  src.app.modules.intelligence.query.engine:engine.py:230 Failed to store conversation history: name 'datetime' is not defined
+============================== warnings summary ===============================
+src\app\modules\intelligence\synthesis\schemas.py:21
+  C:\dev\GUTTERS\src\app\modules\intelligence\synthesis\schemas.py:21: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class UnifiedProfile(BaseModel):
+
+src\app\modules\intelligence\query\schemas.py:8
+  C:\dev\GUTTERS\src\app\modules\intelligence\query\schemas.py:8: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class QueryRequest(BaseModel):
+
+src\app\modules\intelligence\hypothesis\models.py:32
+  C:\dev\GUTTERS\src\app\modules\intelligence\hypothesis\models.py:32: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class Hypothesis(BaseModel):
+
+tests/modules/intelligence/test_observable_ai.py::test_query_generates_trace
+tests/modules/intelligence/test_observable_ai.py::test_vector_search_tracked_in_trace
+tests/modules/intelligence/test_observable_ai.py::test_trace_stored_in_message_metadata
+tests/modules/intelligence/test_observable_ai.py::test_trace_latency_calculation
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:43: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    start_date = datetime.utcnow() - timedelta(days=days)
+
+tests/modules/intelligence/test_observable_ai.py: 245 warnings
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:47: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    while current_date < datetime.utcnow():
+
+tests/modules/intelligence/test_observable_ai.py::test_query_generates_trace
+tests/modules/intelligence/test_observable_ai.py::test_vector_search_tracked_in_trace
+tests/modules/intelligence/test_observable_ai.py::test_trace_stored_in_message_metadata
+tests/modules/intelligence/test_observable_ai.py::test_trace_latency_calculation
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:147: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat()
+
+tests/modules/intelligence/test_observable_ai.py::test_query_generates_trace
+tests/modules/intelligence/test_observable_ai.py::test_vector_search_tracked_in_trace
+tests/modules/intelligence/test_observable_ai.py::test_trace_stored_in_message_metadata
+tests/modules/intelligence/test_observable_ai.py::test_trace_latency_calculation
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:157: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat()
+
+tests/modules/intelligence/test_observable_ai.py::test_query_generates_trace
+tests/modules/intelligence/test_observable_ai.py::test_vector_search_tracked_in_trace
+tests/modules/intelligence/test_observable_ai.py::test_trace_stored_in_message_metadata
+tests/modules/intelligence/test_observable_ai.py::test_trace_latency_calculation
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:167: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat()
+
+tests/modules/intelligence/test_observable_ai.py::test_query_generates_trace
+tests/modules/intelligence/test_observable_ai.py::test_vector_search_tracked_in_trace
+tests/modules/intelligence/test_observable_ai.py::test_trace_stored_in_message_metadata
+tests/modules/intelligence/test_observable_ai.py::test_trace_latency_calculation
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:176: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat()
+
+tests/modules/intelligence/test_observable_ai.py::test_query_generates_trace
+tests/modules/intelligence/test_observable_ai.py::test_vector_search_tracked_in_trace
+tests/modules/intelligence/test_observable_ai.py::test_trace_stored_in_message_metadata
+tests/modules/intelligence/test_observable_ai.py::test_trace_latency_calculation
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:186: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat()
+
+tests/modules/intelligence/test_observable_ai.py::test_query_generates_trace
+tests/modules/intelligence/test_observable_ai.py::test_vector_search_tracked_in_trace
+tests/modules/intelligence/test_observable_ai.py::test_trace_stored_in_message_metadata
+tests/modules/intelligence/test_observable_ai.py::test_trace_latency_calculation
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:205: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    start_date = datetime.utcnow() - timedelta(days=days)
+
+tests/modules/intelligence/test_observable_ai.py: 246 warnings
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:209: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    while current_date < datetime.utcnow():
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/modules/intelligence/test_observable_ai.py::test_vector_search_tracked_in_trace
+FAILED tests/modules/intelligence/test_observable_ai.py::test_trace_stored_in_message_metadata
+================= 2 failed, 2 passed, 522 warnings in 50.94s ==================

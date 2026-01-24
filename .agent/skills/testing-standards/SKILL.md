@@ -10,7 +10,7 @@ Pytest async testing for GUTTERS. All calculations tested against known data, 80
 ## Test Structure
 ```
 tests/
-├── conftest.py              # Shared fixtures
+├── conftest.py              # Shared fixtures (DB, Redis, Singleton resets)
 ├── test_active_memory.py    # Core systems
 ├── test_synthesis.py
 └── modules/
@@ -62,53 +62,38 @@ async def test_synthesis_contribution():
     assert len(contribution["insights"]) > 0
 ```
 
-**4. Edge Cases**
+**4. High-Fidelity Service Integration**
 ```python
-@pytest.mark.asyncio
-async def test_invalid_birth_date_raises_error():
-    with pytest.raises(ValidationError):
-        await calculate_natal_chart(
-            datetime(1800, 1, 1),  # Before ephemeris range
-            lat=0, lon=0
-        )
+# Verify the actual persistence in Redis/PostgreSQL. See high-fidelity-testing skill.
 ```
 
 ## Fixtures (conftest.py)
+
 ```python
-@pytest.fixture
-def mock_db():
-    """Mock database session."""
-    return Mock(spec=AsyncSession)
-
-@pytest.fixture
-def sample_user_data():
-    """Sample birth data."""
-    return {
-        "name": "Test User",
-        "birth_date": datetime(1990, 1, 1, 12, 0),
-        "birth_location": {"lat": 40.7128, "lon": -74.0060}
-    }
+@pytest_asyncio.fixture
+async def seeded_user(test_user):
+    """
+    Deterministic seeding pattern. Populates DB with pattern-rich test data.
+    """
+    from tests.fixtures.seed_data import SeedDataGenerator
+    from src.app.core.db.database import local_session
+    
+    async with local_session() as db:
+        # Seed exact patterns for intelligence modules
+        # e.g., anxiety on Sundays, headaches on high-solar days
+        SeedDataGenerator.seed_historical_patterns(test_user.id, db)
+        await db.commit()
+    return test_user.id
 ```
 
-## Coverage Requirements
-```bash
-# Run with coverage
-uv run pytest --cov=app --cov-report=html tests/
+## Critical Rules (MANDATORY)
 
-# Minimum 80% overall
-# 100% for calculation functions
-```
-
-## Validation Data Sources
-
-- astro.com - Verified natal charts
-- Human Design official calculators
-- Known numerology examples
-
-## Critical Rules
-
-- Test against KNOWN/VERIFIED data (not random)
-- Mock external APIs (NOAA, ephemeris lookups)
-- Test edge cases (invalid input, missing data)
-- NO test should depend on another test
-- Tests must be deterministic (same input = same output)
+- **NO MOCKS for Core Logic:** See `high-fidelity-testing` skill.
+- **Service Integration:** Tests must use real Redis and PostgreSQL (Port 5432).
+- **Persistence Verification:** Verify data exists in DB/Cache after operation.
+- **Deterministic Seeding:** Use real data patterns, not random noise via `SeedDataGenerator`.
+- **High Coverage:** 80% overall, 100% for calculation functions.
+- **Session Passing:** Always pass the `db` session to modules to avoid isolation conflicts.
+- **Aware Datetimes:** Always use `dt.datetime.now(dt.timezone.utc)` for comparisons and storage. NEVER use `dt.datetime.utcnow()`.
+- **Async Singleton Initialization:** Integration tests MUST explicitly `await` initialization of `EventBus` and `ActiveMemory`.
+- **PYTHONPATH:** Run tests from project root with `PYTHONPATH=src`.

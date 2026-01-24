@@ -38,14 +38,14 @@ if validation_script.exists():
     
     if result.returncode != 0:
         print("\n" + "=" * 60)
-        print("❌ MIGRATION BLOCKED: Model validation failed!")
+        print("[ERROR] MIGRATION BLOCKED: Model validation failed!")
         print("=" * 60)
         print("Fix validation errors before running migrations.")
         print(f"Exit code: {result.returncode}")
         sys.exit(1)
-    
+
     print("=" * 60)
-    print("✅ Validation passed - proceeding with migration")
+    print("[OK] Validation passed - proceeding with migration")
     print("=" * 60)
     print()
 # ============================================================================

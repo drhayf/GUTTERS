@@ -5,6 +5,7 @@ from .system_configuration import SystemConfiguration
 from .tier import Tier
 from .user import User
 from .user_profile import UserProfile
+from .chat_session import ChatSession, ChatMessage
 
 __all__ = [
     "CosmicConditions",
@@ -14,4 +15,6 @@ __all__ = [
     "Tier",
     "User",
     "UserProfile",
+    "ChatSession",
+    "ChatMessage",
 ]

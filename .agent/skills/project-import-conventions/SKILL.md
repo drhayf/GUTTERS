@@ -16,26 +16,57 @@ from src.app.models.user import User
 from src.app.modules.registry import ModuleRegistry
 from src.app.core.ai.llm_factory import get_llm
 from src.app.api.v1.intelligence import router
+
+# ⚠️ WARNING: Standardize to one format.
+# If PYTHONPATH includes 'src', use 'from app...'
+# Otherwise, use 'from src.app...'.
+# GUTTERS preference: ALWAYS use 'src.app' for tests to avoid ambiguity.
+```
 ```
 
 ### Within src/app (relative imports OK)
-```python
-# In src/app/modules/intelligence/synthesis/synthesizer.py
-from ....core.ai.llm_factory import get_llm       # Up 4 levels
-from ....models.user_profile import UserProfile
-from ...registry import ModuleRegistry            # Up 3 levels
-from .schemas import SynthesisResponse            # Same directory
 ```
 
-### Relative Import Depth Reference
+---
+
+## Circular Dependencies
+
+Circular dependencies occur when Module A imports B, and B imports A. This causes `AttributeError` during collection.
+
+### 🚩 Detection
+If you see `AttributeError: module 'x' has no attribute 'Y'` but you KNOW it exists, it's likely a circular import.
+
+### ✅ Resolution: Deferred Imports
+Move the import UNTIL it is needed (inside the method/function).
+
+```python
+# src/app/modules/intelligence/synthesis/synthesizer.py
+class ProfileSynthesizer:
+    async def synthesize_profile(self, user_id, db):
+        # ❌ WRONG: Top-level import
+        # results in circular dependency if ModuleRegistry imports synthesizer
+        
+        # ✅ CORRECT: Deferred import
+        from ...registry import ModuleRegistry
+        from .schemas import UnifiedProfile
+        
+        calculated = await ModuleRegistry.get_calculated_modules_for_user(user_id, db)
+        ...
 ```
-src/app/modules/intelligence/synthesis/synthesizer.py
-         │      │            │         └── . (same dir)
-         │      │            └────────── .. (synthesis/)
-         │      │            └────────── ... (intelligence/)
-         │      └─────────────────────── .... (modules/)
-         └────────────────────────────── ..... (app/)
+
+### ✅ Resolution: Explicit Mapper Configuration
+When circular dependencies between models use string forward references (e.g., `User` <-> `ChatSession`), the SQLAlchemy registry must be explicitly initialized in tests.
+
+```python
+# tests/conftest.py
+@pytest_asyncio.fixture(scope="session", autouse=True)
+def configure_mappers_session():
+    """Force SQLAlchemy to resolve all string references once definitions are collected."""
+    from sqlalchemy.orm import configure_mappers
+    configure_mappers()
 ```
+
+---
 
 ---
 
@@ -60,6 +91,12 @@ src/tests/integration/
 tests/
 ├── conftest.py          # Fixtures using src.app imports
 └── test_*.py
+
+### conftest.py Shadowing Warning
+⚠️ DO NOT shadow the `local_session` import from `src.app.core.db.database` with a module-level variable or fixture. Rename it for clarity:
+```python
+from src.app.core.db.database import local_session as async_session_maker
+```
 ```
 
 ---
@@ -119,7 +156,8 @@ with patch.object(engine, 'llm') as mock_llm:  # KeyError!
     ...
 
 # ❌ WRONG - Patching at definition location
-with patch('src.app.core.ai.llm_factory.get_llm', ...):  # Won't work
+# ❌ WRONG (Naive) - `datetime.utcnow()` is BANNED
+# ✅ CORRECT (Aware) - `dt.datetime.now(dt.timezone.utc)`
     ...
 
 # ✅ CORRECT - Patch at import location
@@ -157,10 +195,12 @@ from src.app.main import app
 import pytest
 from unittest.mock import AsyncMock
 
-@pytest.fixture
-def mock_db():
+@pytest_asyncio.fixture
+async def mock_db():
     """Mock async database session."""
     return AsyncMock()
+
+# ALWAYS use @pytest_asyncio.fixture for async fixtures to ensure they are handled by the event loop.
 ```
 
 ---

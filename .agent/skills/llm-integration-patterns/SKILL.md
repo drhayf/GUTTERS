@@ -5,32 +5,43 @@ description: Patterns for LLM integration in GUTTERS. Covers factory usage, prom
 
 # LLM Integration Patterns
 
-Standard patterns for LLM usage in GUTTERS modules.
+Standard patterns for multi-tier LLM usage in GUTTERS modules.
 
-## LLM Factory
+## Multi-Tier Architecture
+
+GUTTERS uses a tiered LLM approach to balance reasoning quality and cost-efficiency.
+
+| Tier | Model | Purpose | Cost (AUD/1K) |
+|------|-------|---------|---------------|
+| **PREMIUM** | `anthropic/claude-sonnet-4.5` | User-facing chat, complex synthesis | $0.0046 / $0.0231 |
+| **STANDARD** | `anthropic/claude-haiku-4.5` | Classification, background tasks | $0.00038 / $0.0019 |
+
+## LLM Tiered Factory
+
+Always use the tiered factory to ensure correct model selection and cost tracking.
 
 ```python
-from app.core.ai.llm_factory import get_llm
+from src.app.core.llm.config import get_premium_llm, get_standard_llm, LLMTier
 
-# Get configured LLM
-llm = get_llm(
-    model_id="anthropic/claude-3-haiku",  # Or from config
-    temperature=0.7,  # Task-appropriate
-)
+# 1. Premium: Best for user-facing responses
+llm = get_premium_llm()
 
-# Async invocation (preferred)
-response = await llm.ainvoke(prompt)
-content = response.content
+# 2. Standard: Best for high-volume background tasks (12x cheaper!)
+llm = get_standard_llm()
+
+# 3. Dynamic Tier (from config or user preference)
+from src.app.core.llm.config import LLMConfig
+llm = LLMConfig.get_llm(LLMTier.STANDARD)
 ```
 
 ## Temperature Guidelines
 
-| Task | Temperature | Why |
-|------|-------------|-----|
-| JSON generation | 0.3-0.5 | Needs structure consistency |
-| Conversational probes | 0.7 | Natural variation |
-| Creative synthesis | 0.8-1.0 | Unique insights |
-| Classification | 0.0-0.3 | Deterministic |
+| Task | Temperature | Tier | Why |
+|------|-------------|------|-----|
+| JSON generation | 0.3-0.5 | Standard | Needs structure consistency |
+| Profile Synthesis | 0.7 | Premium | High-fidelity reasoning |
+| Conversational probes | 0.7 | Premium | Natural variation |
+| Classification | 0.0-0.2 | Standard | Deterministic |
 
 ## Prompt Engineering
 
@@ -99,36 +110,39 @@ def _fallback_result(input_data: InputData) -> Result:
     )
 ```
 
-## Activity Logging (REQUIRED)
+## Activity Logging & Cost Tracking (REQUIRED)
 
-Every LLM call MUST be logged:
+Every LLM call MUST be logged with model details and AUD cost estimation.
 
 ```python
-from app.core.activity.logger import get_activity_logger
+from src.app.core.llm.config import LLMConfig, LLMTier
+from src.app.core.activity.logger import get_activity_logger
 
 logger = get_activity_logger()
 
-# Before call
+# 1. Before call
 await logger.log_activity(
     trace_id=trace_id,
     agent="module.component",
     activity_type="llm_call_started",
     details={
-        "model": model_id,
-        "prompt_length": len(prompt),
-        "purpose": "generate_probe",
+        "tier": LLMTier.PREMIUM,
+        "purpose": "query_analysis",
     }
 )
 
-# After call
+# 2. After call (calculate and log cost)
+tokens_in = len(prompt.split()) * 1.3
+tokens_out = len(response.content.split()) * 1.3
+cost_aud = LLMConfig.estimate_cost(LLMTier.PREMIUM, int(tokens_in), int(tokens_out), currency="AUD")
+
 await logger.log_llm_call(
     trace_id=trace_id,
-    model_id=model_id,
-    prompt=prompt[:500],  # Truncate for storage
+    model_id="anthropic/claude-sonnet-4.5",
+    prompt=prompt[:500],
     response=response.content[:500],
     duration_ms=duration,
-    tokens_used=token_count,
-    reasoning=reasoning,
+    cost_aud=cost_aud, # Log AUD for user transparency
 )
 ```
 
@@ -155,90 +169,50 @@ except Exception as e:
 
 ## Multi-Model User Preferences
 
-Allow users to select their preferred LLM model.
+Allow users to select their preferred LLM for specific high-value interactions.
 
-### Allowed Models
+### Preferred Models (Standardized IDs)
 ```python
 ALLOWED_MODELS = [
-    "anthropic/claude-3.5-sonnet",      # Default
-    "anthropic/claude-opus-4.5-20251101",  # Premium
-    "qwen/qwen-2.5-72b-instruct:free",  # Testing
+    "anthropic/claude-sonnet-4.5",  # Default / Premium
+    "anthropic/claude-haiku-4.5",   # Efficient
+    "anthropic/claude-3-opus",     # Legacy Premium
 ]
-DEFAULT_MODEL = ALLOWED_MODELS[0]
+DEFAULT_MODEL = "anthropic/claude-sonnet-4.5"
 ```
 
-### Storing Preferences
+---
+
+## Embedding Service Pattern
+
+For semantic search and knowledge retrieval, use the `EmbeddingService`.
+
 ```python
-# Store in UserProfile.data['preferences']['llm_model']
-from sqlalchemy.orm.attributes import flag_modified
+from src.app.modules.intelligence.vector.embedding_service import EmbeddingService
 
-async def update_user_preference(user_id: int, key: str, value: Any, db: AsyncSession):
-    result = await db.execute(
-        select(UserProfile).where(UserProfile.user_id == user_id)
-    )
-    profile = result.scalar_one_or_none()
-    
-    if not profile:
-        raise ValueError(f"No profile for user {user_id}")
-    
-    if not profile.data:
-        profile.data = {}
-    if "preferences" not in profile.data:
-        profile.data["preferences"] = {}
-    
-    profile.data["preferences"][key] = value
-    flag_modified(profile, "data")
-    await db.commit()
+service = EmbeddingService(api_key=settings.OPENROUTER_API_KEY.get_secret_value())
+
+# Embed text
+vector = await service.embed_text("User query or content piece")
+
+# Module-specific helpers
+vector = await service.embed_journal_entry(entry)
 ```
 
-### Retrieving Preferences
-```python
-async def get_user_preferred_model(user_id: int, db: AsyncSession) -> str:
-    result = await db.execute(
-        select(UserProfile).where(UserProfile.user_id == user_id)
-    )
-    profile = result.scalar_one_or_none()
-    
-    if profile and profile.data:
-        model = profile.data.get("preferences", {}).get("llm_model")
-        if model in ALLOWED_MODELS:
-            return model
-    
-    return DEFAULT_MODEL
-```
-
-### Per-Request Override
-```python
-@router.post("/query")
-async def query(
-    question: str,
-    model: str | None = None,  # Optional override
-    current_user: Annotated[dict, Depends(get_current_user)],
-    db: Annotated[AsyncSession, Depends(async_get_db)],
-):
-    user_id = current_user["id"]
-    
-    # Priority: request param > user preference > default
-    if model and model in ALLOWED_MODELS:
-        model_id = model
-    else:
-        model_id = await get_user_preferred_model(user_id, db)
-    
-    engine = QueryEngine(model_id=model_id)
-    return await engine.answer_query(user_id, question, db)
-```
+### Best Practices
+- **Standardize Dimensions**: Ensure all embeddings in a table use the same model/dimensions.
+- **AUD Visibility**: When exposing RAG costs, convert using `LLMConfig.AUD_EXCHANGE_RATE`.
 
 ---
 
 ## Checklist
 
-- [ ] Use `get_llm()` factory (never instantiate directly)
+- [ ] Use `LLMConfig.get_llm(tier)` or tier-specific factory
+- [ ] Set appropriate tier (Premium for user-facing, Standard for background)
 - [ ] Set appropriate temperature for task
+- [ ] Estimate and log cost in **AUD**
 - [ ] Parse JSON with fallback handling
-- [ ] Implement template fallback for failures
-- [ ] Log activity before and after LLM calls
-- [ ] Truncate prompts/responses for storage
-- [ ] Handle all exception types
-- [ ] Support user model preferences (if user-facing)
-- [ ] Validate model against ALLOWED_MODELS
+- [ ] Truncate storage fields to prevent JSONB bloat
+- [ ] Handle `OutputParserException` specifically
+- [ ] Validate any model overrides against standardized IDs
 

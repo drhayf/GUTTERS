@@ -1,0 +1,366 @@
+2026-01-24T05:58:39.242240Z [info     ] Registered module: human_design (layer: calculation) [src.app.modules.registry]
+2026-01-24T05:58:40.678897Z [info     ] Registered module: numerology (layer: calculation) [src.app.modules.registry]
+2026-01-24T05:58:40.736397Z [info     ] Registered module: synthesis (layer: intelligence) [src.app.modules.registry]
+2026-01-24T05:58:40.759527Z [info     ] Registered module: query (layer: intelligence) [src.app.modules.registry]
+2026-01-24T05:58:41.752598Z [info     ] Registered module: observer (layer: intelligence) [src.app.modules.registry]
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-9.0.2, pluggy-1.6.0 -- C:\dev\GUTTERS\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\dev\GUTTERS
+configfile: pyproject.toml
+plugins: anyio-4.12.1, Faker-37.3.0, langsmith-0.6.4, asyncio-1.3.0, mock-3.14.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+tests/integration/test_end_to_end.py::test_complete_user_journey [OK] User created (ID: 36)
+[OK] Profile initialized
+2026-01-24T05:58:43.223364Z [info     ] Registered module: astrology (layer: calculation) [src.app.modules.registry]
+[OK] Calculation modules complete (Astrology, HD, Numerology)
+[WARN] Tracking module check skipped/failed (possibly no API key): 'SolarTracker' object has no attribute 'get_current_conditions'
+2026-01-24T05:58:45.591719Z [info     ] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK" [httpx]
+2026-01-24T05:58:52.258224Z [info     ] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK" [httpx]
+2026-01-24T05:58:57.755976Z [info     ] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK" [httpx]
+2026-01-24T05:59:09.742924Z [info     ] Stored master synthesis for user 36 with 2 modules [src.app.core.memory.active_memory]
+FAILED
+
+================================== FAILURES ===================================
+_________________________ test_complete_user_journey __________________________
+
+db = <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x000001E3C4F35730>
+clean_redis = None
+
+    @pytest.mark.asyncio
+    async def test_complete_user_journey(db, clean_redis):
+        """
+        Complete user journey from registration to AI interaction.
+    
+        This test verifies:
+        1. User creation
+        2. Profile initialization
+        3. Module calculations
+        4. Synthesis generation
+        5. Active Memory
+        6. Chat conversation
+        7. Journal entry
+        8. Vector search
+        9. Observer detection
+        10. Query with full context
+        """
+    
+        # Needs real DB session, not just the fixture, but the fixture 'db' IS a session
+        real_db = db
+    
+        # ========================================
+        # STEP 1: Create User
+        # ========================================
+        from src.app.models.user import User
+        from src.app.models.user_profile import UserProfile
+    
+        # Randomize user to avoid DB collisions
+        uid = str(uuid.uuid4())[:8]
+        user = User(
+            name=f"Test Journey {uid}",
+            username=f"tj_{uid}",
+            email=f"test_journey_{uid}@example.com",
+            hashed_password="hashed_secret",
+            birth_date=date(1990, 6, 15),
+            birth_time=time(14, 30),
+            birth_location="New York, NY, USA",
+            birth_latitude=40.7128,
+            birth_longitude=-74.0060,
+            birth_timezone="America/New_York",
+        )
+    
+        real_db.add(user)
+        await real_db.commit()
+        await real_db.refresh(user)
+    
+        print(f"[OK] User created (ID: {user.id})")
+    
+        # Verify profile created
+        from sqlalchemy import select
+    
+        result = await real_db.execute(select(UserProfile).where(UserProfile.user_id == user.id))
+        profile = result.scalar_one_or_none()
+    
+        # If not created by triggers (which might not be present in test DB), create manually
+        if not profile:
+            profile = UserProfile(user_id=user.id, data={})
+            real_db.add(profile)
+            await real_db.commit()
+            await real_db.refresh(profile)
+    
+        assert profile is not None
+    
+        print(f"[OK] Profile initialized")
+    
+        # ========================================
+        # STEP 2: Calculate Profiles (All Modules)
+        # ========================================
+        from src.app.modules.calculation.astrology.brain.calculator import calculate_natal_chart
+        from src.app.modules.calculation.human_design.brain.calculator import HumanDesignCalculator
+        from src.app.modules.calculation.numerology.brain.calculator import NumerologyCalculator
+    
+        # Astrology (Function, Sync)
+        # Note: calculate_natal_chart expects specific arguments
+        astro_profile = calculate_natal_chart(
+            name=user.name,
+            birth_date=user.birth_date,
+            birth_time=user.birth_time,
+            latitude=user.birth_latitude,
+            longitude=user.birth_longitude,
+            timezone=user.birth_timezone,
+        )
+    
+        profile.data["natal_chart"] = astro_profile
+    
+        # Human Design (Class, Sync)
+        hd_calc = HumanDesignCalculator()
+        hd_profile_obj = hd_calc.calculate_chart(
+            name=user.name,
+            birth_date=user.birth_date,
+            birth_time=user.birth_time,
+            latitude=user.birth_latitude,
+            longitude=user.birth_longitude,
+            timezone=user.birth_timezone,
+        )
+    
+        profile.data["human_design"] = hd_profile_obj.model_dump(mode="json")
+    
+        # Numerology (Class, Sync)
+        num_calc = NumerologyCalculator()
+        num_profile_obj = num_calc.calculate_chart(
+            name=user.name,  # Full name
+            birth_date=user.birth_date,
+        )
+    
+        profile.data["numerology"] = num_profile_obj.model_dump(mode="json")
+    
+        from sqlalchemy.orm.attributes import flag_modified
+    
+        flag_modified(profile, "data")
+        await real_db.commit()
+    
+        print(f"[OK] Calculation modules complete (Astrology, HD, Numerology)")
+    
+        # ========================================
+        # STEP 3: Tracking Modules
+        # ========================================
+        from src.app.modules.tracking.solar.tracker import SolarTracker
+    
+        # Mocking external calls for tracking to ensure stability if API keys missing
+        # BUT the objective says "Tracking Modules Pull Cosmic Data"
+        # We will try real first, but fallback or handle errors if no API key
+        try:
+            solar_tracker = SolarTracker()
+            solar_data = await solar_tracker.get_current_conditions()
+    
+            assert solar_data is not None
+            # Keys might vary depending on API response structure
+            # assert 'kp_index' in solar_data or 'solar_wind_speed' in solar_data
+    
+            print(f"[OK] Tracking modules functional (Solar data retrieved)")
+        except Exception as e:
+            print(f"[WARN] Tracking module check skipped/failed (possibly no API key): {e}")
+    
+        # ========================================
+        # STEP 4: Synthesis Generation
+        # ========================================
+        from src.app.modules.intelligence.synthesis.synthesizer import ProfileSynthesizer
+    
+        synth_engine = ProfileSynthesizer()
+        # It returns UnifiedProfile object
+>       synthesis_obj = await synth_engine.synthesize_profile(user.id, real_db)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\integration\test_end_to_end.py:154: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <src.app.modules.intelligence.synthesis.synthesizer.ProfileSynthesizer object at 0x000001E3C4F5A660>
+user_id = 36
+db = <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x000001E3C4F35730>
+trace_id = '8596064b-e42f-4fbf-bc3c-02856e4ed696'
+
+    async def synthesize_profile(self, user_id: int, db: AsyncSession, trace_id: str | None = None):
+        """
+        Generate hierarchical synthesis from all available data.
+        """
+        import uuid
+    
+        # Defer imports to avoid circular dependencies during collection
+        from .module_synthesis import ModuleSynthesizer
+        from .schemas import UnifiedProfile
+        from ....core.memory.active_memory import get_active_memory
+        from ...intelligence.observer.storage import ObserverFindingStorage
+        from ....core.events.bus import get_event_bus
+        from ....protocol.events import SYNTHESIS_GENERATED
+    
+        trace_id = trace_id or str(uuid.uuid4())
+    
+        # Initialize
+        module_synthesizer = ModuleSynthesizer(self.llm)
+        memory = get_active_memory()
+        await memory.initialize()
+    
+        # STEP 1: Fetch module data
+        astro_data = await memory.get_module_output(user_id, "astrology")
+        hd_data = await memory.get_module_output(user_id, "human_design")
+        num_data = await memory.get_module_output(user_id, "numerology")
+    
+        # STEP 2: Generate module-specific syntheses
+        astro_synthesis = await module_synthesizer.synthesize_astrology(astro_data) if astro_data else ""
+        hd_synthesis = await module_synthesizer.synthesize_human_design(hd_data) if hd_data else ""
+        num_synthesis = await module_synthesizer.synthesize_numerology(num_data) if num_data else ""
+    
+        # STEP 3: Fetch Observer findings
+        observer_storage = ObserverFindingStorage()
+        findings = await observer_storage.get_findings(user_id, min_confidence=0.7)
+    
+        # STEP 4: Generate Observer pattern narrative
+        observer_synthesis = await module_synthesizer.synthesize_observer_patterns(findings) if findings else ""
+    
+        # STEP 4.5: Fetch Confirmed Theory Hypotheses
+        from ..hypothesis.storage import HypothesisStorage
+    
+        hypothesis_storage = HypothesisStorage()
+        confirmed_hypotheses = await hypothesis_storage.get_confirmed_hypotheses(user_id)
+    
+        hypotheses_text = ""
+        if confirmed_hypotheses:
+            hypotheses_text = "\n".join(
+                [f"- {h.claim} (confidence: {h.confidence:.0%})" for h in confirmed_hypotheses[:5]]
+            )
+    
+        # STEP 5: Combine into master synthesis
+        master_prompt = self._build_master_synthesis_prompt(
+            astro_synthesis, hd_synthesis, num_synthesis, observer_synthesis, hypotheses_text
+        )
+    
+        await self.activity_logger.log_activity(
+            trace_id=trace_id,
+            agent="synthesis.master_synthesizer",
+            activity_type="llm_call_started",
+            details={"modules": ["astrology", "human_design", "numerology", "observer"]},
+        )
+    
+        try:
+            from langchain_core.messages import SystemMessage, HumanMessage
+    
+            response = await self.llm.ainvoke(
+                [
+                    SystemMessage(content="You are a cosmic intelligence guide combining multiple wisdom traditions."),
+                    HumanMessage(content=master_prompt),
+                ]
+            )
+    
+            master_synthesis = response.content.strip()
+    
+            await self.activity_logger.log_llm_call(
+                trace_id=trace_id, model_id=self.model_id, prompt=master_prompt[:500], response=master_synthesis[:500]
+            )
+        except Exception as e:
+            logger.error(f"Master synthesis failed: {e}")
+            master_synthesis = "Unable to generate complete synthesis at this time."
+    
+        # STEP 6: Cache in Active Memory
+        modules_included = []
+        if astro_data:
+            modules_included.append("astrology")
+        if hd_data:
+            modules_included.append("human_design")
+        if num_data:
+            modules_included.append("numerology")
+        if findings:
+            modules_included.append("observer")
+    
+        themes = self._extract_themes(master_synthesis)
+    
+        await memory.set_master_synthesis(
+            user_id,
+            master_synthesis,
+            themes=themes,
+            modules_included=modules_included,
+            count_confirmed_theories=len(confirmed_hypotheses),
+        )
+    
+        # STEP 7: Publish event
+        event_bus = get_event_bus()
+>       await event_bus.publish(
+            SYNTHESIS_GENERATED,
+            {
+                "user_id": user_id,
+                "modules": modules_included,
+                "patterns_detected": len(findings),
+                "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+            },
+        )
+
+src\app\modules\intelligence\synthesis\synthesizer.py:236: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <src.app.core.events.bus.EventBus object at 0x000001E3A92E1730>
+event_type = 'synthesis.profile.generated'
+payload = {'generated_at': '2026-01-24T05:59:09.742924+00:00', 'modules': ['human_design', 'numerology'], 'patterns_detected': 0, 'user_id': 36}
+source = 'system', user_id = None
+
+    async def publish(
+        self,
+        event_type: str,
+        payload: dict[str, Any],
+        source: str = "system",
+        user_id: str | None = None,
+    ) -> None:
+        """
+        Publish an event to the bus.
+    
+        Creates a Packet and broadcasts it to all matching subscribers.
+    
+        Args:
+            event_type: Event type constant (from protocol.events)
+            payload: Event-specific data
+            source: Module or system emitting the event
+            user_id: User this event relates to (optional)
+    
+        Example:
+            >>> await bus.publish(
+            ...     "module.profile_calculated",
+            ...     {"module_name": "astrology", "profile_id": "123"},
+            ...     source="astrology"
+            ... )
+        """
+        if not self.redis_client:
+>           raise RuntimeError("EventBus not initialized. Call initialize() first.")
+E           RuntimeError: EventBus not initialized. Call initialize() first.
+
+src\app\core\events\bus.py:132: RuntimeError
+------------------------------ Captured log call ------------------------------
+INFO     src.app.modules.registry:registry.py:64 Registered module: astrology (layer: calculation)
+INFO     httpx:_client.py:1740 HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1740 HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1740 HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+INFO     src.app.core.memory.active_memory:active_memory.py:300 Stored master synthesis for user 36 with 2 modules
+============================== warnings summary ===============================
+src\app\modules\intelligence\synthesis\schemas.py:21
+  C:\dev\GUTTERS\src\app\modules\intelligence\synthesis\schemas.py:21: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class UnifiedProfile(BaseModel):
+
+src\app\modules\intelligence\query\schemas.py:9
+  C:\dev\GUTTERS\src\app\modules\intelligence\query\schemas.py:9: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class QueryRequest(BaseModel):
+
+src\app\modules\intelligence\hypothesis\models.py:32
+  C:\dev\GUTTERS\src\app\modules\intelligence\hypothesis\models.py:32: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class Hypothesis(BaseModel):
+
+tests/integration/test_end_to_end.py::test_complete_user_journey
+  C:\dev\GUTTERS\.venv\Lib\site-packages\kerykeion\backword.py:155: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    NOW = _dt.utcnow()
+
+tests/integration/test_end_to_end.py::test_complete_user_journey
+  C:\dev\GUTTERS\.venv\Lib\site-packages\kerykeion\backword.py:188: DeprecationWarning: 'AstrologicalSubject' is deprecated and will be removed in a future major release. Please migrate to: AstrologicalSubjectFactory.from_birth_data
+    _deprecated("AstrologicalSubject", "AstrologicalSubjectFactory.from_birth_data")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/integration/test_end_to_end.py::test_complete_user_journey - Run...
+======================= 1 failed, 5 warnings in 27.64s ========================

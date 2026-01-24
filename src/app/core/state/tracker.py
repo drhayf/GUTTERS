@@ -61,6 +61,14 @@ PROFILE_DOMAINS = {
         "required_fields": ["letters", "values"],
         "weight": 0.3,
     },
+    "synthesis": {
+        "required_fields": ["synthesis", "modules_included"],
+        "weight": 0.8,  # High importance - synthesis shows integration
+    },
+    "hypothesis": {
+        "required_fields": ["confirmed_hypotheses"],
+        "weight": 0.5,
+    },
 }
 
 
@@ -201,7 +209,7 @@ class StateTracker:
                 "active": True,
                 "hypothesis_count": hypothesis_count,
                 "fields_uncertain": fields_uncertain,
-                "started_at": datetime.utcnow().isoformat(),
+                "started_at": datetime.now(timezone.utc).isoformat(),
                 "confirmations": {},
             }
             
@@ -235,7 +243,7 @@ class StateTracker:
             
             profile_data["genesis"]["confirmations"][field] = {
                 "value": confirmed_value,
-                "confirmed_at": datetime.utcnow().isoformat(),
+                "confirmed_at": datetime.now(timezone.utc).isoformat(),
             }
             
             # Remove from uncertain fields
@@ -245,7 +253,7 @@ class StateTracker:
             # Check if all fields confirmed
             if not profile_data["genesis"].get("fields_uncertain"):
                 profile_data["genesis"]["active"] = False
-                profile_data["genesis"]["completed_at"] = datetime.utcnow().isoformat()
+                profile_data["genesis"]["completed_at"] = datetime.now(timezone.utc).isoformat()
             
             # Save
             await crud_user_profiles.update(
@@ -264,6 +272,71 @@ class StateTracker:
             
             profile_data = getattr(profile, "data", {}) or {}
             return profile_data.get("genesis")
+
+    async def update_synthesis_status(self, user_id: int, db: AsyncSession) -> None:
+        """Update synthesis completion status."""
+        from src.app.core.memory.active_memory import get_active_memory
+        
+        memory = get_active_memory()
+        await memory.initialize()
+        
+        synthesis = await memory.get_master_synthesis(user_id)
+        
+        if synthesis and synthesis.get('modules_included'):
+            # Synthesis complete
+            await self.mark_domain_complete(user_id, "synthesis", db)
+        else:
+            # Incomplete
+            await self.mark_domain_incomplete(user_id, "synthesis", db)
+
+    async def update_hypothesis_status(self, user_id: int, db: AsyncSession) -> None:
+        """Update hypothesis completion status."""
+        from src.app.modules.intelligence.hypothesis.storage import HypothesisStorage
+        
+        storage = HypothesisStorage()
+        confirmed = await storage.get_confirmed_hypotheses(user_id)
+        
+        if len(confirmed) >= 3:  # At least 3 confirmed hypotheses
+            await self.mark_domain_complete(user_id, "hypothesis", db)
+        else:
+            await self.mark_domain_incomplete(user_id, "hypothesis", db)
+
+    async def mark_domain_complete(self, user_id: int, domain: str, db: AsyncSession) -> None:
+        """Mark a domain as complete in the user profile."""
+        profile = await crud_user_profiles.get(db=db, user_id=user_id)
+        if not profile:
+            return
+        
+        profile_data = getattr(profile, "data", {}) or {}
+        if "domains_complete" not in profile_data:
+            profile_data["domains_complete"] = {}
+        
+        profile_data["domains_complete"][domain] = True
+        
+        await crud_user_profiles.update(
+            db=db,
+            object={"data": profile_data},
+            user_id=user_id
+        )
+
+    async def mark_domain_incomplete(self, user_id: int, domain: str, db: AsyncSession) -> None:
+        """Mark a domain as incomplete in the user profile."""
+        profile = await crud_user_profiles.get(db=db, user_id=user_id)
+        if not profile:
+            return
+        
+        profile_data = getattr(profile, "data", {}) or {}
+        if "domains_complete" not in profile_data:
+            return
+        
+        if domain in profile_data["domains_complete"]:
+            profile_data["domains_complete"][domain] = False
+            
+            await crud_user_profiles.update(
+                db=db,
+                object={"data": profile_data},
+                user_id=user_id
+            )
 
 
 # Singleton instance

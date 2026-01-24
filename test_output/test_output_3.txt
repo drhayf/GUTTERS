@@ -1,0 +1,148 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-9.0.2, pluggy-1.6.0 -- C:\dev\GUTTERS\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\dev\GUTTERS
+configfile: pyproject.toml
+plugins: anyio-4.12.1, Faker-37.3.0, langsmith-0.6.4, asyncio-1.3.0, mock-3.14.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 4 items
+
+tests/modules/intelligence/test_generative_ui.py::test_models_serialization PASSED [ 25%]
+tests/modules/intelligence/test_generative_ui.py::test_generator_multi_slider PASSED [ 50%]
+tests/modules/intelligence/test_generative_ui.py::test_query_engine_integration PASSED [ 75%]
+tests/modules/intelligence/test_generative_ui.py::test_api_component_submission FAILED [100%]
+
+================================== FAILURES ===================================
+________________________ test_api_component_submission ________________________
+
+seeded_user = 5
+db = <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x000001D347D3F920>
+
+    @pytest.mark.asyncio
+    async def test_api_component_submission(seeded_user, db):
+        """
+        Test submitting a component response via API logic directly.
+        (We verify the logic inside the endpoint handler pattern).
+        """
+        # Simulate API handler logic
+        from src.app.api.v1.chat import submit_component_response
+    
+        # Create a component response
+        comp_id = str(uuid.uuid4())
+        payload = ComponentResponse(
+            component_id=comp_id,
+            component_type=ComponentType.MULTI_SLIDER,
+            slider_values={"mood": 5, "energy": 3, "anxiety": 8},
+            interaction_time_ms=1500,
+        )
+    
+        # Call handler (simulated)
+        # We need a user object matching the seeded_user ID
+        from src.app.models.user import User
+    
+        user = User(id=seeded_user, email="test@example.com")
+    
+>       result = await submit_component_response(response=payload, current_user=user, db=db)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\modules\intelligence\test_generative_ui.py:129: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\app\api\v1\chat.py:266: in submit_component_response
+    await event_bus.publish(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <src.app.core.events.bus.EventBus object at 0x000001D32C141D00>
+event_type = 'journal.entry.created'
+payload = {'content': 'Check-in: Mood: 5/10, Energy: 3/10, Anxiety: 8/10', 'entry_id': 'f63f18fb-22dd-490d-8b8c-661a7fd1db83', 'user_id': 5}
+source = 'generative_ui.multi_slider', user_id = '5'
+
+    async def publish(
+        self,
+        event_type: str,
+        payload: dict[str, Any],
+        source: str = "system",
+        user_id: str | None = None,
+    ) -> None:
+        """
+        Publish an event to the bus.
+    
+        Creates a Packet and broadcasts it to all matching subscribers.
+    
+        Args:
+            event_type: Event type constant (from protocol.events)
+            payload: Event-specific data
+            source: Module or system emitting the event
+            user_id: User this event relates to (optional)
+    
+        Example:
+            >>> await bus.publish(
+            ...     "module.profile_calculated",
+            ...     {"module_name": "astrology", "profile_id": "123"},
+            ...     source="astrology"
+            ... )
+        """
+        if not self.redis_client:
+>           raise RuntimeError("EventBus not initialized. Call initialize() first.")
+E           RuntimeError: EventBus not initialized. Call initialize() first.
+
+src\app\core\events\bus.py:132: RuntimeError
+============================== warnings summary ===============================
+src\app\modules\intelligence\synthesis\schemas.py:21
+  C:\dev\GUTTERS\src\app\modules\intelligence\synthesis\schemas.py:21: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class UnifiedProfile(BaseModel):
+
+src\app\modules\intelligence\query\schemas.py:9
+  C:\dev\GUTTERS\src\app\modules\intelligence\query\schemas.py:9: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class QueryRequest(BaseModel):
+
+src\app\modules\intelligence\hypothesis\models.py:32
+  C:\dev\GUTTERS\src\app\modules\intelligence\hypothesis\models.py:32: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class Hypothesis(BaseModel):
+
+tests/modules/intelligence/test_generative_ui.py::test_query_engine_integration
+tests/modules/intelligence/test_generative_ui.py::test_api_component_submission
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:43: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    start_date = datetime.utcnow() - timedelta(days=days)
+
+tests/modules/intelligence/test_generative_ui.py: 124 warnings
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:47: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    while current_date < datetime.utcnow():
+
+tests/modules/intelligence/test_generative_ui.py::test_query_engine_integration
+tests/modules/intelligence/test_generative_ui.py::test_api_component_submission
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:147: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat()
+
+tests/modules/intelligence/test_generative_ui.py::test_query_engine_integration
+tests/modules/intelligence/test_generative_ui.py::test_api_component_submission
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:157: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat()
+
+tests/modules/intelligence/test_generative_ui.py::test_query_engine_integration
+tests/modules/intelligence/test_generative_ui.py::test_api_component_submission
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:167: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat()
+
+tests/modules/intelligence/test_generative_ui.py::test_query_engine_integration
+tests/modules/intelligence/test_generative_ui.py::test_api_component_submission
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:176: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat()
+
+tests/modules/intelligence/test_generative_ui.py::test_query_engine_integration
+tests/modules/intelligence/test_generative_ui.py::test_api_component_submission
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:186: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat()
+
+tests/modules/intelligence/test_generative_ui.py::test_query_engine_integration
+tests/modules/intelligence/test_generative_ui.py::test_api_component_submission
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:205: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    start_date = datetime.utcnow() - timedelta(days=days)
+
+tests/modules/intelligence/test_generative_ui.py: 122 warnings
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:209: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    while current_date < datetime.utcnow():
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/modules/intelligence/test_generative_ui.py::test_api_component_submission
+================= 1 failed, 3 passed, 263 warnings in 20.90s ==================

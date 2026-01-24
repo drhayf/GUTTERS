@@ -11,12 +11,47 @@ Every feature in GUTTERS must integrate with these systems. This is NOT optional
 
 | System | When to Integrate | Files to Touch |
 |--------|-------------------|----------------|
-| **ModuleRegistry** | Any module that calculates or synthesizes | Auto-registered via `BaseModule`, check `modules/registry.py` |
+| **ModuleRegistry** | Any module that calculates or synthesizes | Auto-registered via `BaseModule` |
 | **Genesis** | Any data that may be uncertain/incomplete | `genesis/declarations/`, engine subscriptions |
+| **Active Memory** | Performance-critical data (synthesis, outputs) | `core/memory/active_memory.py` |
 | **StateTracker** | Any data that affects profile completion | `core/state/tracker.py` |
 | **EventBus** | Any action other modules might react to | `protocol/events.py`, `protocol/payloads.py` |
 | **ActivityLogger** | Any LLM call or significant operation | `log_activity()` calls |
-| **Observability** | Any new data users should see in dashboard | `api/v1/observability.py` |
+| **Chat System** | Any feature needing conversation presence | `SessionManager`, `ChatSession` |
+| **Vector Index** | Any module with searchable history | `vector/embedding_service.py` |
+| **Observability** | Any dashboard visibility | `api/v1/observability.py` |
+| **Generative UI** | Any custom user interaction | `generative_ui/models.py`, `chat.py` |
+
+---
+
+## 1. Chat System Integration (The Cognitive Interface)
+
+**Ask:** Does this feature involve user interaction, data gathering via dialogue, or automated status reporting?
+
+**If YES, you MUST coordinate with the Master/Branch architecture:**
+
+1.  **Master Chat Presence:** High-level status updates or refinement probes (Genesis) should target the user's singleton Master Chat.
+2.  **Workspaces (Branches):** Intensive, topic-specific work (Deep Journaling, Nutrition Planning) should occur in a dedicated Branch session.
+3.  **Memory Toggles:** Decide if the session should contribute to the user's permanent profile (`contribute_to_memory=True`).
+4.  **Trace Metadata:** Store thinking steps, tool outputs, and LLM internal reasoning in `ChatMessage.meta` for Phase 7b observability.
+
+```python
+from src.app.modules.features.chat.session_manager import SessionManager
+
+manager = SessionManager()
+
+# Get the persistent UI presence
+master = await manager.get_or_create_master_session(user_id, db)
+
+# Or create a dedicated topic branch
+branch = await manager.create_branch_session(
+    user_id=user_id,
+    session_type="nutrition",
+    name="Meal Planning Week 4",
+    contribute_to_memory=True,
+    db=db
+)
+```
 
 ---
 
@@ -167,6 +202,7 @@ await logger.log_llm_call(
     model_id=model_id,
     prompt=prompt,
     response=response,
+    cost_aud=cost_aud, # 🆕 MANDATORY: Log AUD cost for user transparency
 )
 
 # For general activities
@@ -178,9 +214,28 @@ await logger.log_activity(
 )
 ```
 
+# 6. Active Memory Integration (Caching)
+
+**Ask:** Does this module produce data needed for real-time conversation or dashboard display?
+
+**If YES, you MUST:**
+```python
+from app.core.memory.active_memory import get_active_memory
+
+memory = get_active_memory()
+
+# 1. Warm Memory: Cache module output immediately after calculation
+await memory.set_module_output(user_id, "{module}", data)
+
+# 2. Hot Memory: Trigger synthesis if this changes the user's core profile
+from app.core.memory.synthesis_orchestrator import get_orchestrator, SynthesisTrigger
+orchestrator = get_orchestrator()
+await orchestrator.trigger_synthesis(user_id, SynthesisTrigger.MODULE_DATA_UPDATED)
+```
+
 ---
 
-## 6. API Endpoint Integration
+## 7. API Endpoint Integration
 
 **Ask:** Does this feature need user-facing endpoints?
 
@@ -203,6 +258,36 @@ async def get_{feature}_activity(user_id: int):
 
 ---
 
+## 8. Generative UI Integration (Interactive Components)
+
+**Ask:** Does this feature need structured input from the user beyond text?
+
+**If YES, you MUST:**
+```python
+# 1. Define Component Model
+# File: modules/intelligence/generative_ui/models.py
+class {My}ComponentSpec(BaseModel):
+    options: List[str]
+
+# 2. Add to ComponentType
+# File: modules/intelligence/generative_ui/models.py - ComponentType Enum
+MY_COMPONENT = "my_component"
+
+# 3. Add Generation Logic
+# File: modules/intelligence/generative_ui/generator.py
+async def generate_my_component(...):
+    return ComponentSpec(component_type=ComponentType.MY_COMPONENT, ...)
+
+# 4. Handle Submission in API
+# File: api/v1/chat.py - submit_component_response
+elif response.component_type == ComponentType.MY_COMPONENT:
+    # Store data
+    # Publish event
+    await event_bus.publish("my.component.submitted", ...)
+```
+
+---
+
 ## Pre-Implementation Checklist
 
 Before writing any code, answer these:
@@ -210,9 +295,11 @@ Before writing any code, answer these:
 - [ ] **Genesis:** Will any output be uncertain? → Create extractor + strategies
 - [ ] **StateTracker:** Does this affect profile completion? → Update domains
 - [ ] **EventBus:** Should other modules react? → Define events + payloads
-- [ ] **ActivityLogger:** Are there LLM calls or key operations? → Add logging
+- [ ] **ActivityLogger:** Are there LLM calls? → Set tier (Premium/Standard) + Log AUD cost
 - [ ] **Observability:** Should users see this in dashboard? → Add endpoints
-- [ ] **Tests:** Have you planned 80%+ coverage?
+- [ ] **Active Memory:** Is data pushed to warm/hot layers? → Update cache
+- [ ] **Vector Index:** Should this content be semantically searchable? → Seed embeddings
+- [ ] **High-Fidelity Tests:** Real DB + Redis test created? → No mocks!
 
 ---
 
@@ -235,16 +322,15 @@ Before writing any code, answer these:
 5. Integrate with Genesis if produces uncertainties
 
 ### New API Feature
-1. Create router + register
-2. Use existing auth dependencies
+1. Create router + register in `src/app/api/v1/__init__.py`
+2. Use existing auth dependencies (`get_current_user` from `src.app.api.dependencies`)
 3. Add observability if significant
-4. Test with authentication
+4. Test with authentication and properly awaited fixtures
+5. Ensure `manifest.json` is present for modules
 
 ---
 
-## NEVER Skip These
-
-❌ "I'll add Genesis integration later" → NO, do it now
-❌ "StateTracker doesn't need this" → YES it does, always check
-❌ "Events aren't needed for this simple feature" → Think again, decoupling matters
-❌ "Activity logging is optional" → NO, observability is core
+❌ "I'll add Genesis integration later" → NO, do it now. Genesis is the "soul" of the system.
+❌ "Events aren't needed" → Decoupling is mandatory.
+❌ "Mocking the database in tests" → NO. See `high-fidelity-testing` skill. All tests must verify actual persistence.
+❌ "Leaving it in PG, I'll cache later" → NO, push to Active Memory Warm Layer immediately.

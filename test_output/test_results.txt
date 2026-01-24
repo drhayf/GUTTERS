@@ -1,0 +1,276 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-9.0.2, pluggy-1.6.0 -- C:\dev\GUTTERS\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\dev\GUTTERS
+configfile: pyproject.toml
+plugins: anyio-4.12.1, Faker-37.3.0, langsmith-0.6.4, asyncio-1.3.0, mock-3.14.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 4 items
+
+tests/modules/intelligence/test_observable_ai.py::test_query_generates_trace ERROR [ 25%]
+tests/modules/intelligence/test_observable_ai.py::test_vector_search_tracked_in_trace ERROR [ 50%]
+tests/modules/intelligence/test_observable_ai.py::test_trace_stored_in_message_metadata ERROR [ 75%]
+tests/modules/intelligence/test_observable_ai.py::test_trace_latency_calculation ERROR [100%]
+
+=================================== ERRORS ====================================
+________________ ERROR at setup of test_query_generates_trace _________________
+file C:\dev\GUTTERS\tests\modules\intelligence\test_observable_ai.py, line 15
+  @pytest.mark.asyncio
+  async def test_query_generates_trace(seeded_user, real_db):
+      """
+      Test that Query Engine generates activity trace.
+
+      Verification:
+      - Trace has thinking steps
+      - Trace has tool calls
+      - Trace has model info
+      - Trace has confidence score
+      """
+      memory = get_active_memory()
+      await memory.initialize()
+
+      engine = QueryEngine()
+
+      response = await engine.answer_query(seeded_user, "What should I focus on today?", real_db, use_vector_search=True)
+
+      # Verify trace exists
+      assert response.trace is not None
+
+      # Verify thinking steps
+      assert len(response.trace.thinking_steps) > 0
+      assert any("Active Memory" in step.description for step in response.trace.thinking_steps)
+
+      # Verify tool calls
+      assert len(response.trace.tools_used) > 0
+
+      # Check Active Memory was called
+      active_memory_calls = [call for call in response.trace.tools_used if call.tool == "active_memory"]
+      assert len(active_memory_calls) > 0
+
+      # Verify model info
+      assert response.trace.model_info is not None
+      # Depending on test env, might be unknown or actual provider
+      assert response.trace.model_info.tokens_in > 0
+      assert response.trace.model_info.tokens_out > 0
+
+      # Verify confidence
+      assert 0.0 <= response.trace.confidence <= 1.0
+E       fixture 'real_db' not found
+>       available fixtures: _class_scoped_runner, _function_scoped_runner, _module_scoped_runner, _package_scoped_runner, _session_faker, _session_scoped_runner, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, class_mocker, cleanup_test_state, client, current_user_dict, db, doctest_namespace, event_loop_policy, faker, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, memory, mock_db, mock_redis, mocker, module_mocker, monkeypatch, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_user_data, sample_user_read, seeded_user, session_mocker, subtests, sync_db, test_user, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+C:\dev\GUTTERS\tests\modules\intelligence\test_observable_ai.py:15
+____________ ERROR at setup of test_vector_search_tracked_in_trace ____________
+file C:\dev\GUTTERS\tests\modules\intelligence\test_observable_ai.py, line 57
+  @pytest.mark.asyncio
+  async def test_vector_search_tracked_in_trace(seeded_user, real_db):
+      """
+      Test that vector search operations appear in trace.
+      """
+      from src.app.modules.intelligence.vector.embedding_service import EmbeddingService
+      from src.app.models.embedding import Embedding
+      from src.app.models.user_profile import UserProfile
+      from src.app.core.config import settings
+
+      # Ensure user profile exists
+      result = await real_db.execute(select(UserProfile).where(UserProfile.user_id == seeded_user))
+      profile = result.scalar_one_or_none()
+      if not profile:
+          real_db.add(
+              UserProfile(
+                  user_id=seeded_user, data={"journal_entries": [{"content": "I feel tired", "date": "2024-01-24"}]}
+              )
+          )
+          await real_db.commit()
+
+      service = EmbeddingService(settings.OPENROUTER_API_KEY.get_secret_value())
+
+      # Seed an embedding manually to ensure count > 0
+      # Use real embedding service if possible, or mock search if necessary.
+      # But mandate says NO mocks for core logic.
+      embedding_data = await service.embed_text("Test journal entry")
+      real_db.add(
+          Embedding(
+              user_id=seeded_user, content="Test journal entry", embedding=embedding_data, metadata={"source": "test"}
+          )
+      )
+      await real_db.commit()
+
+      memory = get_active_memory()
+      await memory.initialize()
+
+      engine = QueryEngine()
+
+      response = await engine.answer_query(
+          seeded_user, "Tell me about my journal patterns", real_db, use_vector_search=True
+      )
+
+      # Verify vector search in trace
+      vector_calls = [call for call in response.trace.tools_used if call.tool == "vector_search"]
+
+      assert len(vector_calls) > 0
+
+      # Check details
+      search_call = next(c for c in vector_calls if c.operation == "hybrid_search")
+      assert search_call.latency_ms >= 0
+      assert "Found" in search_call.result_summary
+E       fixture 'real_db' not found
+>       available fixtures: _class_scoped_runner, _function_scoped_runner, _module_scoped_runner, _package_scoped_runner, _session_faker, _session_scoped_runner, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, class_mocker, cleanup_test_state, client, current_user_dict, db, doctest_namespace, event_loop_policy, faker, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, memory, mock_db, mock_redis, mocker, module_mocker, monkeypatch, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_user_data, sample_user_read, seeded_user, session_mocker, subtests, sync_db, test_user, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+C:\dev\GUTTERS\tests\modules\intelligence\test_observable_ai.py:57
+___________ ERROR at setup of test_trace_stored_in_message_metadata ___________
+file C:\dev\GUTTERS\tests\modules\intelligence\test_observable_ai.py, line 111
+  @pytest.mark.asyncio
+  async def test_trace_stored_in_message_metadata(seeded_user, real_db):
+      """
+      Test that trace is stored in ChatMessage.metadata.
+      """
+      memory = get_active_memory()
+      await memory.initialize()
+
+      query_engine = QueryEngine()
+      handler = MasterChatHandler(query_engine)
+
+      response = await handler.send_message(seeded_user, "What should I do today?", real_db)
+
+      # Verify trace in response
+      assert "trace" in response
+      assert response["trace"] is not None
+
+      # Get message from database
+      from src.app.models.chat_session import ChatMessage, ChatSession
+
+      # Find master session for user
+      sess_result = await real_db.execute(
+          select(ChatSession).where(ChatSession.user_id == seeded_user, ChatSession.session_type == "master")
+      )
+      session = sess_result.scalar_one()
+
+      result = await real_db.execute(
+          select(ChatMessage)
+          .where(ChatMessage.session_id == session.id, ChatMessage.role == "assistant")
+          .order_by(ChatMessage.created_at.desc())
+      )
+      latest_message = result.scalar_one()
+
+      # Verify trace in metadata
+      assert "trace" in latest_message.metadata
+      assert latest_message.metadata["trace"] is not None
+      assert "thinking_steps" in latest_message.metadata["trace"]
+      assert "tools_used" in latest_message.metadata["trace"]
+      assert "model_info" in latest_message.metadata["trace"]
+E       fixture 'real_db' not found
+>       available fixtures: _class_scoped_runner, _function_scoped_runner, _module_scoped_runner, _package_scoped_runner, _session_faker, _session_scoped_runner, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, class_mocker, cleanup_test_state, client, current_user_dict, db, doctest_namespace, event_loop_policy, faker, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, memory, mock_db, mock_redis, mocker, module_mocker, monkeypatch, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_user_data, sample_user_read, seeded_user, session_mocker, subtests, sync_db, test_user, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+C:\dev\GUTTERS\tests\modules\intelligence\test_observable_ai.py:111
+______________ ERROR at setup of test_trace_latency_calculation _______________
+file C:\dev\GUTTERS\tests\modules\intelligence\test_observable_ai.py, line 152
+  @pytest.mark.asyncio
+  async def test_trace_latency_calculation(seeded_user, real_db):
+      """
+      Test that trace calculates total latency correctly.
+      """
+      memory = get_active_memory()
+      await memory.initialize()
+
+      engine = QueryEngine()
+
+      response = await engine.answer_query(seeded_user, "Quick test for latency", real_db, use_vector_search=False)
+
+      trace = response.trace
+
+      # Verify timestamps
+      assert trace.started_at is not None
+      assert trace.completed_at is not None
+      assert trace.completed_at > trace.started_at
+
+      # Verify total latency
+      assert trace.total_latency_ms > 0
+
+      # Total should be at least as long as LLM call
+      if trace.model_info:
+          assert trace.total_latency_ms >= trace.model_info.latency_ms
+E       fixture 'real_db' not found
+>       available fixtures: _class_scoped_runner, _function_scoped_runner, _module_scoped_runner, _package_scoped_runner, _session_faker, _session_scoped_runner, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, class_mocker, cleanup_test_state, client, current_user_dict, db, doctest_namespace, event_loop_policy, faker, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, memory, mock_db, mock_redis, mocker, module_mocker, monkeypatch, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_user_data, sample_user_read, seeded_user, session_mocker, subtests, sync_db, test_user, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+C:\dev\GUTTERS\tests\modules\intelligence\test_observable_ai.py:152
+============================== warnings summary ===============================
+src\app\modules\intelligence\synthesis\schemas.py:21
+  C:\dev\GUTTERS\src\app\modules\intelligence\synthesis\schemas.py:21: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class UnifiedProfile(BaseModel):
+
+src\app\modules\intelligence\query\schemas.py:8
+  C:\dev\GUTTERS\src\app\modules\intelligence\query\schemas.py:8: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class QueryRequest(BaseModel):
+
+src\app\modules\intelligence\hypothesis\models.py:32
+  C:\dev\GUTTERS\src\app\modules\intelligence\hypothesis\models.py:32: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class Hypothesis(BaseModel):
+
+tests/modules/intelligence/test_observable_ai.py::test_query_generates_trace
+tests/modules/intelligence/test_observable_ai.py::test_vector_search_tracked_in_trace
+tests/modules/intelligence/test_observable_ai.py::test_trace_stored_in_message_metadata
+tests/modules/intelligence/test_observable_ai.py::test_trace_latency_calculation
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:43: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    start_date = datetime.utcnow() - timedelta(days=days)
+
+tests/modules/intelligence/test_observable_ai.py: 246 warnings
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:47: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    while current_date < datetime.utcnow():
+
+tests/modules/intelligence/test_observable_ai.py::test_query_generates_trace
+tests/modules/intelligence/test_observable_ai.py::test_vector_search_tracked_in_trace
+tests/modules/intelligence/test_observable_ai.py::test_trace_stored_in_message_metadata
+tests/modules/intelligence/test_observable_ai.py::test_trace_latency_calculation
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:147: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat()
+
+tests/modules/intelligence/test_observable_ai.py::test_query_generates_trace
+tests/modules/intelligence/test_observable_ai.py::test_vector_search_tracked_in_trace
+tests/modules/intelligence/test_observable_ai.py::test_trace_stored_in_message_metadata
+tests/modules/intelligence/test_observable_ai.py::test_trace_latency_calculation
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:157: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat()
+
+tests/modules/intelligence/test_observable_ai.py::test_query_generates_trace
+tests/modules/intelligence/test_observable_ai.py::test_vector_search_tracked_in_trace
+tests/modules/intelligence/test_observable_ai.py::test_trace_stored_in_message_metadata
+tests/modules/intelligence/test_observable_ai.py::test_trace_latency_calculation
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:167: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat()
+
+tests/modules/intelligence/test_observable_ai.py::test_query_generates_trace
+tests/modules/intelligence/test_observable_ai.py::test_vector_search_tracked_in_trace
+tests/modules/intelligence/test_observable_ai.py::test_trace_stored_in_message_metadata
+tests/modules/intelligence/test_observable_ai.py::test_trace_latency_calculation
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:176: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat()
+
+tests/modules/intelligence/test_observable_ai.py::test_query_generates_trace
+tests/modules/intelligence/test_observable_ai.py::test_vector_search_tracked_in_trace
+tests/modules/intelligence/test_observable_ai.py::test_trace_stored_in_message_metadata
+tests/modules/intelligence/test_observable_ai.py::test_trace_latency_calculation
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:186: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat()
+
+tests/modules/intelligence/test_observable_ai.py::test_query_generates_trace
+tests/modules/intelligence/test_observable_ai.py::test_vector_search_tracked_in_trace
+tests/modules/intelligence/test_observable_ai.py::test_trace_stored_in_message_metadata
+tests/modules/intelligence/test_observable_ai.py::test_trace_latency_calculation
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:205: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    start_date = datetime.utcnow() - timedelta(days=days)
+
+tests/modules/intelligence/test_observable_ai.py: 245 warnings
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:209: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    while current_date < datetime.utcnow():
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+ERROR tests/modules/intelligence/test_observable_ai.py::test_query_generates_trace
+ERROR tests/modules/intelligence/test_observable_ai.py::test_vector_search_tracked_in_trace
+ERROR tests/modules/intelligence/test_observable_ai.py::test_trace_stored_in_message_metadata
+ERROR tests/modules/intelligence/test_observable_ai.py::test_trace_latency_calculation
+======================= 522 warnings, 4 errors in 2.88s =======================

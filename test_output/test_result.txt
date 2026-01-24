@@ -1,0 +1,89 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-8.4.0, pluggy-1.6.0 -- C:\dev\GUTTERS\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\dev\GUTTERS
+configfile: pyproject.toml
+plugins: anyio-4.9.0, Faker-37.3.0, langsmith-0.6.4, asyncio-1.0.0, mock-3.14.1
+asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 5 items
+
+tests/modules/intelligence/test_hypothesis.py::test_hypothesis_generation_from_patterns PASSED [ 20%]
+tests/modules/intelligence/test_hypothesis.py::test_hypothesis_storage_and_retrieval PASSED [ 40%]
+tests/modules/intelligence/test_hypothesis.py::test_hypothesis_confidence_update PASSED [ 60%]
+tests/modules/intelligence/test_hypothesis.py::test_confirmed_hypotheses_in_synthesis PASSED [ 80%]
+tests/modules/intelligence/test_hypothesis.py::test_hypothesis_event_published PASSED [100%]
+
+============================== warnings summary ===============================
+.venv\Lib\site-packages\pydantic\_internal\_config.py:323
+.venv\Lib\site-packages\pydantic\_internal\_config.py:323
+.venv\Lib\site-packages\pydantic\_internal\_config.py:323
+.venv\Lib\site-packages\pydantic\_internal\_config.py:323
+  C:\dev\GUTTERS\.venv\Lib\site-packages\pydantic\_internal\_config.py:323: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+tests/modules/intelligence/test_hypothesis.py::test_hypothesis_generation_from_patterns
+tests/modules/intelligence/test_hypothesis.py::test_hypothesis_storage_and_retrieval
+tests/modules/intelligence/test_hypothesis.py::test_hypothesis_confidence_update
+tests/modules/intelligence/test_hypothesis.py::test_confirmed_hypotheses_in_synthesis
+tests/modules/intelligence/test_hypothesis.py::test_hypothesis_event_published
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:43: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    start_date = datetime.utcnow() - timedelta(days=days)
+
+tests/modules/intelligence/test_hypothesis.py: 306 warnings
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:47: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    while current_date < datetime.utcnow():
+
+tests/modules/intelligence/test_hypothesis.py::test_hypothesis_generation_from_patterns
+tests/modules/intelligence/test_hypothesis.py::test_hypothesis_storage_and_retrieval
+tests/modules/intelligence/test_hypothesis.py::test_hypothesis_confidence_update
+tests/modules/intelligence/test_hypothesis.py::test_confirmed_hypotheses_in_synthesis
+tests/modules/intelligence/test_hypothesis.py::test_hypothesis_event_published
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:147: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat()
+
+tests/modules/intelligence/test_hypothesis.py::test_hypothesis_generation_from_patterns
+tests/modules/intelligence/test_hypothesis.py::test_hypothesis_storage_and_retrieval
+tests/modules/intelligence/test_hypothesis.py::test_hypothesis_confidence_update
+tests/modules/intelligence/test_hypothesis.py::test_confirmed_hypotheses_in_synthesis
+tests/modules/intelligence/test_hypothesis.py::test_hypothesis_event_published
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:157: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat()
+
+tests/modules/intelligence/test_hypothesis.py::test_hypothesis_generation_from_patterns
+tests/modules/intelligence/test_hypothesis.py::test_hypothesis_storage_and_retrieval
+tests/modules/intelligence/test_hypothesis.py::test_hypothesis_confidence_update
+tests/modules/intelligence/test_hypothesis.py::test_confirmed_hypotheses_in_synthesis
+tests/modules/intelligence/test_hypothesis.py::test_hypothesis_event_published
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:167: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat()
+
+tests/modules/intelligence/test_hypothesis.py::test_hypothesis_generation_from_patterns
+tests/modules/intelligence/test_hypothesis.py::test_hypothesis_storage_and_retrieval
+tests/modules/intelligence/test_hypothesis.py::test_hypothesis_confidence_update
+tests/modules/intelligence/test_hypothesis.py::test_confirmed_hypotheses_in_synthesis
+tests/modules/intelligence/test_hypothesis.py::test_hypothesis_event_published
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:176: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat()
+
+tests/modules/intelligence/test_hypothesis.py::test_hypothesis_generation_from_patterns
+tests/modules/intelligence/test_hypothesis.py::test_hypothesis_storage_and_retrieval
+tests/modules/intelligence/test_hypothesis.py::test_hypothesis_confidence_update
+tests/modules/intelligence/test_hypothesis.py::test_confirmed_hypotheses_in_synthesis
+tests/modules/intelligence/test_hypothesis.py::test_hypothesis_event_published
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:186: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat()
+
+tests/modules/intelligence/test_hypothesis.py::test_hypothesis_generation_from_patterns
+tests/modules/intelligence/test_hypothesis.py::test_hypothesis_storage_and_retrieval
+tests/modules/intelligence/test_hypothesis.py::test_hypothesis_confidence_update
+tests/modules/intelligence/test_hypothesis.py::test_confirmed_hypotheses_in_synthesis
+tests/modules/intelligence/test_hypothesis.py::test_hypothesis_event_published
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:205: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    start_date = datetime.utcnow() - timedelta(days=days)
+
+tests/modules/intelligence/test_hypothesis.py: 308 warnings
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:209: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    while current_date < datetime.utcnow():
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+====================== 5 passed, 653 warnings in 26.67s =======================

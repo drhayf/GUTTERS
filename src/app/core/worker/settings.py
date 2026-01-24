@@ -3,12 +3,28 @@ from typing import cast
 
 from arq.cli import watch_reload
 from arq.connections import RedisSettings
+from arq.cron import cron
 from arq.typing import WorkerSettingsType
 from arq.worker import check_health, run_worker
 
 from ...core.config import settings
 from ...core.logger import logging  # noqa: F401
-from .functions import on_job_end, on_job_start, sample_background_task, shutdown, startup
+from .functions import (
+    on_job_end,
+    on_job_start,
+    sample_background_task,
+    shutdown,
+    startup,
+    synthesize_profile_job,
+    update_lunar_tracking_job,
+    update_solar_tracking_job,
+    update_solar_tracking_job,
+    update_transit_tracking_job,
+    observer_analysis_job,
+    generate_hypotheses_job,
+    populate_embeddings_job,
+)
+
 
 REDIS_QUEUE_HOST = settings.REDIS_QUEUE_HOST
 REDIS_QUEUE_PORT = settings.REDIS_QUEUE_PORT
@@ -16,13 +32,31 @@ REDIS_PASSWORD = settings.REDIS_PASSWORD
 
 
 class WorkerSettings:
-    functions = [sample_background_task]
+    functions = [
+        sample_background_task,
+        synthesize_profile_job,
+        update_solar_tracking_job,
+        update_lunar_tracking_job,
+        update_lunar_tracking_job,
+        update_transit_tracking_job,
+        observer_analysis_job,
+        generate_hypotheses_job,
+        populate_embeddings_job,
+    ]
     redis_settings = RedisSettings(
         host=REDIS_QUEUE_HOST,
         port=REDIS_QUEUE_PORT,
         password=REDIS_PASSWORD,
-        ssl=bool(REDIS_PASSWORD)
+        ssl=bool(REDIS_PASSWORD),
     )
+    cron_jobs = [
+        cron(update_solar_tracking_job, hour={0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23}),
+        cron(update_lunar_tracking_job, hour=0, minute=0),
+        cron(update_transit_tracking_job, hour=0, minute=30),
+        cron(observer_analysis_job, hour=1, minute=0),
+        cron(generate_hypotheses_job, hour=2, minute=0),
+        cron(populate_embeddings_job, hour=3, minute=0),
+    ]
     on_startup = startup
     on_shutdown = shutdown
     on_job_start = on_job_start

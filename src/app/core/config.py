@@ -10,6 +10,7 @@ class AppSettings(BaseSettings):
     APP_DESCRIPTION: str | None = "Guided Universal Transcendental Transformation & Evolutionary Response System"
     APP_VERSION: str | None = None
     LICENSE_NAME: str | None = None
+    OPENROUTER_API_KEY: SecretStr | None = None
     CONTACT_NAME: str | None = None
     CONTACT_EMAIL: str | None = None
 
@@ -81,7 +82,7 @@ class PostgresSettings(DatabaseSettings):
     POSTGRES_SERVER: str = "localhost"
     POSTGRES_PORT: int = 5432
     POSTGRES_DB: str = "postgres"
-    POSTGRES_SYNC_PREFIX: str = "postgresql://"
+    POSTGRES_SYNC_PREFIX: str = "postgresql+psycopg://"
     POSTGRES_ASYNC_PREFIX: str = "postgresql+asyncpg://"
     POSTGRES_URL: str | None = None
 
@@ -113,7 +114,7 @@ class RedisCacheSettings(BaseSettings):
     @property
     def REDIS_CACHE_URL(self) -> str:
         if self.REDIS_PASSWORD:
-            return f"rediss://default:{self.REDIS_PASSWORD}@{self.REDIS_CACHE_HOST}:{self.REDIS_CACHE_PORT}"
+            return f"redis://default:{self.REDIS_PASSWORD}@{self.REDIS_CACHE_HOST}:{self.REDIS_CACHE_PORT}"
         return f"redis://{self.REDIS_CACHE_HOST}:{self.REDIS_CACHE_PORT}"
 
 
@@ -130,7 +131,7 @@ class RedisQueueSettings(BaseSettings):
     @property
     def REDIS_QUEUE_URL(self) -> str:
         if self.REDIS_PASSWORD:
-            return f"rediss://default:{self.REDIS_PASSWORD}@{self.REDIS_QUEUE_HOST}:{self.REDIS_QUEUE_PORT}"
+            return f"redis://default:{self.REDIS_PASSWORD}@{self.REDIS_QUEUE_HOST}:{self.REDIS_QUEUE_PORT}"
         return f"redis://{self.REDIS_QUEUE_HOST}:{self.REDIS_QUEUE_PORT}"
 
 
@@ -143,7 +144,7 @@ class RedisRateLimiterSettings(BaseSettings):
     @property
     def REDIS_RATE_LIMIT_URL(self) -> str:
         if self.REDIS_PASSWORD:
-            return f"rediss://default:{self.REDIS_PASSWORD}@{self.REDIS_RATE_LIMIT_HOST}:{self.REDIS_RATE_LIMIT_PORT}"
+            return f"redis://default:{self.REDIS_PASSWORD}@{self.REDIS_RATE_LIMIT_HOST}:{self.REDIS_RATE_LIMIT_PORT}"
         return f"redis://{self.REDIS_RATE_LIMIT_HOST}:{self.REDIS_RATE_LIMIT_PORT}"
 
 

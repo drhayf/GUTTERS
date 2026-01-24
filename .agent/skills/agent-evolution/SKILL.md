@@ -178,6 +178,12 @@ User must apply manually to prevent accidental overwrites.
 - `human-design-math` (bodygraph calculation, gate mapping)
 - `birth-time-refinement` (hypothesis generation, confidence scoring)
 
+### Priority 5: Chat and Refinement
+- `chat-architecture-patterns` (Master vs Branch logic, singleton UI presence)
+- `cognitive-interface-standards` (how modules report "thinking" to the user)
+- `genesis-refinement-dialogue` (patterns for gathering uncertain data via chat)
+- `session-memory-synthesis` (linking chats to long-term user profiles)
+
 ## Execution Steps
 
 1. **Analyze** completed work against decision matrix

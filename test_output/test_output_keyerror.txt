@@ -1,0 +1,371 @@
+2026-01-24T06:14:35.715896Z [info     ] Registered module: human_design (layer: calculation) [src.app.modules.registry]
+2026-01-24T06:14:36.986776Z [info     ] Registered module: numerology (layer: calculation) [src.app.modules.registry]
+2026-01-24T06:14:37.044144Z [info     ] Registered module: synthesis (layer: intelligence) [src.app.modules.registry]
+2026-01-24T06:14:37.070281Z [info     ] Registered module: query (layer: intelligence) [src.app.modules.registry]
+2026-01-24T06:14:38.066081Z [info     ] Registered module: observer (layer: intelligence) [src.app.modules.registry]
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-9.0.2, pluggy-1.6.0 -- C:\dev\GUTTERS\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\dev\GUTTERS
+configfile: pyproject.toml
+plugins: anyio-4.12.1, Faker-37.3.0, langsmith-0.6.4, asyncio-1.3.0, mock-3.14.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+tests/integration/test_end_to_end.py::test_complete_user_journey [OK] User created (ID: 52)
+[OK] Profile initialized
+2026-01-24T06:14:39.888680Z [info     ] Registered module: astrology (layer: calculation) [src.app.modules.registry]
+[OK] Calculation modules complete (Astrology, HD, Numerology)
+[WARN] Tracking module check skipped/failed (possibly no API key): 'SolarTracker' object has no attribute 'get_current_conditions'
+2026-01-24T06:14:43.105092Z [info     ] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK" [httpx]
+2026-01-24T06:14:47.655625Z [info     ] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK" [httpx]
+2026-01-24T06:14:54.388443Z [info     ] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK" [httpx]
+2026-01-24T06:14:59.180363Z [info     ] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK" [httpx]
+2026-01-24T06:15:09.661623Z [info     ] Stored master synthesis for user 52 with 3 modules [src.app.core.memory.active_memory]
+[OK] Master synthesis generated (1815 chars)
+[OK] Active Memory operational (Context retrieved)
+2026-01-24T06:15:12.701729Z [info     ] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK" [httpx]
+2026-01-24T06:15:15.447946Z [info     ] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK" [httpx]
+2026-01-24T06:15:18.921766Z [info     ] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK" [httpx]
+[OK] Master Chat conversation successful
+  Response: # Your Focus for Today
+
+Given your design, today calls for **honoring where you are in your emotiona...
+2026-01-24T06:15:36.396776Z [info     ] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK" [httpx]
+2026-01-24T06:15:38.732623Z [info     ] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK" [httpx]
+2026-01-24T06:15:45.915966Z [info     ] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK" [httpx]
+[OK] Generative UI component created: multi_slider
+[OK] Journal entry created via component
+2026-01-24T06:15:57.104494Z [info     ] HTTP Request: POST https://openrouter.ai/api/v1/embeddings "HTTP/1.1 200 OK" [httpx]
+FAILED
+
+================================== FAILURES ===================================
+_________________________ test_complete_user_journey __________________________
+
+db = <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x000001A16D365C70>
+clean_redis = None
+
+    @pytest.mark.asyncio
+    async def test_complete_user_journey(db, clean_redis):
+        """
+        Complete user journey from registration to AI interaction.
+    
+        This test verifies:
+        1. User creation
+        2. Profile initialization
+        3. Module calculations
+        4. Synthesis generation
+        5. Active Memory
+        6. Chat conversation
+        7. Journal entry
+        8. Vector search
+        9. Observer detection
+        10. Query with full context
+        """
+    
+        # Needs real DB session, not just the fixture, but the fixture 'db' IS a session
+        real_db = db
+    
+        # Initialize Event Bus
+        from src.app.core.events.bus import get_event_bus
+    
+        event_bus = get_event_bus()
+        await event_bus.initialize()
+    
+        # ========================================
+        # STEP 1: Create User
+        # ========================================
+        from src.app.models.user import User
+        from src.app.models.user_profile import UserProfile
+    
+        # Randomize user to avoid DB collisions
+        uid = str(uuid.uuid4())[:8]
+        user = User(
+            name=f"Test Journey {uid}",
+            username=f"tj_{uid}",
+            email=f"test_journey_{uid}@example.com",
+            hashed_password="hashed_secret",
+            birth_date=date(1990, 6, 15),
+            birth_time=time(14, 30),
+            birth_location="New York, NY, USA",
+            birth_latitude=40.7128,
+            birth_longitude=-74.0060,
+            birth_timezone="America/New_York",
+        )
+    
+        real_db.add(user)
+        await real_db.commit()
+        await real_db.refresh(user)
+    
+        print(f"[OK] User created (ID: {user.id})")
+    
+        # Verify profile created
+        from sqlalchemy import select
+    
+        result = await real_db.execute(select(UserProfile).where(UserProfile.user_id == user.id))
+        profile = result.scalar_one_or_none()
+    
+        # If not created by triggers (which might not be present in test DB), create manually
+        if not profile:
+            profile = UserProfile(user_id=user.id, data={})
+            real_db.add(profile)
+            await real_db.commit()
+            await real_db.refresh(profile)
+    
+        assert profile is not None
+    
+        print(f"[OK] Profile initialized")
+    
+        # ========================================
+        # STEP 2: Calculate Profiles (All Modules)
+        # ========================================
+        from src.app.modules.calculation.astrology.brain.calculator import calculate_natal_chart
+        from src.app.modules.calculation.human_design.brain.calculator import HumanDesignCalculator
+        from src.app.modules.calculation.numerology.brain.calculator import NumerologyCalculator
+    
+        # Astrology (Function, Sync)
+        # Note: calculate_natal_chart expects specific arguments
+        astro_profile = calculate_natal_chart(
+            name=user.name,
+            birth_date=user.birth_date,
+            birth_time=user.birth_time,
+            latitude=user.birth_latitude,
+            longitude=user.birth_longitude,
+            timezone=user.birth_timezone,
+        )
+    
+        profile.data["astrology"] = astro_profile
+    
+        # Human Design (Class, Sync)
+        hd_calc = HumanDesignCalculator()
+        hd_profile_obj = hd_calc.calculate_chart(
+            name=user.name,
+            birth_date=user.birth_date,
+            birth_time=user.birth_time,
+            latitude=user.birth_latitude,
+            longitude=user.birth_longitude,
+            timezone=user.birth_timezone,
+        )
+    
+        profile.data["human_design"] = hd_profile_obj.model_dump(mode="json")
+    
+        # Numerology (Class, Sync)
+        num_calc = NumerologyCalculator()
+        num_profile_obj = num_calc.calculate_chart(
+            name=user.name,  # Full name
+            birth_date=user.birth_date,
+        )
+    
+        profile.data["numerology"] = num_profile_obj.model_dump(mode="json")
+    
+        from sqlalchemy.orm.attributes import flag_modified
+    
+        flag_modified(profile, "data")
+        await real_db.commit()
+    
+        print(f"[OK] Calculation modules complete (Astrology, HD, Numerology)")
+    
+        # ========================================
+        # STEP 3: Tracking Modules
+        # ========================================
+        from src.app.modules.tracking.solar.tracker import SolarTracker
+    
+        # Mocking external calls for tracking to ensure stability if API keys missing
+        # BUT the objective says "Tracking Modules Pull Cosmic Data"
+        # We will try real first, but fallback or handle errors if no API key
+        try:
+            solar_tracker = SolarTracker()
+            solar_data = await solar_tracker.get_current_conditions()
+    
+            assert solar_data is not None
+            # Keys might vary depending on API response structure
+            # assert 'kp_index' in solar_data or 'solar_wind_speed' in solar_data
+    
+            print(f"[OK] Tracking modules functional (Solar data retrieved)")
+        except Exception as e:
+            print(f"[WARN] Tracking module check skipped/failed (possibly no API key): {e}")
+    
+        # ========================================
+        # STEP 4: Synthesis Generation
+        # ========================================
+        from src.app.modules.intelligence.synthesis.synthesizer import ProfileSynthesizer
+    
+        synth_engine = ProfileSynthesizer()
+        # It returns UnifiedProfile object
+        synthesis_obj = await synth_engine.synthesize_profile(user.id, real_db)
+        synthesis = synthesis_obj.model_dump()
+    
+        assert synthesis is not None
+        assert "synthesis" in synthesis  # The field is named 'synthesis', not 'synthesis_text'
+        assert len(synthesis["modules_included"]) >= 3  # Astrology, HD, Numerology
+    
+        print(f"[OK] Master synthesis generated ({len(synthesis['synthesis'])} chars)")
+    
+        # ========================================
+        # STEP 5: Active Memory
+        # ========================================
+        from src.app.core.memory import get_active_memory
+    
+        memory = get_active_memory()
+        # Already initialized in clean_redis but good to be safe
+        # await memory.initialize()
+    
+        # Store synthesis - Already done by synthesizer
+        # await memory.update_master_synthesis(user.id, synthesis)
+    
+        # Retrieve context
+        context = await memory.get_full_context(user.id)
+    
+        assert context["synthesis"] is not None
+        # Depending on implementation, profiles might be pulled from DB or cache
+        # assert context['profiles']['natal_chart'] is not None
+    
+        print(f"[OK] Active Memory operational (Context retrieved)")
+    
+        # ========================================
+        # STEP 6: Master Chat Conversation
+        # ========================================
+        from src.app.modules.features.chat.master_chat import MasterChatHandler
+        from src.app.modules.intelligence.query.engine import QueryEngine
+        from src.app.core.llm.config import get_premium_llm, LLMTier
+    
+        query_engine = QueryEngine(llm=get_premium_llm(), memory=memory, tier=LLMTier.PREMIUM, enable_generative_ui=True)
+    
+        handler = MasterChatHandler(query_engine)
+    
+        # Send message
+        response = await handler.send_message(user.id, "What should I focus on today?", real_db)
+    
+        assert response["message"] is not None
+        assert len(response["message"]) > 10  # Reduced length check for robustness
+        assert response["session_id"] is not None
+    
+        print(f"[OK] Master Chat conversation successful")
+        print(f"  Response: {response['message'][:100]}...")
+    
+        # ========================================
+        # STEP 7: Journal Entry via Component
+        # ========================================
+    
+        # First, trigger component generation
+        response2 = await handler.send_message(
+            user.id, "I felt really anxious today during the solar storm", real_db, session_id=response["session_id"]
+        )
+    
+        # Should generate a mood slider component
+        if response2.get("component"):
+            print(f"[OK] Generative UI component created: {response2['component']['component_type']}")
+    
+            # Simulate component submission
+            from src.app.modules.intelligence.generative_ui.models import ComponentResponse, ComponentType
+    
+            comp_response = ComponentResponse(
+                component_id=response2["component"]["component_id"],
+                component_type=ComponentType(response2["component"]["component_type"]),
+                slider_values={"mood": 4, "energy": 3, "anxiety": 8},
+                submitted_at=datetime.now(dt_timezone.utc),
+            )
+    
+            # Submit via API logic (simulated)
+            if "component_responses" not in profile.data:
+                profile.data["component_responses"] = []
+    
+            profile.data["component_responses"].append(comp_response.model_dump(mode="json"))
+    
+            # Create journal entry
+            if "journal_entries" not in profile.data:
+                profile.data["journal_entries"] = []
+    
+            entry = {
+                "id": str(uuid.uuid4()),
+                "timestamp": datetime.now(dt_timezone.utc).isoformat(),
+                "text": "Felt anxious during solar storm",
+                "mood_score": 4,
+                "energy_score": 3,
+                "anxiety_score": 8,
+                "source": "multi_slider_component",
+            }
+    
+            profile.data["journal_entries"].append(entry)
+            flag_modified(profile, "data")
+            await real_db.commit()
+    
+            print(f"[OK] Journal entry created via component")
+        else:
+            # Manual journal entry if no component
+            if "journal_entries" not in profile.data:
+                profile.data["journal_entries"] = []
+    
+            entry = {
+                "id": str(uuid.uuid4()),
+                "timestamp": datetime.now(dt_timezone.utc).isoformat(),
+                "text": "Felt anxious during solar storm",
+                "mood_score": 4,
+                "source": "manual",
+            }
+    
+            profile.data["journal_entries"].append(entry)
+            flag_modified(profile, "data")
+            await real_db.commit()
+    
+            print(f"[OK] Journal entry created manually")
+    
+        # ========================================
+        # STEP 8: Vector Search
+        # ========================================
+        from src.app.modules.intelligence.vector.embedding_service import EmbeddingService
+        from src.app.modules.intelligence.vector.search_engine import VectorSearchEngine
+        from src.app.models.embedding import Embedding
+        from src.app.core.config import settings
+    
+        # Create embedding for journal entry
+        embed_service = EmbeddingService(settings.OPENROUTER_API_KEY.get_secret_value())
+    
+        embedded = await embed_service.embed_journal_entry(entry)
+    
+        embedding_record = Embedding(
+>           user_id=user.id, content=embedded["content"], embedding=embedded["embedding"], metadata=embedded["metadata"]
+                                                                                                    ^^^^^^^^^^^^^^^^^^^^
+        )
+E       KeyError: 'metadata'
+
+tests\integration\test_end_to_end.py:292: KeyError
+------------------------------ Captured log call ------------------------------
+INFO     src.app.modules.registry:registry.py:64 Registered module: astrology (layer: calculation)
+INFO     httpx:_client.py:1740 HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1740 HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1740 HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1740 HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+INFO     src.app.core.memory.active_memory:active_memory.py:300 Stored master synthesis for user 52 with 3 modules
+INFO     httpx:_client.py:1740 HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1740 HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1740 HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1740 HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1740 HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1740 HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1740 HTTP Request: POST https://openrouter.ai/api/v1/embeddings "HTTP/1.1 200 OK"
+============================== warnings summary ===============================
+src\app\modules\intelligence\synthesis\schemas.py:21
+  C:\dev\GUTTERS\src\app\modules\intelligence\synthesis\schemas.py:21: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class UnifiedProfile(BaseModel):
+
+src\app\modules\intelligence\query\schemas.py:9
+  C:\dev\GUTTERS\src\app\modules\intelligence\query\schemas.py:9: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class QueryRequest(BaseModel):
+
+src\app\modules\intelligence\hypothesis\models.py:32
+  C:\dev\GUTTERS\src\app\modules\intelligence\hypothesis\models.py:32: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class Hypothesis(BaseModel):
+
+tests/integration/test_end_to_end.py::test_complete_user_journey
+  C:\dev\GUTTERS\.venv\Lib\site-packages\kerykeion\backword.py:155: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    NOW = _dt.utcnow()
+
+tests/integration/test_end_to_end.py::test_complete_user_journey
+  C:\dev\GUTTERS\.venv\Lib\site-packages\kerykeion\backword.py:188: DeprecationWarning: 'AstrologicalSubject' is deprecated and will be removed in a future major release. Please migrate to: AstrologicalSubjectFactory.from_birth_data
+    _deprecated("AstrologicalSubject", "AstrologicalSubjectFactory.from_birth_data")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/integration/test_end_to_end.py::test_complete_user_journey - Key...
+================== 1 failed, 5 warnings in 79.14s (0:01:19) ===================

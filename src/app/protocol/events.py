@@ -70,6 +70,15 @@ SYNTHESIS_COMPLETED = "synthesis.completed"
 SYNTHESIS_UPDATED = "synthesis.updated"
 """Synthesis data updated. Payload: {user_id: UUID, synthesis_id: UUID, updated_fields: list}"""
 
+SYNTHESIS_GENERATED = "synthesis.profile.generated"
+"""Hierarchical synthesis generated. Payload: SynthesisGeneratedPayload"""
+
+SYNTHESIS_CACHED = "synthesis.cache.updated"
+"""Synthesis cached in active memory. Payload: {user_id: int}"""
+
+MODULE_SYNTHESIS_GENERATED = "synthesis.module.generated"
+"""Module-specific synthesis generated. Payload: {user_id: int, module: str}"""
+
 
 # ============================================================================
 # Genesis Events
@@ -87,4 +96,35 @@ GENESIS_CONFIDENCE_UPDATED = "genesis.confidence.updated"
 
 GENESIS_FIELD_CONFIRMED = "genesis.field.confirmed"
 """Field reached confirmation threshold. Payload: GenesisFieldConfirmedPayload"""
+
+
+# ============================================================================
+# Hypothesis Events (Theories)
+# ============================================================================
+# Triggered by Hypothesis module for general theories
+
+HYPOTHESIS_GENERATED = "hypothesis.generated"
+"""Theory hypothesis generated. Payload: HypothesisGeneratedPayload"""
+
+HYPOTHESIS_CONFIRMED = "hypothesis.confirmed"
+"""Theory hypothesis confirmed. Payload: HypothesisConfirmedPayload"""
+
+HYPOTHESIS_UPDATED = "hypothesis.confidence.updated"
+"""Theory hypothesis confidence updated. Payload: HypothesisUpdatedPayload"""
+
+
+# ============================================================================
+# Memory Events
+# ============================================================================
+# Triggered by Active Working Memory system
+
+MEMORY_SYNTHESIS_CACHED = "memory.synthesis.cached"
+"""Master synthesis stored in hot memory. Payload: {user_id: int, modules_included: list, themes: list}"""
+
+MEMORY_CONTEXT_RETRIEVED = "memory.context.retrieved"
+"""Full context assembled from memory. Payload: {user_id: int, has_synthesis: bool, module_count: int}"""
+
+MEMORY_CACHE_INVALIDATED = "memory.cache.invalidated"
+"""Cache entry invalidated. Payload: {user_id: int, cache_type: str, module: str | None}"""
+
 

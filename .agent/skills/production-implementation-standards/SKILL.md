@@ -15,6 +15,44 @@ EVERY implementation MUST meet these standards. No exceptions, no shortcuts.
 4. **FULL TYPE HINTS** - No `Any`, no untyped functions
 5. **PYDANTIC SCHEMAS** - All data structures validated
 6. **SEPARATION OF CONCERNS** - Clear boundaries
+7. **UTC-AWARE DATETIMES** - Absolute ban on `utcnow()`
+9. **NO MappedAsDataclass** - Use standard `DeclarativeBase` for all models
+10. **LAZY LOADING** - All circular relationships MUST use `lazy="select"`
+
+---
+
+## Database Model Standards
+
+To prevent initialization gridlocks and complex circular dependency issues during system startup (especially in test runners), follow these strict rules:
+
+### ✅ CORRECT: Standard Declarative
+```python
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+
+class User(Base):
+    __tablename__ = "user"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    
+    # Relationships MUST be string references and lazy loaded
+    chat_sessions: Mapped[list["ChatSession"]] = relationship(
+        "ChatSession", 
+        back_populates="user",
+        lazy="select"
+    )
+```
+
+### ❌ WRONG: MappedAsDataclass
+```python
+# ABSOLUTELY BANNED
+class User(DeclarativeBase, MappedAsDataclass):
+    # This causes "specifies 'init' but parent class does not" errors 
+    # and fails to resolve circular references at runtime.
+```
+
+1. **Lazy Loading**: Always use `lazy="select"` for relationships that reference other models.
+2. **String Ref**: Always use `relationship("ClassName")` instead of `relationship(ClassName)`.
+3. **No init args**: Do not use `init=False` or `default_factory` in `mapped_column` (these are dataclass features). Use `default=...` or `server_default`.
+4. **Primary Key**: Standard declarative models will handle `id` automatically if defined properly.
 
 ---
 
@@ -23,10 +61,13 @@ EVERY implementation MUST meet these standards. No exceptions, no shortcuts.
 ### Correct Structure
 ```
 modules/{layer}/{module_name}/
-├── __init__.py         # Exports only
+├── manifest.json       # REQUIRED: Metadata, layer, version, subscriptions
 ├── module.py           # BaseModule subclass
 ├── schemas.py          # Pydantic models (input/output)
 ├── service.py          # Business logic (pure functions)
+├── brain/              # Intelligence logic (for NODE/BRAIN pattern)
+│   ├── calculator.py
+│   └── interpreter.py
 ├── models.py           # SQLAlchemy (only if DB tables needed)
 ├── crud.py             # FastCRUD operations
 ├── refinement/         # Genesis handlers (if applicable)
@@ -145,6 +186,37 @@ logger.warning(f"Fallback used for {context}")
 
 ---
 
+## Datetime Standardization (CRITICAL)
+
+To avoid "Naive Datetime" errors and timezone drift, follow these strict rules:
+
+### ❌ WRONG (Naive)
+```python
+from datetime import datetime
+now = datetime.utcnow()  # DEPRECATED
+now = datetime.now()     # NAIVE
+```
+
+### ✅ CORRECT (Aware)
+```python
+import datetime as dt
+now = dt.datetime.now(dt.timezone.utc)
+```
+
+**Rule**: All timestamps stored in JSONB or database columns MUST be UTC-aware ISO strings or timezone-aware objects.
+
+---
+
+## Async Singleton Stability
+
+Async singletons (EventBus, ActiveMemory) on Windows are sensitive to event loop closure.
+
+1. **Initialization**: Always `await bus.initialize()` before the first `publish/subscribe`.
+2. **Test Persistence**: Avoid `async_engine.dispose()` or singleton nullification in `teardown` unless absolutely necessary, as it can close loops shared by the connection pool.
+3. **Wait for Events**: Always `await bus.publish(...)` to ensure the message is dispatched before the scope closes.
+
+---
+
 ## Testing Standards
 
 ### Coverage (80% minimum)
@@ -197,7 +269,9 @@ def test_calculate():
 async def get_data(user_id: int):
     ...
 
-# ✅ CORRECT - With auth
+# ✅ CORRECT - With auth (using correct dependency path)
+from src.app.api.dependencies import get_current_user
+
 @router.get("/{user_id}")
 async def get_data(
     user_id: int,
@@ -261,3 +335,6 @@ Before considering any implementation complete:
 - [ ] No `pass` in except blocks
 - [ ] No TODO/FIXME in production code
 - [ ] Migrations created for DB changes
+- [ ] **manifest.json** present and populated
+- [ ] **ActiveMemory** usage standardized (use `set/get` for generic lists, `set_json/get_json` ONLY for Pydantic models)
+- [ ] **ActiveMemory** `ex` vs `ttl`: Use `ttl` argument for `set/set_json`, not `ex`.

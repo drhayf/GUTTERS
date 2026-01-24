@@ -1,0 +1,152 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-9.0.2, pluggy-1.6.0 -- C:\dev\GUTTERS\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\dev\GUTTERS
+configfile: pyproject.toml
+plugins: anyio-4.12.1, Faker-37.3.0, langsmith-0.6.4, asyncio-1.3.0, mock-3.14.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 4 items
+
+tests/modules/features/test_multi_conversation.py::test_create_multiple_master_conversations FAILED [ 25%]
+tests/modules/features/test_multi_conversation.py::test_messages_stay_separate FAILED [ 50%]
+tests/modules/features/test_multi_conversation.py::test_cannot_delete_only_master_conversation FAILED [ 75%]
+tests/modules/features/test_multi_conversation.py::test_search_across_conversations FAILED [100%]
+
+================================== FAILURES ===================================
+__________________ test_create_multiple_master_conversations __________________
+
+seeded_user = 5
+db = <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x00000151090E5C70>
+
+    @pytest.mark.asyncio
+    async def test_create_multiple_master_conversations(seeded_user, db):
+        """Test that multiple master conversations can be created."""
+>       from src.app.modules.features.chat.session_manager import SessionManager
+E         File "C:\dev\GUTTERS\src\app\modules\features\chat\session_manager.py", line 173
+E           db: AsyncSession
+E           ^^^^^^^^^^^^^^^^
+E       SyntaxError: parameter without a default follows parameter with a default
+
+tests\modules\features\test_multi_conversation.py:13: SyntaxError
+_________________________ test_messages_stay_separate _________________________
+
+seeded_user = 5
+db = <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x000001510910F350>
+
+    @pytest.mark.asyncio
+    async def test_messages_stay_separate(seeded_user, db):
+        """Test that messages in different conversations stay separate."""
+>       from src.app.modules.features.chat.session_manager import SessionManager
+E         File "C:\dev\GUTTERS\src\app\modules\features\chat\session_manager.py", line 173
+E           db: AsyncSession
+E           ^^^^^^^^^^^^^^^^
+E       SyntaxError: parameter without a default follows parameter with a default
+
+tests\modules\features\test_multi_conversation.py:42: SyntaxError
+_________________ test_cannot_delete_only_master_conversation _________________
+
+seeded_user = 5
+db = <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x0000015109157A40>
+
+    @pytest.mark.asyncio
+    async def test_cannot_delete_only_master_conversation(seeded_user, db):
+        """Test that you can't delete the only master conversation."""
+>       from src.app.modules.features.chat.session_manager import SessionManager
+E         File "C:\dev\GUTTERS\src\app\modules\features\chat\session_manager.py", line 173
+E           db: AsyncSession
+E           ^^^^^^^^^^^^^^^^
+E       SyntaxError: parameter without a default follows parameter with a default
+
+tests\modules\features\test_multi_conversation.py:70: SyntaxError
+______________________ test_search_across_conversations _______________________
+
+seeded_user = 5
+db = <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x00000151091666C0>
+
+    @pytest.mark.asyncio
+    async def test_search_across_conversations(seeded_user, db):
+        """Test searching across multiple conversations."""
+>       from src.app.modules.features.chat.session_manager import SessionManager
+E         File "C:\dev\GUTTERS\src\app\modules\features\chat\session_manager.py", line 173
+E           db: AsyncSession
+E           ^^^^^^^^^^^^^^^^
+E       SyntaxError: parameter without a default follows parameter with a default
+
+tests\modules\features\test_multi_conversation.py:86: SyntaxError
+============================== warnings summary ===============================
+src\app\modules\intelligence\synthesis\schemas.py:21
+  C:\dev\GUTTERS\src\app\modules\intelligence\synthesis\schemas.py:21: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class UnifiedProfile(BaseModel):
+
+src\app\modules\intelligence\query\schemas.py:9
+  C:\dev\GUTTERS\src\app\modules\intelligence\query\schemas.py:9: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class QueryRequest(BaseModel):
+
+src\app\modules\intelligence\hypothesis\models.py:32
+  C:\dev\GUTTERS\src\app\modules\intelligence\hypothesis\models.py:32: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class Hypothesis(BaseModel):
+
+tests/modules/features/test_multi_conversation.py::test_create_multiple_master_conversations
+tests/modules/features/test_multi_conversation.py::test_messages_stay_separate
+tests/modules/features/test_multi_conversation.py::test_cannot_delete_only_master_conversation
+tests/modules/features/test_multi_conversation.py::test_search_across_conversations
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:43: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    start_date = datetime.utcnow() - timedelta(days=days)
+
+tests/modules/features/test_multi_conversation.py: 245 warnings
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:47: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    while current_date < datetime.utcnow():
+
+tests/modules/features/test_multi_conversation.py::test_create_multiple_master_conversations
+tests/modules/features/test_multi_conversation.py::test_messages_stay_separate
+tests/modules/features/test_multi_conversation.py::test_cannot_delete_only_master_conversation
+tests/modules/features/test_multi_conversation.py::test_search_across_conversations
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:147: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat()
+
+tests/modules/features/test_multi_conversation.py::test_create_multiple_master_conversations
+tests/modules/features/test_multi_conversation.py::test_messages_stay_separate
+tests/modules/features/test_multi_conversation.py::test_cannot_delete_only_master_conversation
+tests/modules/features/test_multi_conversation.py::test_search_across_conversations
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:157: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat()
+
+tests/modules/features/test_multi_conversation.py::test_create_multiple_master_conversations
+tests/modules/features/test_multi_conversation.py::test_messages_stay_separate
+tests/modules/features/test_multi_conversation.py::test_cannot_delete_only_master_conversation
+tests/modules/features/test_multi_conversation.py::test_search_across_conversations
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:167: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat()
+
+tests/modules/features/test_multi_conversation.py::test_create_multiple_master_conversations
+tests/modules/features/test_multi_conversation.py::test_messages_stay_separate
+tests/modules/features/test_multi_conversation.py::test_cannot_delete_only_master_conversation
+tests/modules/features/test_multi_conversation.py::test_search_across_conversations
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:176: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat()
+
+tests/modules/features/test_multi_conversation.py::test_create_multiple_master_conversations
+tests/modules/features/test_multi_conversation.py::test_messages_stay_separate
+tests/modules/features/test_multi_conversation.py::test_cannot_delete_only_master_conversation
+tests/modules/features/test_multi_conversation.py::test_search_across_conversations
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:186: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "detected_at": datetime.utcnow().isoformat()
+
+tests/modules/features/test_multi_conversation.py::test_create_multiple_master_conversations
+tests/modules/features/test_multi_conversation.py::test_messages_stay_separate
+tests/modules/features/test_multi_conversation.py::test_cannot_delete_only_master_conversation
+tests/modules/features/test_multi_conversation.py::test_search_across_conversations
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:205: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    start_date = datetime.utcnow() - timedelta(days=days)
+
+tests/modules/features/test_multi_conversation.py: 246 warnings
+  C:\dev\GUTTERS\tests\fixtures\seed_data.py:209: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    while current_date < datetime.utcnow():
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/modules/features/test_multi_conversation.py::test_create_multiple_master_conversations
+FAILED tests/modules/features/test_multi_conversation.py::test_messages_stay_separate
+FAILED tests/modules/features/test_multi_conversation.py::test_cannot_delete_only_master_conversation
+FAILED tests/modules/features/test_multi_conversation.py::test_search_across_conversations
+======================= 4 failed, 522 warnings in 3.26s =======================
