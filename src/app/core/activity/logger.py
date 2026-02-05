@@ -5,7 +5,7 @@ Logs LLM activity for observability and thought process transparency.
 Stores call details, reasoning, and tool usage.
 
 Example:
-    >>> from app.core.activity.logger import get_activity_logger
+    >>> from src.app.core.activity.logger import get_activity_logger
     >>> logger = get_activity_logger()
     >>> await logger.log_llm_call(
     ...     trace_id="trace-123",

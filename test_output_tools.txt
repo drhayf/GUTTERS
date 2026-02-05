@@ -1,0 +1,139 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-9.0.2, pluggy-1.6.0
+rootdir: C:\dev\GUTTERS
+configfile: pyproject.toml
+plugins: anyio-4.12.1, Faker-37.3.0, langsmith-0.6.4, asyncio-1.3.0, mock-3.14.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 3 items
+
+tests\integration\intelligence\test_tools_fidelity.py EEE                [100%]
+
+=================================== ERRORS ====================================
+___________ ERROR at setup of test_tool_registry_context_injection ____________
+file c:\dev\GUTTERS\tests\integration\intelligence\test_tools_fidelity.py, line 15
+  @pytest.mark.asyncio
+  async def test_tool_registry_context_injection(db: AsyncSession, test_user_id: int):
+      """Verify that ToolRegistry correctly injects context into tools."""
+      tools = ToolRegistry.get_tools_for_request(test_user_id, db)
+
+      # Check for presence of all tools
+      tool_names = [t.name for t in tools]
+      assert "calculate_astrology_chart" in tool_names
+      assert "calculate_human_design" in tool_names
+      assert "calculate_numerology" in tool_names
+      assert "log_journal_entry" in tool_names
+
+      # Verify Journal tool is configured
+      journal_tool = next(t for t in tools if t.name == "log_journal_entry")
+      assert journal_tool.name == "log_journal_entry"
+      # Cannot easily verify closed-over variables without inspection hack,
+      # but presence in list implies successful factory creation.
+E       fixture 'test_user_id' not found
+>       available fixtures: _class_scoped_runner, _function_scoped_runner, _module_scoped_runner, _package_scoped_runner, _session_faker, _session_scoped_runner, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, class_mocker, clean_redis, cleanup_test_state, client, current_user_dict, db, doctest_namespace, event_loop_policy, faker, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, memory, mock_db, mock_redis, mocker, module_mocker, monkeypatch, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_user_data, sample_user_read, seeded_user, session_mocker, subtests, sync_db, test_user, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+c:\dev\GUTTERS\tests\integration\intelligence\test_tools_fidelity.py:15
+_______________ ERROR at setup of test_astrology_tool_execution _______________
+file c:\dev\GUTTERS\tests\integration\intelligence\test_tools_fidelity.py, line 34
+  @pytest.mark.asyncio
+  async def test_astrology_tool_execution(db: AsyncSession, test_user_id: int):
+      """Verify the Astrology tool runs correctly against the calculator."""
+      tools = ToolRegistry.get_tools_for_request(test_user_id, db)
+      astro_tool = next(t for t in tools if t.name == "calculate_astrology_chart")
+
+      input_data = {
+          "name": "Test User",
+          "birth_date": "1990-05-15",
+          "birth_time": "14:30",
+          "latitude": 40.7128,
+          "longitude": -74.0060,
+          "timezone": "America/New_York",
+      }
+
+      # Execute tool
+      result = await astro_tool.ainvoke(input_data)
+
+      # Verify result structure (high fidelity check against actual calculator output)
+      assert isinstance(result, dict)
+      assert "planets" in result
+      assert "houses" in result
+      assert result["subject"]["name"] == "Test User"
+
+      # Verify calculation accuracy (Sun should be near 24 Taurus)
+      sun = next(p for p in result["planets"] if p["name"] == "Sun")
+      assert "Tau" in sun["sign"]
+E       fixture 'test_user_id' not found
+>       available fixtures: _class_scoped_runner, _function_scoped_runner, _module_scoped_runner, _package_scoped_runner, _session_faker, _session_scoped_runner, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, class_mocker, clean_redis, cleanup_test_state, client, current_user_dict, db, doctest_namespace, event_loop_policy, faker, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, memory, mock_db, mock_redis, mocker, module_mocker, monkeypatch, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_user_data, sample_user_read, seeded_user, session_mocker, subtests, sync_db, test_user, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+c:\dev\GUTTERS\tests\integration\intelligence\test_tools_fidelity.py:34
+______________ ERROR at setup of test_engine_tool_execution_flow ______________
+file c:\dev\GUTTERS\tests\integration\intelligence\test_tools_fidelity.py, line 63
+  @pytest.mark.asyncio
+  async def test_engine_tool_execution_flow(db: AsyncSession, test_user_id: int):
+      """
+      Test the full QueryEngine loop with a mocked LLM forcing a tool call.
+      We mock the LLM decision but execute the REAL tool and REAL calculator.
+      """
+      # 1. Setup Engine with Mock LLM
+      mock_llm = AsyncMock()
+      mock_llm.bind_tools.return_value = mock_llm  # mimic binding returning a runnable
+
+      # Define the sequence of LLM responses:
+      # 1. First call -> Returns Tool Call (Calculate Astrology)
+      # 2. Second call -> Returns Final Answer (Interpretation)
+
+      tool_call_msg = AIMessage(
+          content="",
+          tool_calls=[
+              {
+                  "name": "calculate_astrology_chart",
+                  "args": {
+                      "name": "Test User",
+                      "birth_date": "1990-05-15",
+                      "birth_time": "14:30",
+                      "latitude": 40.7128,
+                      "longitude": -74.0060,
+                      "timezone": "America/New_York",
+                  },
+                  "id": "call_12345",
+              }
+          ],
+      )
+
+      final_answer_msg = AIMessage(content="Your sun is in Taurus.")
+
+      # Configure mock side_effect
+      mock_llm.ainvoke.side_effect = [tool_call_msg, final_answer_msg]
+
+      engine = QueryEngine(llm=mock_llm)
+
+      # 2. Execute Query
+      response = await engine.answer_query(user_id=test_user_id, question="Calculate my chart", db=db)
+
+      # 3. Verify Interactions
+
+      # Check that bind_tools was called
+      assert mock_llm.bind_tools.called
+
+      # Verify Trace recorded the tool call
+      trace = response.trace
+      tool_steps = [s for s in trace.steps if s.tool_type == "calculator"]  # or whatever generic type we used
+      # We used ToolType.CALCULATOR in engine.py
+
+      assert len(tool_steps) > 0
+      assert tool_steps[0].tool_name == "calculate_astrology_chart"
+      assert "Executed calculate_astrology_chart successfully" in tool_steps[0].output
+
+      # Verify final answer matches
+      assert response.answer == "Your sun is in Taurus."
+E       fixture 'test_user_id' not found
+>       available fixtures: _class_scoped_runner, _function_scoped_runner, _module_scoped_runner, _package_scoped_runner, _session_faker, _session_scoped_runner, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, class_mocker, clean_redis, cleanup_test_state, client, current_user_dict, db, doctest_namespace, event_loop_policy, faker, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, memory, mock_db, mock_redis, mocker, module_mocker, monkeypatch, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_user_data, sample_user_read, seeded_user, session_mocker, subtests, sync_db, test_user, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+c:\dev\GUTTERS\tests\integration\intelligence\test_tools_fidelity.py:63
+=========================== short test summary info ===========================
+ERROR tests/integration/intelligence/test_tools_fidelity.py::test_tool_registry_context_injection
+ERROR tests/integration/intelligence/test_tools_fidelity.py::test_astrology_tool_execution
+ERROR tests/integration/intelligence/test_tools_fidelity.py::test_engine_tool_execution_flow
+============================== 3 errors in 0.05s ==============================

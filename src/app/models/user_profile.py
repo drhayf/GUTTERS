@@ -62,3 +62,20 @@ class UserProfile(Base):
         DateTime(timezone=True),
         default=None,
     )
+
+    def get_notification_preference(self, category: str) -> bool:
+        """
+        Check if user has enabled notifications for a specific category.
+        Defaults to True (Opt-out model) if preference is missing.
+        Categories: 'solar', 'lunar', 'quests', 'progression'
+        """
+        if not self.data:
+            return True
+
+        preferences = self.data.get("preferences", {})
+        if not preferences:
+            return True
+
+        notifications = preferences.get("notifications", {})
+        # Smart Default: If key logic is missing, return True
+        return notifications.get(category, True)

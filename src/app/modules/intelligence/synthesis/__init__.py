@@ -1,7 +1,7 @@
 """
 GUTTERS Synthesis Module
 
-Cross-system profile synthesis using LLM.
+Cross-system profile synthesis using LLM and Harmonic Council of Systems.
 """
 from .module import SynthesisModule, module
 from .schemas import ModuleInsights, SynthesisPattern, SynthesisRequest, SynthesisResponse, UnifiedProfile
@@ -11,6 +11,17 @@ from .synthesizer import (
     ProfileSynthesizer,
     get_user_preferred_model,
     update_user_preference,
+)
+from .harmonic import (
+    CouncilOfSystems,
+    HarmonicSynthesis,
+    SystemReading,
+    ElementalResonance,
+    ResonanceType,
+    Element,
+    IChingAdapter,
+    CardologyAdapter,
+    cross_system_synthesis,
 )
 
 __all__ = [
@@ -30,4 +41,14 @@ __all__ = [
     # Constants
     "ALLOWED_MODELS",
     "DEFAULT_MODEL",
+    # Council of Systems / Harmonic Synthesis
+    "CouncilOfSystems",
+    "HarmonicSynthesis",
+    "SystemReading",
+    "ElementalResonance",
+    "ResonanceType",
+    "Element",
+    "IChingAdapter",
+    "CardologyAdapter",
+    "cross_system_synthesis",
 ]

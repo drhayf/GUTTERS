@@ -14,6 +14,8 @@ if TYPE_CHECKING:
     from .user_profile import UserProfile
     from .embedding import Embedding
     from .chat_session import ChatSession
+    from .progression import PlayerStats
+    from src.app.modules.features.quests.models import Quest
 
 
 class User(Base):
@@ -46,12 +48,17 @@ class User(Base):
 
     tier_id: Mapped[int | None] = mapped_column(ForeignKey("tier.id"), index=True, default=None)
 
-    # Relationship to user's cosmic profile
+    # Relationship to user's progression and gamification stats
+    progression = relationship(
+        "PlayerStats", back_populates="user", uselist=False, cascade="all, delete-orphan", lazy="select"
+    )
+
     # Relationship to user's cosmic profile
     profile = relationship(
         "UserProfile",
         back_populates="user",
         uselist=False,
+        cascade="all, delete-orphan",
     )
 
     # Vector embeddings for semantic search
@@ -76,3 +83,11 @@ class User(Base):
     birth_latitude: Mapped[float | None] = mapped_column(Float, default=None)
     birth_longitude: Mapped[float | None] = mapped_column(Float, default=None)
     birth_timezone: Mapped[str | None] = mapped_column(String(50), default=None)
+
+    push_subscriptions = relationship(
+        "PushSubscription",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+    quests = relationship("Quest", back_populates="user", cascade="all, delete-orphan", lazy="select")

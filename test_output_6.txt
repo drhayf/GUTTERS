@@ -1,0 +1,29 @@
+2026-01-26T06:55:06.567734Z [info     ] Registered calculation module: human_design (v1.0.0) [src.app.modules.calculation.registry]
+2026-01-26T06:55:06.569512Z [info     ] Registered module: human_design (layer: calculation) [src.app.modules.registry]
+2026-01-26T06:55:07.933697Z [info     ] Registered calculation module: numerology (v1.0.0) [src.app.modules.calculation.registry]
+2026-01-26T06:55:07.936211Z [info     ] Registered module: numerology (layer: calculation) [src.app.modules.registry]
+2026-01-26T06:55:08.002158Z [info     ] Registered calculation module: astrology (v1.0.0) [src.app.modules.calculation.registry]
+2026-01-26T06:55:08.014899Z [info     ] Registered module: astrology (layer: calculation) [src.app.modules.registry]
+ImportError while loading conftest 'C:\dev\GUTTERS\tests\conftest.py'.
+tests\conftest.py:17: in <module>
+    from src.app.main import app
+src\app\main.py:7: in <module>
+    from .api import router
+src\app\api\__init__.py:3: in <module>
+    from ..api.v1 import router as v1_router
+src\app\api\v1\__init__.py:6: in <module>
+    from .intelligence import router as intelligence_router
+src\app\api\v1\intelligence.py:16: in <module>
+    from ...modules.intelligence.query import QueryEngine, QueryRequest, QueryResponse
+src\app\modules\intelligence\query\__init__.py:6: in <module>
+    from .engine import QueryEngine
+src\app\modules\intelligence\query\engine.py:33: in <module>
+    from src.app.modules.intelligence.tools.registry import ToolRegistry  # NEW: Import Registry
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src\app\modules\intelligence\tools\registry.py:9: in <module>
+    from .library import astrology, human_design, numerology, journal, quests
+src\app\modules\intelligence\tools\library\quests.py:6: in <module>
+    from src.app.modules.features.quests.manager import QuestManager
+src\app\modules\features\quests\manager.py:5: in <module>
+    from croniter import croniter
+E   ModuleNotFoundError: No module named 'croniter'

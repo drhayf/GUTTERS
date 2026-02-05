@@ -7,6 +7,7 @@ Handles creation, retrieval, and management of Master + Branch sessions.
 from typing import Optional, List
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, or_, delete, cast, String
+from sqlalchemy.orm import selectinload
 from datetime import datetime, timezone as dt_timezone
 from typing import Dict, Any
 
@@ -24,11 +25,11 @@ class SessionManager:
         """
         # Check if exists
         result = await db.execute(
-            select(ChatSession).where(
-                ChatSession.user_id == user_id, ChatSession.session_type == SessionType.MASTER.value
-            )
+            select(ChatSession)
+            .where(ChatSession.user_id == user_id, ChatSession.session_type == SessionType.MASTER.value)
+            .order_by(ChatSession.created_at.desc())
         )
-        session = result.scalar_one_or_none()
+        session = result.scalars().first()
 
         if session:
             return session
@@ -81,7 +82,7 @@ class SessionManager:
         self, user_id: int, db: AsyncSession, session_type: Optional[str] = None
     ) -> List[ChatSession]:
         """Get all sessions for user, optionally filtered by type."""
-        query = select(ChatSession).where(ChatSession.user_id == user_id)
+        query = select(ChatSession).options(selectinload(ChatSession.messages)).where(ChatSession.user_id == user_id)
 
         if session_type:
             query = query.where(ChatSession.session_type == session_type)
@@ -178,8 +179,10 @@ class SessionManager:
         Returns:
             List of master conversations, sorted by updated_at desc
         """
-        query = select(ChatSession).where(
-            ChatSession.user_id == user_id, ChatSession.session_type == SessionType.MASTER.value
+        query = (
+            select(ChatSession)
+            .options(selectinload(ChatSession.messages))
+            .where(ChatSession.user_id == user_id, ChatSession.session_type == SessionType.MASTER.value)
         )
 
         if not include_archived:
@@ -225,7 +228,7 @@ class SessionManager:
             .order_by(ChatSession.created_at.asc())  # Oldest first
         )
 
-        session = result.scalar_one_or_none()
+        session = result.scalars().first()
 
         if session:
             # If found legacy session without name, update it

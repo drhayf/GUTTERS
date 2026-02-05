@@ -55,7 +55,7 @@ class ActiveMemory:
         - COLD: PostgreSQL fallback (50-200ms reads)
 
     Example:
-        >>> from app.core.memory.active_memory import get_active_memory
+        >>> from src.app.core.memory.active_memory import get_active_memory
         >>>
         >>> memory = get_active_memory()
         >>> await memory.initialize()
@@ -696,7 +696,7 @@ def get_active_memory() -> ActiveMemory:
         Global ActiveMemory instance
 
     Example:
-        >>> from app.core.memory.active_memory import get_active_memory
+        >>> from src.app.core.memory.active_memory import get_active_memory
         >>> memory = get_active_memory()
         >>> await memory.initialize()
         >>> await memory.set("key", "value")

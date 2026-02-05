@@ -70,7 +70,7 @@ class SynthesisOrchestrator:
     - Updates Active Memory with results
 
     Example:
-        >>> from app.core.memory.synthesis_orchestrator import get_orchestrator
+        >>> from src.app.core.memory.synthesis_orchestrator import get_orchestrator
         >>>
         >>> orchestrator = await get_orchestrator()
         >>>
@@ -193,7 +193,7 @@ class SynthesisOrchestrator:
         """Queue synthesis as background job."""
         try:
             # Try ARQ worker first
-            from ...core.worker.client import get_arq_pool
+            from src.app.core.worker.client import get_arq_pool
 
             pool = await get_arq_pool()
             if pool:

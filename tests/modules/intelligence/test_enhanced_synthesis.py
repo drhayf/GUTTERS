@@ -5,14 +5,14 @@ import pytest
 from sqlalchemy import select
 from datetime import datetime
 
-from app.models.user_profile import UserProfile
-from app.core.memory.active_memory import get_active_memory
-from app.core.db.database import local_session as async_session_maker
-from app.core.events.bus import get_event_bus
+from src.app.models.user_profile import UserProfile
+from src.app.core.memory.active_memory import get_active_memory
+from src.app.core.db.database import local_session as async_session_maker
+from src.app.core.events.bus import get_event_bus
 
 @pytest.mark.asyncio
 async def test_hierarchical_synthesis_with_seeded_data(seeded_user):
-    from app.modules.intelligence.synthesis.synthesizer import ProfileSynthesizer
+    from src.app.modules.intelligence.synthesis.synthesizer import ProfileSynthesizer
     
     await get_event_bus().initialize()
     memory = get_active_memory()
@@ -29,7 +29,7 @@ async def test_hierarchical_synthesis_with_seeded_data(seeded_user):
 
 @pytest.mark.asyncio
 async def test_synthesis_includes_journal_patterns(seeded_user):
-    from app.modules.intelligence.synthesis.synthesizer import ProfileSynthesizer
+    from src.app.modules.intelligence.synthesis.synthesizer import ProfileSynthesizer
     await get_event_bus().initialize()
     
     synthesizer = ProfileSynthesizer()
@@ -42,7 +42,7 @@ async def test_synthesis_includes_journal_patterns(seeded_user):
 
 @pytest.mark.asyncio
 async def test_synthesis_persistence(seeded_user):
-    from app.modules.intelligence.synthesis.synthesizer import ProfileSynthesizer
+    from src.app.modules.intelligence.synthesis.synthesizer import ProfileSynthesizer
     await get_event_bus().initialize()
     
     synthesizer = ProfileSynthesizer()
@@ -56,12 +56,12 @@ async def test_synthesis_persistence(seeded_user):
 
 @pytest.mark.asyncio
 async def test_module_synthesis_parallel_generation(seeded_user):
-    from app.modules.intelligence.synthesis.module_synthesis import ModuleSynthesizer
-    from app.core.ai.llm_factory import get_llm
-    from app.modules.intelligence.synthesis.synthesizer import DEFAULT_MODEL
+    from src.app.modules.intelligence.synthesis.module_synthesis import ModuleSynthesizer
+    from src.app.core.ai.llm_factory import get_llm
+    from src.app.modules.intelligence.synthesis.synthesizer import DEFAULT_MODEL
     
     module_synthesizer = ModuleSynthesizer(get_llm(DEFAULT_MODEL))
-    from app.modules.intelligence.observer.storage import ObserverFindingStorage
+    from src.app.modules.intelligence.observer.storage import ObserverFindingStorage
     storage = ObserverFindingStorage()
     findings = await storage.get_findings(seeded_user)
     
@@ -71,10 +71,10 @@ async def test_module_synthesis_parallel_generation(seeded_user):
 @pytest.mark.asyncio
 async def test_synthesis_event_published(seeded_user):
     from unittest.mock import patch, AsyncMock
-    from app.protocol.events import SYNTHESIS_GENERATED
-    from app.modules.intelligence.synthesis.synthesizer import ProfileSynthesizer
+    from src.app.protocol.events import SYNTHESIS_GENERATED
+    from src.app.modules.intelligence.synthesis.synthesizer import ProfileSynthesizer
     
-    with patch("app.core.events.bus.get_event_bus") as mock_bus:
+    with patch("src.app.core.events.bus.get_event_bus") as mock_bus:
         mock_instance = AsyncMock()
         mock_bus.return_value = mock_instance
         

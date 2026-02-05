@@ -13,6 +13,39 @@ This makes the brain:
 
 from datetime import date, time
 from typing import Any
+from src.app.modules.calculation.registry import CalculationModuleRegistry
+
+
+@CalculationModuleRegistry.register(
+    name="astrology",
+    display_name="Astrology",
+    description="Calculating natal chart and planetary positions",
+    weight=1,
+    requires_birth_time=True,
+    order=1,
+    version="1.0.0",
+)
+class AstrologyCalculator:
+    """Wrapper for Kerykeion-based calculation functions."""
+
+    async def calculate(
+        self,
+        name: str,
+        birth_date: date,
+        birth_time: time | None,
+        latitude: float,
+        longitude: float,
+        timezone: str,
+        **kwargs,
+    ) -> dict[str, Any]:
+        return calculate_natal_chart(
+            name=name,
+            birth_date=birth_date,
+            birth_time=birth_time,
+            latitude=latitude,
+            longitude=longitude,
+            timezone=timezone,
+        )
 
 
 def calculate_natal_chart(

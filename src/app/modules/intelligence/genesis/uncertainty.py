@@ -84,10 +84,10 @@ class UncertaintyDeclaration(BaseModel):
         description="Accuracy level of the source calculation"
     )
     declared_at: datetime = Field(
-        default_factory=datetime.utcnow, description="When this declaration was first created"
+        default_factory=lambda: datetime.now(UTC), description="When this declaration was first created"
     )
     last_updated: datetime = Field(
-        default_factory=datetime.utcnow, description="When this declaration was last modified"
+        default_factory=lambda: datetime.now(UTC), description="When this declaration was last modified"
     )
     stored_in_profile: bool = Field(default=False, description="Whether this has been persisted to UserProfile.data")
 
@@ -155,4 +155,152 @@ class UncertaintyDeclaration(BaseModel):
             declared_at=datetime.fromisoformat(data["declared_at"]),
             last_updated=datetime.fromisoformat(data["last_updated"]),
             stored_in_profile=data.get("stored_in_profile", True),
+        )
+
+
+# ============================================================================
+# ALIGNMENT DISCREPANCY MODELS (Phase 25-C: MAGI Integration)
+# ============================================================================
+
+
+class AlignmentDiscrepancy(BaseModel):
+    """
+    Represents a discrepancy between the deterministic MAGI script and
+    the user's reported/observed experience.
+    
+    The MAGI system provides deterministic planetary periods and card energies.
+    When a user's journal entries, mood reports, or chat messages suggest
+    experiences that don't align with the expected period energy, we capture
+    that as a discrepancy for Genesis to investigate.
+    
+    Example:
+        AlignmentDiscrepancy(
+            user_id=42,
+            script_energy="expansion, abundance, optimism",  # Jupiter period
+            reported_energy="contraction, scarcity, worry",   # From journal
+            discrepancy_score=0.82,
+            period_planet="Jupiter",
+            period_card="9 of Hearts",
+            source_text="I feel so stuck and anxious about money...",
+            source_type="journal_entry",
+        )
+    
+    High discrepancy scores (>0.7) may indicate:
+    - Shadow work opportunity (resisting the period energy)
+    - Unprocessed material from previous period
+    - Birth chart factors modifying period expression
+    - Life circumstances overriding cosmic weather
+    """
+    
+    user_id: int = Field(description="User ID experiencing the discrepancy")
+    
+    # What the MAGI script says should be happening
+    script_energy: str = Field(
+        description="Expected energy/theme from current MAGI period (e.g., 'expansion, abundance, luck')"
+    )
+    period_planet: str = Field(description="Current planetary period (e.g., 'Jupiter')")
+    period_card: str = Field(description="Current period card (e.g., '9 of Hearts')")
+    
+    # What the user is actually reporting
+    reported_energy: str = Field(
+        description="Detected energy/theme from user's communication (e.g., 'contraction, fear, stagnation')"
+    )
+    source_text: str = Field(description="The original text that triggered discrepancy detection")
+    source_type: Literal["journal_entry", "chat_message", "mood_report", "reflection_response"] = Field(
+        description="Type of content that revealed the discrepancy"
+    )
+    
+    # Scoring and metadata
+    discrepancy_score: float = Field(
+        ge=0.0, le=1.0,
+        description="How misaligned the energies are (0=aligned, 1=opposite)"
+    )
+    detected_at: datetime = Field(
+        default_factory=lambda: datetime.now(UTC),
+        description="When this discrepancy was identified"
+    )
+    
+    # Genesis integration
+    hypothesis_generated: bool = Field(
+        default=False,
+        description="Whether Genesis has created a hypothesis from this discrepancy"
+    )
+    hypothesis_id: str | None = Field(
+        default=None,
+        description="ID of the Genesis hypothesis investigating this discrepancy"
+    )
+    
+    @property
+    def is_significant(self) -> bool:
+        """True if discrepancy score is high enough to warrant investigation."""
+        return self.discrepancy_score >= 0.7
+    
+    @property
+    def severity(self) -> Literal["low", "medium", "high"]:
+        """Categorize the discrepancy severity."""
+        if self.discrepancy_score >= 0.8:
+            return "high"
+        elif self.discrepancy_score >= 0.5:
+            return "medium"
+        return "low"
+    
+    def to_hypothesis_context(self) -> dict:
+        """
+        Format discrepancy data for Genesis hypothesis creation.
+        
+        Returns context dict suitable for initializing a new hypothesis.
+        """
+        return {
+            "type": "alignment_discrepancy",
+            "user_id": self.user_id,
+            "context": {
+                "expected": {
+                    "planet": self.period_planet,
+                    "card": self.period_card,
+                    "energy": self.script_energy,
+                },
+                "observed": {
+                    "energy": self.reported_energy,
+                    "source_type": self.source_type,
+                    "sample_text": self.source_text[:200],  # Truncate for hypothesis
+                },
+                "discrepancy_score": self.discrepancy_score,
+            },
+            "question": (
+                f"Why is {self.period_planet} period energy ({self.script_energy}) "
+                f"not manifesting as expected? User reports: {self.reported_energy}"
+            ),
+        }
+    
+    def to_storage_dict(self) -> dict:
+        """Convert to dictionary for storage."""
+        return {
+            "user_id": self.user_id,
+            "script_energy": self.script_energy,
+            "period_planet": self.period_planet,
+            "period_card": self.period_card,
+            "reported_energy": self.reported_energy,
+            "source_text": self.source_text,
+            "source_type": self.source_type,
+            "discrepancy_score": self.discrepancy_score,
+            "detected_at": self.detected_at.isoformat(),
+            "hypothesis_generated": self.hypothesis_generated,
+            "hypothesis_id": self.hypothesis_id,
+        }
+    
+    @classmethod
+    def from_storage_dict(cls, data: dict) -> "AlignmentDiscrepancy":
+        """Reconstruct from stored dictionary."""
+        return cls(
+            user_id=data["user_id"],
+            script_energy=data["script_energy"],
+            period_planet=data["period_planet"],
+            period_card=data["period_card"],
+            reported_energy=data["reported_energy"],
+            source_text=data["source_text"],
+            source_type=data["source_type"],
+            discrepancy_score=data["discrepancy_score"],
+            detected_at=datetime.fromisoformat(data["detected_at"]),
+            hypothesis_generated=data.get("hypothesis_generated", False),
+            hypothesis_id=data.get("hypothesis_id"),
         )

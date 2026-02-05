@@ -1,20 +1,22 @@
 import asyncio
-import os
-import sys
-
-# Ensure src is in the path
-sys.path.append(os.path.join(os.getcwd(), "src"))
-
-from app.core.db.database import local_session
-from app.models.user import User
+from src.app.core.db.database import local_session
+from src.app.models.user import User
 from sqlalchemy import select
 
-async def main():
+
+from sqlalchemy.orm import configure_mappers
+import src.app.models as models
+
+
+async def check_users():
+    configure_mappers()
     async with local_session() as db:
         result = await db.execute(select(User))
         users = result.scalars().all()
-        for u in users:
-            print(f"ID: {u.id}, Username: {u.username}, Email: {u.email}")
+        print(f"Total Users: {len(users)}")
+        for user in users:
+            print(f"ID: {user.id}, Username: {user.username}, Is Superuser: {user.is_superuser}")
+
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(check_users())

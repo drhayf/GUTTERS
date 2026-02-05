@@ -46,17 +46,21 @@ class TransitTracker(BaseTrackingModule):
 
     async def fetch_current_data(self) -> TrackingData:
         """Calculate current planetary positions."""
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         jd = swe.julday(now.year, now.month, now.day, now.hour + now.minute / 60.0)
 
         positions = {}
         for planet_id, planet_name in self.PLANETS.items():
             result = swe.calc_ut(jd, planet_id)
             longitude = result[0][0]
+            speed = result[0][3]  # Longitudinal velocity
+
             positions[planet_name] = {
                 "longitude": longitude,
                 "sign": self._longitude_to_sign(longitude),
                 "degree": longitude % 30,
+                "speed": speed,
+                "is_retrograde": speed < 0,
             }
 
         return TrackingData(timestamp=now, source="Swiss Ephemeris", data={"positions": positions})
@@ -64,7 +68,7 @@ class TransitTracker(BaseTrackingModule):
     async def compare_to_natal(self, user_id: int, current_data: TrackingData) -> dict:
         """Compare current positions to natal chart."""
         # Get natal chart
-        from app.core.memory import get_active_memory
+        from src.app.core.memory import get_active_memory
 
         memory = get_active_memory()
         await memory.initialize()
@@ -77,14 +81,24 @@ class TransitTracker(BaseTrackingModule):
         transits = []
         current_positions = current_data.data["positions"]
 
-        natal_points = {}
+        natal_points = []
         if "planets" in astrology_data:
             natal_points = astrology_data["planets"]
-        elif "sun" in astrology_data:  # old structure?
+        elif isinstance(astrology_data, list):
             natal_points = astrology_data
 
+        natal_houses = astrology_data.get("houses", []) if isinstance(astrology_data, dict) else []
+
         for transit_planet, transit_data in current_positions.items():
-            for natal_planet_name, natal_data in natal_points.items():
+            for natal_planet_entry in natal_points:
+                # Handle both dict and object (if already parsed)
+                if isinstance(natal_planet_entry, dict):
+                    natal_planet_name = natal_planet_entry.get("name", "")
+                    natal_data = natal_planet_entry
+                else:
+                    natal_planet_name = getattr(natal_planet_entry, "name", "")
+                    natal_data = natal_planet_entry
+
                 # Filter only major planets
                 if natal_planet_name.lower() not in [
                     "sun",
@@ -100,17 +114,26 @@ class TransitTracker(BaseTrackingModule):
                 ]:
                     continue
 
-                if not isinstance(natal_data, dict):
-                    continue
-
                 natal_longitude = 0.0
                 # Try to find absolute longitude or calculate it
-                if "absolute_degree" in natal_data:
-                    natal_longitude = natal_data["absolute_degree"]
-                elif "sign" in natal_data and "degree" in natal_data:
-                    natal_longitude = self._sign_to_longitude(natal_data["sign"]) + natal_data["degree"]
+                if isinstance(natal_data, dict):
+                    if "absolute_degree" in natal_data:
+                        natal_longitude = natal_data["absolute_degree"]
+                    elif "sign" in natal_data and "degree" in natal_data:
+                        natal_longitude = self._sign_to_longitude(natal_data["sign"]) + natal_data["degree"]
+                    else:
+                        continue
                 else:
-                    continue  # Can't calculate aspect without position
+                    abs_deg = getattr(natal_data, "absolute_degree", None)
+                    if abs_deg is not None:
+                        natal_longitude = abs_deg
+                    else:
+                        sgn = getattr(natal_data, "sign", None)
+                        deg = getattr(natal_data, "degree", None)
+                        if sgn and deg is not None:
+                            natal_longitude = self._sign_to_longitude(sgn) + deg
+                        else:
+                            continue
 
                 transit_longitude = transit_data["longitude"]
 
@@ -127,8 +150,17 @@ class TransitTracker(BaseTrackingModule):
                             "interpretation": self._interpret_transit(
                                 transit_planet, natal_planet_name.title(), aspect["name"]
                             ),
+                            "applying": self._is_applying(
+                                transit_data["longitude"], natal_longitude, transit_data["speed"], aspect["angle"]
+                            ),
                         }
                     )
+
+            # Check House Placement
+            if natal_houses:
+                house_num = self._calculate_house_placement(transit_longitude, natal_houses)
+                if house_num:
+                    transit_data["current_house"] = house_num
 
         # Sort by exactness (closest orb first)
         transits.sort(key=lambda t: t["orb"])
@@ -140,65 +172,74 @@ class TransitTracker(BaseTrackingModule):
             "current_positions": current_positions,
         }
 
-    def detect_significant_events(self, current_data: TrackingData, previous_data: Optional[TrackingData]) -> List[str]:
-        """Detect when transits become exact."""
-        # Event detection for transits is tricky because 'exact' depends on natal chart.
-        # This global detect logic runs WITHOUT user_id (it compares global state).
-        # However, BaseTrackingModule.update() passes user_id to compare_to_natal(),
-        # but detect_significant_events() only takes current/previous data.
+    def detect_significant_events(
+        self,
+        current_data: TrackingData,
+        previous_data: Optional[TrackingData],
+        comparison: Optional[dict] = None,
+    ) -> List[str]:
+        """Detect when transits become exact (within 1 degree)."""
+        events = []
 
-        # Refactoring approach:
-        # Since transits are personal, significant events are personal.
-        # But 'detect_significant_events' in base module is designed around data changes (like solar storm).
-        # For personal transits, we might need to rely on 'compare_to_natal' result or
-        # change the architecture to allow personal event detection.
+        if comparison and comparison.get("exact_transits"):
+            for transit in comparison["exact_transits"]:
+                transit_planet = transit["transit_planet"]
+                natal_planet = transit["natal_planet"]
+                aspect = transit["aspect"]
 
-        # IMPORTANT: The BaseTrackingModule.update() calls detect_significant_events(current, previous).
-        # It does NOT pass user_id. This is a limit of the requested architecture for personal events.
-        # However, update() DOES call compare_to_natal().
-        # We can return events from compare_to_natal? No, base class doesn't support that.
+                # Professional, user-facing string for Evolution HUD
+                label = f"Cosmic Witness: Transit {transit_planet} {aspect} Natal {natal_planet}"
+                events.append(label)
 
-        # Hack/Workaround:
-        # Since 'update()' is called PER USER in the background job (see functions.py logic),
-        # we can't easily detect "my transit is exact" inside the global data fetch.
-        # BUT 'update()' fetches data once? No, 'update(user_id)' logic:
-        # 1. Check cache for *data* (shared?)
-        # BaseTrackingModule.update() caches data by user_id?
-        # `last_update_key = f"tracking:{self.module_name}:last_update_timestamp:{user_id}"`
-        # Yes! The caching is per-user!
-        # So `current_data` is unique to user?
-        # NO. `fetch_current_data()` returns global cosmic data (TrackingData).
-        # It does not take user_id.
+        # Retrograde Stations
+        current_pos = current_data.data.get("positions", {})
+        previous_pos = previous_data.data.get("positions", {}) if previous_data else {}
 
-        # So `previous_data` in `detect_significant_events(current, previous)` is global previous data.
-        # This works for Solar (storm is global) and Lunar (phase is global).
-        # It DOES NOT work for Transits (exact transit is personal).
+        for planet, data in current_pos.items():
+            if planet in ["Sun", "Moon"]:
+                continue
 
-        # Unless... we detect "Transit of Saturn to 15 deg Leo" as a global event?
-        # No, that's too granular.
+            is_rx = data.get("is_retrograde", False)
+            was_rx = previous_pos.get(planet, {}).get("is_retrograde", False)
 
-        # User requested: "When transit becomes exact -> synthesis triggered automatically"
-        # Since the architecture provided separates global data (fetch) from personal (compare),
-        # and trigger logic is based on `detect_significant_events` (global)...
-        # We have a design flaw in the requested architecture for personal transit triggers.
+            if is_rx and not was_rx:
+                events.append(f"Cosmic Witness: {planet} Stations Retrograde")
+            elif not is_rx and was_rx:
+                events.append(f"Cosmic Witness: {planet} Stations Direct")
 
-        # However, I must follow the requested architecture.
-        # Use case: "When transit becomes exact -> synthesis triggered"
-        # I will leave this empty for now as strictly instructed by the user's implementation plan which said:
-        # "For now, return empty (significant events detected in compare_to_natal)"
-        # AND "Synthesis triggers work... When transit becomes exact -> synthesis triggered automatically" is a success criteria.
+        return events
 
-        # If I want to trigger synthesis for personal transits, I should do it in `compare_to_natal`?
-        # But `base.py` only triggers if `events` is returned by `detect_significant_events`.
+    def _is_applying(self, t_lon: float, n_lon: float, t_speed: float, aspect_angle: float) -> bool:
+        """
+        Check if aspect is applying (getting closer).
+        """
+        # Calculate current diff
+        diff_now = abs(t_lon - n_lon)
+        if diff_now > 180:
+            diff_now = 360 - diff_now
+        orb_now = abs(diff_now - aspect_angle)
 
-        # I will modify `base.py` locally or hook into it? No, keep base.py generic.
-        # Wait, the user's base.py code:
-        # events = self.detect_significant_events(current, previous)
-        # comparison = await self.compare_to_natal(user_id, current)
+        # Calculate future diff (1 hour from now)
+        # speed is degrees/day. 1 hour = speed/24
+        t_lon_future = (t_lon + t_speed / 24.0) % 360
+        diff_future = abs(t_lon_future - n_lon)
+        if diff_future > 180:
+            diff_future = 360 - diff_future
+        orb_future = abs(diff_future - aspect_angle)
 
-        # I'll stick to the user's plan.
+        return orb_future < orb_now
 
-        return []
+    def _calculate_house_placement(self, lon: float, houses: list) -> Optional[int]:
+        """
+        Determine which house a longitude falls into.
+        Expects houses list of dicts: [{'house': 1, 'degree': ...}, ...] or objects.
+        """
+        # Simplified for common format (list of 1-12)
+        # This requires robust House handling which depends on 'astrology' module output format.
+        # Assuming simple list first.
+        # If houses missing, returns None.
+        return None  # Placeholder until House System strict definition confirmed
+        # (Safer to disable than error out on robust formatting)
 
     def _calculate_aspect(self, transit_lon: float, natal_lon: float) -> Optional[dict]:
         """Calculate aspect between two planets."""

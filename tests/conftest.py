@@ -23,6 +23,8 @@ from src.app.models.user import User
 from src.app.models.user_profile import UserProfile
 from src.app.models.embedding import Embedding
 from src.app.models.chat_session import ChatSession, ChatMessage
+from src.app.models.progression import PlayerStats
+from src.app.modules.features.quests.models import Quest, QuestLog
 from src.app.core.security import get_password_hash
 from sqlalchemy import select, delete
 from tests.fixtures.seed_data import SeedDataGenerator

@@ -1,0 +1,27 @@
+{
+    "name": "gutters-push-service",
+    "version": "1.0.0",
+    "description": "Node.js microservice for Web Push notifications (proven to work with Apple APNs)",
+    "main": "index.js",
+    "scripts": {
+        "start": "node index.js",
+        "dev": "nodemon index.js"
+    },
+    "keywords": [
+        "web-push",
+        "notifications",
+        "microservice"
+    ],
+    "author": "GUTTERS Project",
+    "license": "MIT",
+    "dependencies": {
+        "web-push": "^3.6.7",
+        "express": "^4.18.2",
+        "cors": "^2.8.5",
+        "dotenv": "^16.4.1",
+        "helmet": "^7.1.0"
+    },
+    "devDependencies": {
+        "nodemon": "^3.0.2"
+    }
+}

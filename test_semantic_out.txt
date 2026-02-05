@@ -1,0 +1,34 @@
+2026-01-26T12:22:22.769149Z [info     ] Registered calculation module: human_design (v1.0.0) [src.app.modules.calculation.registry]
+2026-01-26T12:22:22.771218Z [info     ] Registered module: human_design (layer: calculation) [src.app.modules.registry]
+2026-01-26T12:22:24.165259Z [info     ] Registered calculation module: numerology (v1.0.0) [src.app.modules.calculation.registry]
+2026-01-26T12:22:24.166770Z [info     ] Registered module: numerology (layer: calculation) [src.app.modules.registry]
+2026-01-26T12:22:24.233494Z [info     ] Registered calculation module: astrology (v1.0.0) [src.app.modules.calculation.registry]
+2026-01-26T12:22:24.309420Z [info     ] Registered module: astrology (layer: calculation) [src.app.modules.registry]
+2026-01-26T12:22:24.340496Z [info     ] Registered module: query (layer: intelligence) [src.app.modules.registry]
+2026-01-26T12:22:24.344105Z [info     ] Registered module: synthesis (layer: intelligence) [src.app.modules.registry]
+2026-01-26T12:22:25.301190Z [info     ] Registered module: observer (layer: intelligence) [src.app.modules.registry]
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-9.0.2, pluggy-1.6.0 -- C:\dev\GUTTERS\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\dev\GUTTERS
+configfile: pyproject.toml
+plugins: anyio-4.12.1, Faker-37.3.0, langsmith-0.6.4, asyncio-1.3.0, mock-3.14.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+tests/integration/test_semantic_evolution.py::test_semantic_evolution_loop [*] Completing Semantic Quest...
+DEBUG: EvolutionEngine received XP packet for user 79. Amount: 75
+DEBUG: Processing XP. Amount: 75, Reason: Quest Completed: Leader's Presence
+2026-01-26T12:22:28.169331Z [info     ] QuestManager: Quest 33 completed. Emitted ProgressionPacket (75 XP) [src.app.modules.features.quests.manager]
+2026-01-26T12:22:30.242864Z [info     ] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK" [httpx]
+[*] Post-Quest XP: 75
+[*] Post-Quest Level: 1
+[*] Simulating Passive Cosmic Event...
+DEBUG: EvolutionEngine received XP packet for user 79. Amount: 5
+DEBUG: Processing XP. Amount: 5, Reason: Cosmic Witness: G4 Severe Solar Storm
+[*] Post-Passive XP: 85
+[*] Sync History: [{'level': 1, 'amount': 75, 'reason': "Quest Completed: Leader's Presence", 'category': 'INTELLECT', 'new_total': 75, 'timestamp': '2026-01-26T12:22:28.334892+00:00'}, {'level': 1, 'amount': 5, 'reason': 'Cosmic Witness: G4 Severe Solar Storm', 'category': 'VITALITY', 'new_total': 80, 'timestamp': '2026-01-26T12:22:32.359229+00:00'}, {'level': 1, 'amount': 5, 'reason': 'Cosmic Witness: G4 Severe Solar Storm', 'category': 'VITALITY', 'new_total': 85, 'timestamp': '2026-01-26T12:22:32.688407+00:00'}]
+[OK] Semantic Evolution Loop & Passive XP Verified.
+PASSED
+
+============================== 1 passed in 8.09s ==============================

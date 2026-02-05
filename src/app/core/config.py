@@ -101,21 +101,22 @@ class FirstUserSettings(BaseSettings):
     ADMIN_PASSWORD: str = "!Ch4ng3Th1sP4ssW0rd!"
 
 
-class TestSettings(BaseSettings):
-    ...
+class TestSettings(BaseSettings): ...
 
 
 class RedisCacheSettings(BaseSettings):
     REDIS_CACHE_HOST: str = "localhost"
     REDIS_CACHE_PORT: int = 6379
     REDIS_PASSWORD: str = ""
+    REDIS_CACHE_SSL: bool = False
 
     @computed_field  # type: ignore[prop-decorator]
     @property
     def REDIS_CACHE_URL(self) -> str:
+        protocol = "rediss" if self.REDIS_CACHE_SSL else "redis"
         if self.REDIS_PASSWORD:
-            return f"redis://default:{self.REDIS_PASSWORD}@{self.REDIS_CACHE_HOST}:{self.REDIS_CACHE_PORT}"
-        return f"redis://{self.REDIS_CACHE_HOST}:{self.REDIS_CACHE_PORT}"
+            return f"{protocol}://default:{self.REDIS_PASSWORD}@{self.REDIS_CACHE_HOST}:{self.REDIS_CACHE_PORT}"
+        return f"{protocol}://{self.REDIS_CACHE_HOST}:{self.REDIS_CACHE_PORT}"
 
 
 class ClientSideCacheSettings(BaseSettings):
@@ -126,26 +127,32 @@ class RedisQueueSettings(BaseSettings):
     REDIS_QUEUE_HOST: str = "localhost"
     REDIS_QUEUE_PORT: int = 6379
     REDIS_PASSWORD: str = ""
+    REDIS_QUEUE_SSL: bool = False
 
     @computed_field  # type: ignore[prop-decorator]
     @property
     def REDIS_QUEUE_URL(self) -> str:
+        protocol = "rediss" if self.REDIS_QUEUE_SSL else "redis"
         if self.REDIS_PASSWORD:
-            return f"redis://default:{self.REDIS_PASSWORD}@{self.REDIS_QUEUE_HOST}:{self.REDIS_QUEUE_PORT}"
-        return f"redis://{self.REDIS_QUEUE_HOST}:{self.REDIS_QUEUE_PORT}"
+            return f"{protocol}://default:{self.REDIS_PASSWORD}@{self.REDIS_QUEUE_HOST}:{self.REDIS_QUEUE_PORT}"
+        return f"{protocol}://{self.REDIS_QUEUE_HOST}:{self.REDIS_QUEUE_PORT}"
 
 
 class RedisRateLimiterSettings(BaseSettings):
     REDIS_RATE_LIMIT_HOST: str = "localhost"
     REDIS_RATE_LIMIT_PORT: int = 6379
     REDIS_PASSWORD: str = ""
+    REDIS_RATE_LIMIT_SSL: bool = False
 
     @computed_field  # type: ignore[prop-decorator]
     @property
     def REDIS_RATE_LIMIT_URL(self) -> str:
+        protocol = "rediss" if self.REDIS_RATE_LIMIT_SSL else "redis"
         if self.REDIS_PASSWORD:
-            return f"redis://default:{self.REDIS_PASSWORD}@{self.REDIS_RATE_LIMIT_HOST}:{self.REDIS_RATE_LIMIT_PORT}"
-        return f"redis://{self.REDIS_RATE_LIMIT_HOST}:{self.REDIS_RATE_LIMIT_PORT}"
+            return (
+                f"{protocol}://default:{self.REDIS_PASSWORD}@{self.REDIS_RATE_LIMIT_HOST}:{self.REDIS_RATE_LIMIT_PORT}"
+            )
+        return f"{protocol}://{self.REDIS_RATE_LIMIT_HOST}:{self.REDIS_RATE_LIMIT_PORT}"
 
 
 class DefaultRateLimitSettings(BaseSettings):
@@ -190,6 +197,22 @@ class CORSSettings(BaseSettings):
     CORS_HEADERS: list[str] = ["*"]
 
 
+class PushSettings(BaseSettings):
+    VAPID_PUBLIC_KEY: str | None = None
+    VAPID_PRIVATE_KEY: str | None = None
+    VAPID_CLAIM_EMAIL: str | None = None
+    VAPID_CLAIMS_SUB: str | None = None
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def RESOLVED_VAPID_SUB(self) -> str:
+        """Resolve VAPID_CLAIMS_SUB, preferring VAPID_CLAIM_EMAIL if set."""
+        return self.VAPID_CLAIM_EMAIL or self.VAPID_CLAIMS_SUB or "mailto:admin@gutters.local"
+
+    PUSH_SERVICE_SECRET: str = "gutters-push-service-secret-token-change-me"
+    PUSH_SERVICE_URL: str = "http://localhost:4000"
+
+
 class Settings(
     AppSettings,
     SQLiteSettings,
@@ -207,6 +230,7 @@ class Settings(
     CORSSettings,
     FileLoggerSettings,
     ConsoleLoggerSettings,
+    PushSettings,
 ):
     model_config = SettingsConfigDict(
         env_file=os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "..", ".env"),

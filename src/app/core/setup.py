@@ -53,7 +53,9 @@ async def close_redis_cache_pool() -> None:
 
 # -------------- queue --------------
 async def create_redis_queue_pool() -> None:
-    queue.pool = await create_pool(RedisSettings(host=settings.REDIS_QUEUE_HOST, port=settings.REDIS_QUEUE_PORT))
+    queue.pool = await create_pool(
+        RedisSettings(host=settings.REDIS_QUEUE_HOST, port=settings.REDIS_QUEUE_PORT, password=settings.REDIS_PASSWORD)
+    )
 
 
 async def close_redis_queue_pool() -> None:
@@ -96,6 +98,9 @@ def lifespan_factory(
     async def lifespan(app: FastAPI) -> AsyncGenerator:
         from asyncio import Event
 
+        # Import Worker
+        from src.app.core.worker.ingestion import worker
+
         initialization_complete = Event()
         app.state.initialization_complete = initialization_complete
 
@@ -114,11 +119,42 @@ def lifespan_factory(
             if create_tables_on_start:
                 await create_tables()
 
+            # Initialize EventBus
+            from ..core.events.bus import get_event_bus
+
+            await get_event_bus().initialize()
+
+            # Initialize LLM Config from Database
+            from ..core.llm.config import LLMConfig
+
+            await LLMConfig.initialize_from_db()
+
+            # Start Background Worker
+            await worker.start()
+
+            # Initialize Semantic Progression Engine (Math)
+            from ..modules.intelligence.evolution.engine import get_evolution_engine
+
+            await get_evolution_engine().initialize()
+
+            # Initialize Genesis Semantic Feedback Loop (Meaning)
+            from ..modules.intelligence.genesis.listener import get_genesis_listener
+
+            await get_genesis_listener().initialize()
+
+            # Initialize System Journalist (Logs)
+            from ..modules.features.journal.system_journal import get_system_journalist
+
+            await get_system_journalist().initialize()
+
             initialization_complete.set()
 
             yield
 
         finally:
+            # Stop Background Worker
+            await worker.stop()
+
             if isinstance(settings, RedisCacheSettings):
                 await close_redis_cache_pool()
 
@@ -127,6 +163,11 @@ def lifespan_factory(
 
             if isinstance(settings, RedisRateLimiterSettings):
                 await close_redis_rate_limit_pool()
+
+            # Close EventBus
+            from ..core.events.bus import get_event_bus
+
+            await get_event_bus().cleanup()
 
     return lifespan
 

@@ -32,7 +32,14 @@ class LoggerMiddleware(BaseHTTPMiddleware):
             path=request.url.path,
             method=request.method,
         )
-        response = await call_next(request)
-        structlog.contextvars.bind_contextvars(status_code=response.status_code)
-        response.headers["X-Request-ID"] = request_id
-        return response
+        import asyncio
+
+        try:
+            response = await call_next(request)
+            structlog.contextvars.bind_contextvars(status_code=response.status_code)
+            response.headers["X-Request-ID"] = request_id
+            return response
+        except asyncio.CancelledError:
+            # Client disconnected or server shutting down
+            structlog.contextvars.bind_contextvars(status_code=499)
+            return Response("Client Closed Request", status_code=499)

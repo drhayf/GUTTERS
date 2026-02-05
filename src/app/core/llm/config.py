@@ -34,6 +34,15 @@ class ModelConfig:
         self.cost_per_1k_input = cost_per_1k_input
         self.cost_per_1k_output = cost_per_1k_output
 
+    def to_dict(self) -> dict:
+        return {
+            "model_id": self.model_id,
+            "temperature": self.temperature,
+            "max_tokens": self.max_tokens,
+            "cost_per_1k_input": self.cost_per_1k_input,
+            "cost_per_1k_output": self.cost_per_1k_output,
+        }
+
 
 class LLMConfig:
     """
@@ -62,6 +71,30 @@ class LLMConfig:
 
     # Exchange rate: 1 USD to AUD
     AUD_EXCHANGE_RATE = 1.54
+
+    @classmethod
+    async def initialize_from_db(cls):
+        """Load model configurations from system_configuration table."""
+        from sqlalchemy import select
+        from src.app.core.db.database import local_session
+        from src.app.models.system_configuration import SystemConfiguration
+
+        async with local_session() as db:
+            result = await db.execute(
+                select(SystemConfiguration).where(SystemConfiguration.module_name == "llm_config")
+            )
+            sys_config = result.scalar_one_or_none()
+
+            if sys_config and sys_config.config:
+                stored_models = sys_config.config.get("models", {})
+                for tier_name, conf in stored_models.items():
+                    try:
+                        tier = LLMTier(tier_name)
+                        cls.MODELS[tier] = ModelConfig(**conf)
+                    except (ValueError, TypeError):
+                        continue
+
+                cls.AUD_EXCHANGE_RATE = sys_config.config.get("exchange_rate", cls.AUD_EXCHANGE_RATE)
 
     @staticmethod
     def get_llm(tier: LLMTier = LLMTier.PREMIUM) -> ChatOpenAI:

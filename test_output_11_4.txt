@@ -1,0 +1,125 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-9.0.2, pluggy-1.6.0
+rootdir: C:\dev\GUTTERS
+configfile: pyproject.toml
+plugins: anyio-4.12.1, Faker-37.3.0, langsmith-0.6.4, asyncio-1.3.0, mock-3.14.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 2 items
+
+tests\integration\features\test_insight_engine.py EE                     [100%]
+
+=================================== ERRORS ====================================
+_______________ ERROR at setup of test_insight_flow_solar_peak ________________
+
+db = <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x00000218E15BDCD0>
+
+    @pytest_asyncio.fixture
+    async def ensure_user_profile(db: AsyncSession):
+        """Ensure User 1 exists with Profile."""
+        # Check User
+        stmt = select(User).where(User.id == 1)
+        result = await db.execute(stmt)
+        user = result.scalar_one_or_none()
+    
+        if not user:
+>           user = User(id=1, email="test@example.com", hashed_password="xxx", is_active=True)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\integration\features\test_insight_engine.py:53: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+<string>:4: in __init__
+    ???
+.venv\Lib\site-packages\sqlalchemy\orm\state.py:596: in _initialize_instance
+    with util.safe_reraise():
+         ^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sqlalchemy\util\langhelpers.py:224: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv\Lib\site-packages\sqlalchemy\orm\state.py:594: in _initialize_instance
+    manager.original_init(*mixed[1:], **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <src.app.models.user.User object at 0x00000218E16021B0>
+kwargs = {'email': 'test@example.com', 'hashed_password': 'xxx', 'id': 1, 'is_active': True}
+cls_ = <class 'src.app.models.user.User'>, k = 'is_active'
+
+    def _declarative_constructor(self: Any, **kwargs: Any) -> None:
+        """A simple constructor that allows initialization from kwargs.
+    
+        Sets attributes on the constructed instance using the names and
+        values in ``kwargs``.
+    
+        Only keys that are present as
+        attributes of the instance's class are allowed. These could be,
+        for example, any mapped columns or relationships.
+        """
+        cls_ = type(self)
+        for k in kwargs:
+            if not hasattr(cls_, k):
+>               raise TypeError(
+                    "%r is an invalid keyword argument for %s" % (k, cls_.__name__)
+                )
+E               TypeError: 'is_active' is an invalid keyword argument for User
+
+.venv\Lib\site-packages\sqlalchemy\orm\decl_base.py:2179: TypeError
+______________ ERROR at setup of test_insight_lunar_anticipation ______________
+
+db = <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x00000218E1593F50>
+
+    @pytest_asyncio.fixture
+    async def ensure_user_profile(db: AsyncSession):
+        """Ensure User 1 exists with Profile."""
+        # Check User
+        stmt = select(User).where(User.id == 1)
+        result = await db.execute(stmt)
+        user = result.scalar_one_or_none()
+    
+        if not user:
+>           user = User(id=1, email="test@example.com", hashed_password="xxx", is_active=True)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\integration\features\test_insight_engine.py:53: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+<string>:4: in __init__
+    ???
+.venv\Lib\site-packages\sqlalchemy\orm\state.py:596: in _initialize_instance
+    with util.safe_reraise():
+         ^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sqlalchemy\util\langhelpers.py:224: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv\Lib\site-packages\sqlalchemy\orm\state.py:594: in _initialize_instance
+    manager.original_init(*mixed[1:], **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <src.app.models.user.User object at 0x00000218E1603680>
+kwargs = {'email': 'test@example.com', 'hashed_password': 'xxx', 'id': 1, 'is_active': True}
+cls_ = <class 'src.app.models.user.User'>, k = 'is_active'
+
+    def _declarative_constructor(self: Any, **kwargs: Any) -> None:
+        """A simple constructor that allows initialization from kwargs.
+    
+        Sets attributes on the constructed instance using the names and
+        values in ``kwargs``.
+    
+        Only keys that are present as
+        attributes of the instance's class are allowed. These could be,
+        for example, any mapped columns or relationships.
+        """
+        cls_ = type(self)
+        for k in kwargs:
+            if not hasattr(cls_, k):
+>               raise TypeError(
+                    "%r is an invalid keyword argument for %s" % (k, cls_.__name__)
+                )
+E               TypeError: 'is_active' is an invalid keyword argument for User
+
+.venv\Lib\site-packages\sqlalchemy\orm\decl_base.py:2179: TypeError
+============================== warnings summary ===============================
+src\app\modules\intelligence\insight\schemas.py:27
+  C:\dev\GUTTERS\src\app\modules\intelligence\insight\schemas.py:27: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ReflectionPromptRead(BaseModel):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+ERROR tests/integration/features/test_insight_engine.py::test_insight_flow_solar_peak
+ERROR tests/integration/features/test_insight_engine.py::test_insight_lunar_anticipation
+======================== 1 warning, 2 errors in 1.64s =========================

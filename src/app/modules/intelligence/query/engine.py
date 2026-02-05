@@ -2,7 +2,7 @@
 GUTTERS Query Engine
 
 Answer user questions by searching across all profile modules.
-Uses LLM to classify questions and generate answers.
+Uses LLM with Native Tool Calling to compute charts and retrieve data.
 """
 
 from __future__ import annotations
@@ -11,19 +11,17 @@ import json
 import logging
 import time
 import uuid
+import re
 from datetime import datetime, UTC
 from typing import TYPE_CHECKING, Any, Optional
 
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
-from langchain_community.callbacks import get_openai_callback
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from ....core.ai.llm_factory import get_llm
 from ....core.config import settings
 from ....core.activity.logger import get_activity_logger
 from ....models.embedding import Embedding
 from ...registry import ModuleRegistry
-from ..synthesis.synthesizer import DEFAULT_MODEL
 from ..vector.embedding_service import EmbeddingService
 from ..vector.search_engine import VectorSearchEngine
 from ..trace.context import TraceContext
@@ -32,6 +30,7 @@ from .schemas import QueryResponse
 from src.app.core.llm.config import get_premium_llm, LLMTier, LLMConfig
 from src.app.modules.intelligence.generative_ui.generator import ComponentGenerator
 from src.app.modules.intelligence.generative_ui.models import ComponentType
+from src.app.modules.intelligence.tools.registry import ToolRegistry  # NEW: Import Registry
 
 if TYPE_CHECKING:
     from langchain_openai import ChatOpenAI
@@ -46,8 +45,8 @@ class QueryEngine:
     Answer questions by searching across all modules.
 
     Uses LLM to:
-    1. Classify which modules are relevant to the question
-    2. Build context from relevant module data
+    1. Search Active Memory and Vector DB (RAG)
+    2. Dynamically call Tools (Calculators, Journaling)
     3. Generate a personalized answer
     """
 
@@ -104,7 +103,7 @@ class QueryEngine:
             # STEP 1: Check Active Memory
             trace.think("Checking Active Memory for user's profile and synthesis...")
 
-            from ....core.memory import get_active_memory, get_orchestrator
+            from ....core.memory import get_active_memory
 
             memory = get_active_memory()
 
@@ -195,8 +194,14 @@ class QueryEngine:
                     trace.think(f"Vector search error: {str(e)}. Continuing with cached context only.")
 
             # 1. Classify question (Existing logic, but we can trace it)
-            trace.think("Classifying question intent to optimize context retrieval...")
-            relevant_modules = await self._classify_question(question, trace_id or str(uuid.uuid4()))
+            # trace.think("Classifying question intent to optimize context retrieval...")
+            # relevant_modules = await self._classify_question(question, trace_id or str(uuid.uuid4()))
+
+            # REFACTOR: We skip legacy classification for now and rely on Tool Calling or RAG context.
+            # But to keep existing RAG flow working, we might want to default to ALL modules
+            # or rely on Vector Search context.
+            # For this phase, let's include all modules in context to be safe, or just relying on what's in memory/vector.
+            relevant_modules = ["astrology", "human_design", "numerology"]  # Default to all for context building
 
             # STEP 2.5: Generative UI Decision
             # We do this before generating answer so we can potentially inform the answer
@@ -245,39 +250,25 @@ class QueryEngine:
             trace.think("Generating response with LLM...")
 
             start_time = time.time()
-            prompt = await self._build_enhanced_prompt(question, context_str, vector_context)
-
-            from langchain_core.messages import SystemMessage, HumanMessage
-
-            response = await self.llm.ainvoke(
-                [
-                    SystemMessage(content="You are a compassionate cosmic intelligence guide."),
-                    HumanMessage(content=prompt),
-                ]
+            # Pass trace object to capture internal reasoning
+            # Pass user_id and db for Tool Binding
+            answer, confidence = await self._generate_answer(
+                question,
+                context_str,
+                relevant_modules,
+                trace_id or str(uuid.uuid4()),
+                vector_context,
+                trace,
+                user_id=user_id,
+                db=db,  # NEW: Pass context for tools
             )
+
+            # Record latency for the high-level step
             llm_latency = int((time.time() - start_time) * 1000)
 
-            # ENHANCED: Get actual model info from config
-            provider, model, config = LLMConfig.get_model_info(self.tier)
-
-            # Estimate tokens
-            tokens_in = len(prompt.split()) * 1.3
-            tokens_out = len(response.content.split()) * 1.3
-
-            # Calculate cost in AUD
-            cost_aud = LLMConfig.estimate_cost(self.tier, int(tokens_in), int(tokens_out), currency="AUD")
-
-            trace.model_call(
-                provider=provider,
-                model=model,
-                temperature=config.temperature,
-                tokens_in=int(tokens_in),
-                tokens_out=int(tokens_out),
-                latency_ms=llm_latency,
-                cost_usd=cost_aud,  # Using cost_usd field for AUD value
-            )
-
-            answer = response.content
+            # Note: Detailed model telemetry is now handled inside _generate_answer,
+            # but we record the step completion here.
+            trace.think(f"LLM response received in {llm_latency}ms")
 
             # STEP 5: Calculate confidence (Override with smarter logic)
             trace.think("Calculating response confidence based on data quality...")
@@ -365,6 +356,11 @@ Your answer:"""
             synthesis = context_data["synthesis"]
             context_parts.append(f"## Master Synthesis\n{synthesis.get('synthesis', '')[:1000]}")
 
+        # MAGI TIMELINE CONTEXT - Inject Cardology if available
+        cardology_data = context_data.get("modules", {}).get("cardology") or context_data.get("cardology")
+        if cardology_data:
+            context_parts.append(self._format_magi_context(cardology_data))
+
         for module_name in modules:
             if module_name in context_data.get("modules", {}):
                 data = context_data["modules"][module_name]
@@ -378,6 +374,91 @@ Your answer:"""
                     context_parts.append(self._format_module_context(module_name, data))
 
         return "\n".join(context_parts)
+
+    def _format_magi_context(self, cardology_data: dict) -> str:
+        """
+        Format Cardology/Magi timeline data for LLM context injection.
+        
+        This gives the Chat Agent awareness of:
+        1. User's current planetary period from Cardology (52-day cycles)
+        2. Current I-Ching hexagram (Sun/Earth gates from Council of Systems)
+        """
+        lines = ["\n## MAGI TIMELINE CONTEXT"]
+        
+        # Current state from ChronosStateManager
+        current_state = cardology_data.get("current_state", {})
+        
+        # ===== CARDOLOGY (MACRO) =====
+        # Birth card (static identity)
+        birth_card = cardology_data.get("birth_card", {})
+        if birth_card:
+            card_name = f"{birth_card.get('rank_name', '')} of {birth_card.get('suit', '')}"
+            lines.append(f"Birth Card (Core Identity): {card_name}")
+        
+        # Current planetary period (dynamic)
+        current_planet = current_state.get("current_planet")
+        if current_planet:
+            current_card = current_state.get("current_card", {})
+            card_display = current_card.get("name") or current_card.get("card", "Unknown")
+            lines.append(f"Current Period: {current_planet} (Card: {card_display})")
+        
+        # Days remaining in period
+        days_remaining = current_state.get("days_remaining")
+        if days_remaining is not None:
+            lines.append(f"Days Remaining in Period: {days_remaining}")
+        
+        # Theme and guidance
+        theme = current_state.get("theme")
+        if theme:
+            lines.append(f"Period Theme: {theme}")
+        
+        guidance = current_state.get("guidance")
+        if guidance:
+            lines.append(f"Period Guidance: {guidance}")
+        
+        # Planetary ruling card for the year
+        planetary_ruler = cardology_data.get("planetary_ruling_card", {})
+        if planetary_ruler:
+            ruler_name = f"{planetary_ruler.get('rank_name', '')} of {planetary_ruler.get('suit', '')}"
+            lines.append(f"Yearly Planetary Ruler: {ruler_name}")
+        
+        # Age context
+        age = cardology_data.get("age")
+        if age:
+            lines.append(f"Cardology Age: {age}")
+        
+        # ===== I-CHING / HEXAGRAM (MICRO) =====
+        # Get current hexagram from CouncilService (no async needed)
+        try:
+            from ....modules.intelligence.council import get_council_service
+            
+            council = get_council_service()
+            hexagram = council.get_current_hexagram()
+            
+            if hexagram:
+                lines.append("")
+                lines.append("### I-Ching Daily Code (Council of Systems)")
+                lines.append(f"Sun Gate: {hexagram.sun_gate}.{hexagram.sun_line} - {hexagram.sun_gate_name}")
+                lines.append(f"Earth Gate: {hexagram.earth_gate}.{hexagram.earth_line} - {hexagram.earth_gate_name}")
+                
+                if hexagram.sun_gene_key_gift:
+                    lines.append(f"Sun Gene Key: {hexagram.sun_gene_key_shadow} → {hexagram.sun_gene_key_gift} → {hexagram.sun_gene_key_siddhi}")
+                if hexagram.earth_gene_key_gift:
+                    lines.append(f"Earth Gene Key Gift: {hexagram.earth_gene_key_gift}")
+                
+                if hexagram.polarity_theme:
+                    lines.append(f"Polarity Theme: {hexagram.polarity_theme}")
+                    
+                # Add Council synthesis for richer context
+                synthesis = council.get_council_synthesis()
+                if synthesis:
+                    lines.append(f"Resonance: {synthesis.resonance_type} ({synthesis.resonance_score:.0%})")
+                    if synthesis.guidance:
+                        lines.append(f"Today's Guidance: {synthesis.guidance[0]}")
+        except Exception as e:
+            logger.debug(f"Council context not available: {e}")
+        
+        return "\n".join(lines)
 
     def _calculate_confidence_enhanced(self, context: dict, vector_context: dict, trace: TraceContext) -> float:
         """
@@ -433,6 +514,41 @@ Your answer:"""
                     context_parts.append(f"## Master Synthesis\n{synthesis.get('synthesis', '')[:1000]}")
                     if synthesis.get("themes"):
                         context_parts.append(f"Key Themes: {', '.join(synthesis['themes'])}")
+
+                # MAGI TIMELINE CONTEXT - Check for cardology in memory
+                cardology_data = full_context.get("modules", {}).get("cardology")
+                if cardology_data:
+                    context_parts.append(self._format_magi_context(cardology_data))
+                else:
+                    # Try to get from ChronosStateManager for Cardology state
+                    try:
+                        from ....core.state.chronos import get_chronos_manager
+                        chronos = get_chronos_manager()
+                        chronos_state = await chronos.get_user_chronos(user_id)
+                        if chronos_state:
+                            context_parts.append(self._format_magi_context({"current_state": chronos_state}))
+                    except Exception as e:
+                        logger.debug(f"Chronos state not available: {e}")
+                
+                # Add Council of Systems synthesis (I-Ching + Cross-system resonance)
+                try:
+                    from ....modules.intelligence.council import get_council_service
+                    council = get_council_service()
+                    hexagram = council.get_current_hexagram()
+                    synthesis = council.get_council_synthesis()
+                    
+                    if hexagram or synthesis:
+                        council_lines = ["\n## Council of Systems (Unified Cosmic Intelligence)"]
+                        if hexagram:
+                            council_lines.append(f"Sun Gate: {hexagram.sun_gate}.{hexagram.sun_line} - {hexagram.sun_gate_name}")
+                            council_lines.append(f"Gene Key: {hexagram.sun_gene_key_shadow} → {hexagram.sun_gene_key_gift}")
+                        if synthesis:
+                            council_lines.append(f"Resonance: {synthesis.resonance_type} ({synthesis.resonance_score:.0%})")
+                            if synthesis.guidance:
+                                council_lines.append(f"Guidance: {synthesis.guidance[0]}")
+                        context_parts.append("\n".join(council_lines))
+                except Exception as e:
+                    logger.debug(f"Council synthesis not available: {e}")
 
                 # Include module data from memory
                 for module_name in modules:
@@ -625,13 +741,16 @@ Your answer (JSON array only):"""
 
         if "life_path" in data:
             lp = data["life_path"]
-            lines.append(f"- Life Path: {lp.get('number', '?')}")
+            val = lp.get("number", "?") if isinstance(lp, dict) else lp
+            lines.append(f"- Life Path: {val}")
         if "expression" in data:
             exp = data["expression"]
-            lines.append(f"- Expression: {exp.get('number', '?')}")
+            val = exp.get("number", "?") if isinstance(exp, dict) else exp
+            lines.append(f"- Expression: {val}")
         if "soul_urge" in data:
             su = data["soul_urge"]
-            lines.append(f"- Soul Urge: {su.get('number', '?')}")
+            val = su.get("number", "?") if isinstance(su, dict) else su
+            lines.append(f"- Soul Urge: {val}")
 
         return "\n".join(lines)
 
@@ -641,7 +760,10 @@ Your answer (JSON array only):"""
         context: str,
         modules: list[str],
         trace_id: str,
-        vector_context: dict | None = None,  # NEW: Optional vector context
+        vector_context: dict | None = None,
+        trace: TraceContext | None = None,
+        user_id: int | None = None,  # NEW
+        db: AsyncSession | None = None,  # NEW
     ) -> tuple[str, float]:
         """
         Generate answer using LLM.
@@ -713,31 +835,154 @@ Your answer:"""
                 agent="query.engine",
                 activity_type="llm_call_started",
                 details={
-                    "model": self.model_id,
+                    "model": getattr(self.llm, "model_name", "unknown_model"),
                     "purpose": "answer_query",
                     "modules": modules,
                 },
             )
 
-            response = await self.llm.ainvoke(
-                [
-                    SystemMessage(
-                        content="You are a compassionate guide with deep knowledge of astrology, Human Design, and numerology. Answer questions warmly and specifically, helping people understand their cosmic design."
-                    ),
-                    HumanMessage(content=answer_prompt),
-                ]
-            )
+            # BIND TOOLS
+            tools = []
+            if user_id and db:
+                tools = ToolRegistry.get_tools_for_request(user_id, db)
+                llm_with_tools = self.llm.bind_tools(tools)
+            else:
+                llm_with_tools = self.llm
 
-            answer = response.content if isinstance(response.content, str) else str(response.content)
+            # Create message history
+            messages = [
+                SystemMessage(
+                    content="You are a compassionate guide with deep knowledge of astrology, Human Design, and numerology.\n"
+                    "CRITICAL INSTRUCTION: You must think step-by-step before answering.\n"
+                    "1. First, inside <thinking> tags, analyze the user's profile, check for contradictions, and outline your answer structure.\n"
+                    "2. Then, provide your final response to the user.\n"
+                    "3. If the user asks for a calculation or to log something, USE THE AVAILABLE TOOLS."
+                ),
+                HumanMessage(content=answer_prompt),
+            ]
+
+            # EXECUTION LOOP
+            # We allow up to 3 tool round-trips
+            final_answer = ""
+
+            # Initial Call
+            response = await llm_with_tools.ainvoke(messages)
+
+            # Handle Tool Calls
+            tool_calls = getattr(response, "tool_calls", [])
+
+            if tool_calls:
+                # Add AIMessage with tool calls to history
+                messages.append(response)
+
+                # Execute tools
+                for tool_call in tool_calls:
+                    tool_name = tool_call["name"]
+                    tool_args = tool_call["args"]
+                    call_id = tool_call["id"]
+
+                    trace.think(f"LLM decided to call tool: {tool_name}")
+
+                    # Find tool implementation
+                    tool_impl = next((t for t in tools if t.name == tool_name), None)
+
+                    if tool_impl:
+                        start_time = time.time()
+                        try:
+                            # Execute tool
+                            tool_result = await tool_impl.ainvoke(tool_args)
+                            latency = int((time.time() - start_time) * 1000)
+
+                            trace.tool_call(
+                                ToolType.CALCULATOR,  # We classify all as CALCULATOR for now, or trace specialized types
+                                tool_name,
+                                latency,
+                                f"Executed {tool_name} successfully",
+                                metadata={"args": tool_args, "result_preview": str(tool_result)[:100]},
+                            )
+
+                            # Add ToolMessage result
+                            from langchain_core.messages import ToolMessage
+
+                            messages.append(ToolMessage(tool_call_id=call_id, content=str(tool_result), name=tool_name))
+
+                        except Exception as e:
+                            logger.error(f"Tool execution failed: {e}")
+                            trace.think(f"Tool {tool_name} failed: {e}")
+                            from langchain_core.messages import ToolMessage
+
+                            messages.append(
+                                ToolMessage(
+                                    tool_call_id=call_id, content=f"Error executing tool: {str(e)}", name=tool_name
+                                )
+                            )
+                    else:
+                        trace.think(f"Tool {tool_name} not found in registry.")
+
+                # generate final response after tools
+                trace.think("Generating final answer based on tool results...")
+                final_response = await llm_with_tools.ainvoke(messages)
+                full_content = (
+                    final_response.content if isinstance(final_response.content, str) else str(final_response.content)
+                )
+            else:
+                # No tools called, just standard response
+                full_content = response.content if isinstance(response.content, str) else str(response.content)
+
+            # Parse thinking vs answer
+            import re
+
+            thought_match = re.search(r"<thinking>(.*?)</thinking>", full_content, re.DOTALL)
+
+            if thought_match:
+                thinking_content = thought_match.group(1).strip()
+                # Remove thinking tags from final answer
+                answer = re.sub(r"<thinking>.*?</thinking>", "", full_content, flags=re.DOTALL).strip()
+
+                # Log the LLM's internal reasoning to the trace
+                thinking_lines = [line.strip() for line in thinking_content.split("\n") if line.strip()]
+                for line in thinking_lines:
+                    trace.think(f"LLM: {line}")
+            else:
+                answer = full_content.strip()
+                if not tool_calls:  # Only log no reasoning if strictly no tools used
+                    trace.think("LLM provided no internal reasoning trace.")
 
             # Calculate confidence based on context quality
             confidence = self._calculate_confidence(context, modules)
 
+            # Extract metrics (approximate, summing up multiple calls would be better but keeping simple)
+            response_metadata = getattr(response, "response_metadata", {})
+            token_usage = response_metadata.get("token_usage", {})
+            tokens_in = token_usage.get("prompt_tokens", 0)
+            tokens_out = token_usage.get("completion_tokens", 0)
+
+            # Calculate cost
+            cost_usd = LLMConfig.estimate_cost(self.tier, tokens_in, tokens_out, currency="USD")
+
+            # Log metrics to Trace
+            trace.model_call(
+                provider=getattr(self.llm, "model_name", "unknown").split("/")[0],
+                model=getattr(self.llm, "model_name", "unknown"),
+                temperature=0.7,
+                tokens_in=tokens_in,
+                tokens_out=tokens_out,
+                latency_ms=0,
+                cost_usd=cost_usd,
+            )
+
             await self.activity_logger.log_llm_call(
                 trace_id=trace_id,
-                model_id=self.model_id,
+                model_id=getattr(self.llm, "model_name", "unknown_model"),
                 prompt=answer_prompt[:300],
                 response=answer[:300],
+                metadata={
+                    "tokens_in": tokens_in,
+                    "tokens_out": tokens_out,
+                    "cost_usd": cost_usd,
+                    "provider": getattr(self.llm, "model_name", "unknown").split("/")[0],
+                    "tool_calls": len(tool_calls),
+                },
             )
 
             return answer, confidence

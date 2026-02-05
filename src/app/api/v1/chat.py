@@ -1,16 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException
-from typing import Annotated, Optional, Dict, Any, List
+from typing import Annotated, Optional, Dict, Any
 from pydantic import BaseModel, Field
 
-from src.app.api.dependencies import get_current_user
-from src.app.models.user import User
-from src.app.core.db.database import async_get_db
-from src.app.core.db.database import async_get_db
+from ...api.dependencies import get_current_user
+from ...models.user import User
+from ...core.db.database import async_get_db
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.app.modules.intelligence.generative_ui.models import ComponentResponse, ComponentType
-from src.app.core.events.bus import get_event_bus
+from ...modules.intelligence.generative_ui.models import ComponentResponse, ComponentType
+from ...core.events.bus import get_event_bus
 import uuid
-import uuid as uuid_pkg  # alias to avoid conflict if needed, or just use uuid
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -19,6 +17,7 @@ router = APIRouter(prefix="/chat", tags=["chat"])
 class SendMessageRequest(BaseModel):
     message: str
     session_id: Optional[int] = None  # For branch sessions
+    model_tier: Optional[str] = "standard"  # 'standard' or 'premium'
 
 
 class CreateSessionRequest(BaseModel):
@@ -58,10 +57,14 @@ async def send_to_master_chat(
     memory = get_active_memory()
     await memory.initialize()
 
+    # Initialize with standard, handler will upgrade if needed or we pass it
+    # Ideally passing it to handler is cleaner as handler manages the engine logic per request
     query_engine = QueryEngine(get_llm(), memory)
     handler = MasterChatHandler(query_engine)
 
-    result = await handler.send_message(current_user.id, request.message, db)
+    result = await handler.send_message(
+        current_user["id"], request.message, db, session_id=request.session_id, model_tier=request.model_tier
+    )
 
     return ChatResponse(
         session_id=result["session_id"],
@@ -69,6 +72,8 @@ async def send_to_master_chat(
         metadata={
             "modules_consulted": result.get("modules_consulted", []),
             "confidence": result.get("confidence", 0.0),
+            "trace": result.get("trace"),
+            "component": result.get("component"),
         },
     )
 
@@ -78,6 +83,7 @@ async def get_master_chat_history(
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(async_get_db)],
     limit: int = 50,
+    session_id: Optional[int] = None,
 ):
     """Get Master Chat history."""
     from src.app.modules.features.chat.master_chat import MasterChatHandler
@@ -91,7 +97,7 @@ async def get_master_chat_history(
     query_engine = QueryEngine(get_llm(), memory)
     handler = MasterChatHandler(query_engine)
 
-    history = await handler.get_conversation_history(current_user.id, limit, db)
+    history = await handler.get_conversation_history(current_user["id"], limit, db, session_id=session_id)
 
     return {"history": history}
 
@@ -106,7 +112,7 @@ async def create_master_conversation(
     from src.app.modules.features.chat.session_manager import SessionManager
 
     manager = SessionManager()
-    session = await manager.create_master_conversation(current_user.id, request.name, db)
+    session = await manager.create_master_conversation(current_user["id"], request.name, db)
 
     return {
         "success": True,
@@ -136,7 +142,7 @@ async def list_conversations(
     query_engine = QueryEngine(llm=get_premium_llm(), memory=memory, tier=LLMTier.PREMIUM, enable_generative_ui=True)
 
     handler = MasterChatHandler(query_engine)
-    conversations = await handler.get_conversation_list(current_user.id, db)
+    conversations = await handler.get_conversation_list(current_user["id"], db)
 
     return {"success": True, "conversations": conversations}
 
@@ -153,7 +159,7 @@ async def delete_conversation(
     manager = SessionManager()
 
     try:
-        await manager.delete_conversation(session_id, current_user.id, db)
+        await manager.delete_conversation(session_id, current_user["id"], db)
         return {"success": True, "message": "Conversation deleted"}
     except ValueError as e:
         # Return structured error
@@ -198,7 +204,7 @@ async def search_conversations(
     from src.app.modules.features.chat.session_manager import SessionManager
 
     manager = SessionManager()
-    results = await manager.search_conversations(current_user.id, q, limit, db)
+    results = await manager.search_conversations(current_user["id"], q, limit, db)
 
     return {"success": True, "results": results}
 
@@ -215,7 +221,7 @@ async def create_branch_session(
 
     manager = SessionManager()
     session = await manager.create_branch_session(
-        current_user.id, request.session_type, request.name, request.contribute_to_memory, db
+        current_user["id"], request.session_type, request.name, request.contribute_to_memory, db
     )
 
     return {
@@ -236,7 +242,7 @@ async def list_sessions(
     from src.app.modules.features.chat.session_manager import SessionManager
 
     manager = SessionManager()
-    sessions = await manager.get_user_sessions(current_user.id, session_type, db)
+    sessions = await manager.get_user_sessions(current_user["id"], db, session_type)
 
     return {
         "sessions": [
@@ -267,7 +273,7 @@ async def send_to_journal(
     from src.app.modules.features.journal.journal_chat import JournalChatHandler
 
     handler = JournalChatHandler()
-    result = await handler.send_message(current_user.id, request.session_id, request.message, db)
+    result = await handler.send_message(current_user["id"], request.session_id, request.message, db)
 
     return ChatResponse(session_id=result["session_id"], message=result["message"], metadata=result.get("metadata", {}))
 
@@ -282,7 +288,7 @@ async def get_journal_entries(
     from src.app.models.user_profile import UserProfile
     from sqlalchemy import select
 
-    result = await db.execute(select(UserProfile).where(UserProfile.user_id == current_user.id))
+    result = await db.execute(select(UserProfile).where(UserProfile.user_id == current_user["id"]))
     profile = result.scalar_one()
 
     entries = profile.data.get("journal_entries", [])
@@ -314,7 +320,7 @@ async def submit_component_response(
         if not response.slider_values:
             raise HTTPException(status_code=400, detail="Slider values required for multi-slider")
 
-    stmt = select(UserProfile).where(UserProfile.user_id == current_user.id)
+    stmt = select(UserProfile).where(UserProfile.user_id == current_user["id"])
     result = await db.execute(stmt)
     profile = result.scalar_one_or_none()
 
@@ -322,17 +328,19 @@ async def submit_component_response(
         raise HTTPException(status_code=404, detail="Profile not found")
 
     # Add to component_responses in UserProfile.data
-    # Initialize if missing
-    if "component_responses" not in profile.data:
-        profile.data["component_responses"] = []
+    # Use explicit copy to ensure mutation tracking works reliably with JSONB
+    profile_data = dict(profile.data) if profile.data else {}
 
-    profile.data["component_responses"].append(response.model_dump(mode="json"))
+    if "component_responses" not in profile_data:
+        profile_data["component_responses"] = []
+
+    profile_data["component_responses"].append(response.model_dump(mode="json"))
 
     # Process response based on component type
     if response.component_type == ComponentType.MOOD_SLIDER and response.slider_value is not None:
         # Add to journal entries with mood score
-        if "journal_entries" not in profile.data:
-            profile.data["journal_entries"] = []
+        if "journal_entries" not in profile_data:
+            profile_data["journal_entries"] = []
 
         entry_id = str(uuid.uuid4())
         entry = {
@@ -343,15 +351,18 @@ async def submit_component_response(
             "source": "mood_slider_component",
         }
 
-        profile.data["journal_entries"].append(entry)
+        profile_data["journal_entries"].append(entry)
+
+        # Save back to profile
+        profile.data = profile_data
 
         # Publish event for journal entry creation
         event_bus = get_event_bus()
         await event_bus.publish(
             "journal.entry.created",
-            {"user_id": current_user.id, "entry_id": entry_id, "content": entry["content"]},
+            {"user_id": current_user["id"], "entry_id": entry_id, "content": entry["content"]},
             source="generative_ui.mood_slider",
-            user_id=str(current_user.id),
+            user_id=str(current_user["id"]),
         )
 
     elif response.component_type == ComponentType.MULTI_SLIDER and response.slider_values:
@@ -376,9 +387,9 @@ async def submit_component_response(
         event_bus = get_event_bus()
         await event_bus.publish(
             "journal.entry.created",
-            {"user_id": current_user.id, "entry_id": entry_id, "content": entry["content"]},
+            {"user_id": current_user["id"], "entry_id": entry_id, "content": entry["content"]},
             source="generative_ui.multi_slider",
-            user_id=str(current_user.id),
+            user_id=str(current_user["id"]),
         )
 
     # Use flag_modified to ensure sqlalchemy tracks the JSON change

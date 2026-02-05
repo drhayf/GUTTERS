@@ -320,6 +320,18 @@ alembic upgrade head
 
 ---
 
+## Frontend PWA Standards
+
+The GUTTERS frontend (Intelligence Layer) must match the backend's fidelity.
+
+1. **Environment Aware**: Never hardcode API URLs. Use `import.meta.env.VITE_API_URL`.
+2. **Type Safety**: All API responses must be mapped to TypeScript interfaces. No `any` in stores.
+3. **Mobile First**: All views must use the `useKeyboardHeight` hook to prevent layout shift on input.
+4. **Auth Persistence**: JWT access tokens in memory/localStorage; Refresh tokens in HttpOnly cookies.
+5. **Observability**: Assistant responses MUST include reachable trace data (metadata.trace).
+
+---
+
 ## Pre-Commit Checklist
 
 Before considering any implementation complete:

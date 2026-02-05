@@ -51,7 +51,12 @@ class BaseTrackingModule(ABC):
         pass
 
     @abstractmethod
-    def detect_significant_events(self, current_data: TrackingData, previous_data: Optional[TrackingData]) -> List[str]:
+    def detect_significant_events(
+        self,
+        current_data: TrackingData,
+        previous_data: Optional[TrackingData],
+        comparison: Optional[dict] = None,
+    ) -> List[str]:
         """Detect events that should trigger synthesis."""
         pass
 
@@ -82,16 +87,44 @@ class BaseTrackingModule(ABC):
 
             # Trim to last 90 days (keep history manageable)
             cutoff = datetime.now(UTC) - timedelta(days=90)
+
+            def get_aware_dt(ts_str):
+                dt = datetime.fromisoformat(ts_str)
+                if dt.tzinfo is None:
+                    return dt.replace(tzinfo=UTC)
+                return dt
+
             profile.data["tracking_history"][self.module_name] = [
                 entry
                 for entry in profile.data["tracking_history"][self.module_name]
-                if datetime.fromisoformat(entry["timestamp"]) > cutoff
+                if get_aware_dt(entry["timestamp"]) > cutoff
             ]
 
             # Mark as modified to ensure persistence
             from sqlalchemy.orm.attributes import flag_modified
 
             flag_modified(profile, "data")
+
+            # --- High-Fidelity Telemetry ---
+            # Also persist to CosmicConditions table for time-series analysis
+            from src.app.models.cosmic_conditions import CosmicConditions
+
+            # Map module_name to condition_type
+            condition_type_map = {
+                "solar_tracking": "solar",
+                "lunar_tracking": "lunar",
+                "transit_tracking": "planetary",
+            }
+            c_type = condition_type_map.get(self.module_name, "other")
+
+            # Create telemetry record
+            telemetry = CosmicConditions(
+                condition_type=c_type,
+                timestamp=data.timestamp,
+                source=data.source,
+                data=data.data,
+            )
+            db.add(telemetry)
 
             await db.commit()
 
@@ -115,7 +148,7 @@ class BaseTrackingModule(ABC):
         5. Store in cache
         6. Trigger synthesis if needed
         """
-        from app.core.memory import get_active_memory
+        from src.app.core.memory import get_active_memory
 
         memory = get_active_memory()
         await memory.initialize()
@@ -150,11 +183,11 @@ class BaseTrackingModule(ABC):
         previous_dict = await memory.get(previous_key)
         previous = TrackingData(**previous_dict) if previous_dict else None
 
-        # Detect events
-        events = self.detect_significant_events(current, previous)
-
         # Compare to natal
         comparison = await self.compare_to_natal(user_id, current)
+
+        # Detect events
+        events = self.detect_significant_events(current, previous, comparison)
 
         # Persist current data as previous for next cycle
         await memory.set(previous_key, current.model_dump(mode="json"), ttl=86400 * 7)
@@ -164,22 +197,119 @@ class BaseTrackingModule(ABC):
 
         # Trigger synthesis if significant events detected
         if events:
-            from app.core.memory import get_orchestrator, SynthesisTrigger
+            from src.app.core.memory import get_orchestrator, SynthesisTrigger
+            from src.app.protocol.packet import ProgressionPacket, Packet
+            from src.app.protocol import events as event_types
+            from src.app.core.events.bus import get_event_bus
 
             orchestrator = await get_orchestrator()
+            event_bus = get_event_bus()
 
-            # Map events to triggers
+            # Check User Preferences
+            # We need to fetch the profile's preference section
+            # Stored in "preferences" key of UserProfile.data
+            prefs_data = await memory.get_module_output(user_id, "preferences")
+
+            # Helper to check (logic mirrors UserProfile.get_notification_preference)
+            def check_pref(cat: str) -> bool:
+                if not prefs_data:
+                    return True
+                return prefs_data.get("notifications", {}).get(cat, True)
+
+            base_category = "general"
+            if self.module_name == "solar_tracking":
+                base_category = "solar"
+            elif self.module_name == "lunar_tracking":
+                base_category = "lunar"
+            elif self.module_name == "transit_tracking":
+                base_category = "transits"
+
+            # Map events to synthesis triggers
             trigger_map = {
                 "solar_storm": SynthesisTrigger.SOLAR_STORM_DETECTED,
                 "lunar_phase": SynthesisTrigger.LUNAR_PHASE_CHANGE,
                 "transit_exact": SynthesisTrigger.TRANSIT_EXACT,
             }
 
+            # Map events to granular notification event types
+            notification_event_map = {
+                # Solar events
+                "solar_storm": event_types.COSMIC_SOLAR_ALERT,
+                "geomagnetic_storm": event_types.COSMIC_SOLAR_ALERT,
+                "shield_critical": event_types.COSMIC_SOLAR_ALERT,
+                # Lunar events
+                "voc_start": event_types.COSMIC_LUNAR_VOC_START,
+                "voc_end": event_types.COSMIC_LUNAR_VOC_END,
+                "lunar_phase": event_types.COSMIC_LUNAR_PHASE,
+                "full_moon": event_types.COSMIC_LUNAR_PHASE,
+                "new_moon": event_types.COSMIC_LUNAR_PHASE,
+                # Transit events
+                "retrograde_start": event_types.COSMIC_RETROGRADE_START,
+                "retrograde_end": event_types.COSMIC_RETROGRADE_END,
+                "planet_station": event_types.COSMIC_PLANET_STATION,
+                "transit_exact": event_types.COSMIC_TRANSIT_EXACT,
+                "ingress": event_types.COSMIC_INGRESS,
+            }
+
             for event in events:
+                # Granular checks could happen here if we had event-specific categories
+                # For now, module-level check
+                if not check_pref(base_category):
+                    # Skip LLM/Synthesis for this event if user opted out
+                    continue
+
+                # Trigger synthesis if applicable
                 trigger = trigger_map.get(event)
                 if trigger:
-                    # Note: trigger_synthesis signature might vary, assuming as per user code
                     await orchestrator.trigger_synthesis(user_id, trigger_type=trigger, background=True)
+
+                # ===================================================================
+                # PUBLISH NOTIFICATION EVENT
+                # This enables the push notification system to alert the user
+                # ===================================================================
+                notification_event_type = notification_event_map.get(event)
+                if notification_event_type:
+                    # Build rich payload from current data and comparison
+                    notification_payload = {
+                        "event_name": event,
+                        "module": self.module_name,
+                        **current.data,  # Include all tracking data (kp_index, moon_phase, etc.)
+                    }
+
+                    # Add comparison data if present
+                    if comparison:
+                        notification_payload.update(comparison)
+
+                    notification_packet = Packet(
+                        source=self.module_name,
+                        event_type=notification_event_type,
+                        payload=notification_payload,
+                        user_id=str(user_id),
+                    )
+                    await event_bus.publish_packet(notification_packet)
+
+            # Passive Environmental XP
+            category = (
+                "VITALITY"
+                if self.module_name == "solar_tracking"
+                else "INTELLECT"
+                if self.module_name == "transit_tracking"
+                else "SYNC"
+            )
+            reason = events[0] if len(events) == 1 else f"Cosmic Integration: {len(events)} events"
+
+            packet = ProgressionPacket(
+                source=self.module_name,
+                event_type=event_types.PROGRESSION_EXPERIENCE_GAIN,
+                payload={"tracking_events": events},
+                user_id=str(user_id),
+                amount=5,  # Standard passive XP
+                reason=reason,
+                category=category,
+            )
+            from src.app.core.events.bus import get_event_bus
+
+            await get_event_bus().publish_packet(packet)
 
         # Create result object
         result_model = TrackingResult(

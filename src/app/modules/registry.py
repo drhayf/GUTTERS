@@ -6,11 +6,11 @@ functionality for the intelligence layer to find and query all modules.
 
 Usage:
     # Auto-registration happens in BaseModule.__init__
-    from app.modules.calculation.astrology.module import AstrologyModule
+    from src.app.modules.calculation.astrology.module import AstrologyModule
     astro = AstrologyModule()  # Automatically registered
     
     # Query registered modules
-    from app.modules.registry import ModuleRegistry
+    from src.app.modules.registry import ModuleRegistry
     all_calc = ModuleRegistry.get_all_calculation_modules()
     
     # Get specific module

@@ -112,6 +112,12 @@ class Hypothesis(BaseModel):
         default_factory=lambda: datetime.now(timezone.utc)
     )
     
+    # Temporal Context - captures magi chronos state at generation time
+    temporal_context: dict | None = Field(
+        default=None,
+        description="Magi chronos state when hypothesis was generated (period card, planetary ruler, theme, guidance)"
+    )
+    
     # =========================================================================
     # Computed Properties
     # =========================================================================

@@ -27,6 +27,7 @@ class UnifiedProfile(BaseModel):
     synthesis: str = Field(description="Full LLM-generated synthesis text")
     themes: list[str] = Field(default_factory=list, description="Key themes identified")
     patterns: list[SynthesisPattern] = Field(default_factory=list, description="Cross-system patterns")
+    confidence: float = Field(default=0.0, ge=0.0, le=1.0, description="Confidence score (0-1)")
     model_used: str = Field(description="LLM model used for synthesis")
     generated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 

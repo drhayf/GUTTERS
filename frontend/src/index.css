@@ -1,0 +1,223 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@font-face {
+  font-family: "Geist Sans";
+  src: url("./assets/fonts/Geist-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+/* JetBrains Mono imported via main.tsx */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* 
+      THEME: VAPOR BRUTALISM (Fog & Glass) 
+      Aesthetic: Damp High-Fidelity. 
+      Base: Zinc-50/100 (Cool Gray Fog).
+      Surface: White/60 (Frosted Glass).
+      Accents: Violet-600 (Potent).
+    */
+
+    /* Backgrounds */
+    --background: 240 5% 96%;
+    /* zinc-100ish/slate-50ish mixture - #f4f4f5 */
+    --foreground: 240 10% 3.9%;
+    /* zinc-950 - #09090b (Sharp Contrast) */
+
+    /* Surfaces (Cards/Glass) */
+    --card: 0 0% 100%;
+    /* White base for opacity layers */
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+
+    /* Potency (Actions/Badges) */
+    --primary: 262 83% 58%;
+    /* Violet-600 #7c3aed (Potent) */
+    --primary-foreground: 210 40% 98%;
+
+    /* Mutable/Secondary */
+    --secondary: 240 5% 96%;
+    /* Zinc-100 */
+    --secondary-foreground: 240 5.9% 10%;
+
+    /* Muted/Meta */
+    --muted: 240 4.8% 95.9%;
+    /* Zinc-100 */
+    --muted-foreground: 240 3.8% 46.1%;
+    /* Zinc-500 (High fidelity meta text) */
+
+    /* Accents */
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+
+    /* Destructive */
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    /* Borders */
+    --border: 240 5.9% 90%;
+    /* Zinc-200 (Crisp, thin) */
+    --input: 240 5.9% 90%;
+    --ring: 262 83% 58%;
+    /* Violet Ring */
+
+    --radius: 0.5rem;
+    /* 8px - Modern standard */
+
+    /* Chart/Viz Colors */
+    --chart-1: 262 83% 58%;
+    /* Violet */
+    --chart-2: 240 5% 65%;
+    /* Zinc-400 */
+    --chart-3: 199 89% 48%;
+    /* Cyan-500 (Hardware/Tech vibe) */
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+
+    /* Safe Area Variables (Defaults) */
+    --sat: env(safe-area-inset-top);
+    --sab: env(safe-area-inset-bottom);
+    --sal: env(safe-area-inset-left);
+    --sar: env(safe-area-inset-right);
+  }
+
+  /* Dark Mode: "Deep Void" (Optional, but defining for completeness) */
+  .dark {
+    --background: 240 10% 3.9%;
+    /* Zinc-950 */
+    --foreground: 0 0% 98%;
+
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 263 70% 50%;
+    /* Violet-600 */
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 263 70% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  /* CRITICAL: VIEWPORT LOCK */
+  html {
+    height: 100dvh;
+    width: 100vw;
+    overflow: hidden;
+    /* Prevent body scroll */
+    overscroll-behavior: none;
+    /* Kill rubber-banding */
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-background text-foreground h-full w-full overflow-hidden antialiased;
+    /* Use Geist Sans by default if available, fallback to system */
+    font-family: "Geist Sans", "Inter", sans-serif;
+  }
+}
+
+@layer utilities {
+
+  /* GLASSMORPHISM */
+  .glass {
+    @apply bg-white/60 backdrop-blur-xl border border-white/20 shadow-sm supports-[backdrop-filter]:bg-white/60;
+  }
+
+  .glass-dark {
+    @apply bg-black/60 backdrop-blur-xl border border-white/10 shadow-sm;
+  }
+
+  /* VAPOR CARD */
+  .vapor-card {
+    @apply bg-card/50 backdrop-blur-md border border-border/50 shadow-sm transition-all duration-300;
+  }
+
+  /* TEXT UTILITIES */
+  .font-mono-data {
+    font-family: "JetBrains Mono", monospace;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* APP KERNEL UTILITIES */
+  .safe-top {
+    padding-top: var(--sat);
+  }
+
+  .safe-bottom {
+    padding-bottom: var(--sab);
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* OVERFLOW PREVENTION */
+  .overflow-wrap-anywhere {
+    overflow-wrap: anywhere;
+  }
+
+  .word-break-break-word {
+    word-break: break-word;
+  }
+
+  /* PREVENT UNINTENDED SCROLL/DRAG BEHAVIOR */
+  .touch-none {
+    touch-action: none;
+  }
+
+  /* Prevent rubber-banding/bounce scroll on mobile */
+  main {
+    overscroll-behavior: contain;
+    -webkit-overscroll-behavior: contain;
+  }
+
+  /* 3D CARD FLIP UTILITIES (Birth Card Widget) */
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+
+  .backface-hidden {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+}

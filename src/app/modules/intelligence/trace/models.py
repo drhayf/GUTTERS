@@ -24,6 +24,7 @@ class ToolType(str, Enum):
     SYNTHESIS = "synthesis"
     GENESIS = "genesis"
     DATABASE = "database"
+    CALCULATOR = "calculator"
 
 
 class ToolCall(BaseModel):

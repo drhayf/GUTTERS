@@ -122,16 +122,16 @@ async def test_synthesis_trigger_integration(test_user_id, memory):
     # Mock Orchestrator trigger method ONLY, but use getter pattern
     # The code calls `get_orchestrator()`
     # We can patch 'src.app.modules.tracking.base.get_orchestrator' or 'src.app.core.memory.get_orchestrator'
-    # BaseTrackingModule imports: `from app.core.memory import get_orchestrator` (Wait, did I use src.app in implementation?)
+    # BaseTrackingModule imports: `from src.app.core.memory import get_orchestrator` (Wait, did I use src.app in implementation?)
     
     # Looking at my implementation of `base.py`:
-    # `from app.core.memory import get_orchestrator` (WITHOUT src)
+    # `from src.app.core.memory import get_orchestrator` (WITHOUT src)
     # This assumes `base.py` can import `app`. 
     # If standard is `src.app`, my IMPLEMENTATION might be wrong for runtime, OR
     # `src` is in path during runtime.
     
     # But for TEST, if we patch, we must match what's imported.
-    # If `base.py` has `from app.core.memory...` then `src.app.modules.tracking.base.get_orchestrator` should act on it?
+    # If `base.py` has `from src.app.core.memory...` then `src.app.modules.tracking.base.get_orchestrator` should act on it?
     # Or `app.core.memory`?
     
     # I'll try patching `src.app.core.memory.synthesis_orchestrator.SynthesisOrchestrator.trigger_synthesis`

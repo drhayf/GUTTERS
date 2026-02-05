@@ -1,0 +1,358 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-9.0.2, pluggy-1.6.0
+rootdir: C:\dev\GUTTERS
+configfile: pyproject.toml
+plugins: anyio-4.12.1, Faker-37.3.0, langsmith-0.6.4, asyncio-1.3.0, mock-3.14.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 2 items
+
+tests\integration\features\test_insight_engine.py FEF                    [100%]
+
+=================================== ERRORS ====================================
+______________ ERROR at teardown of test_insight_flow_solar_peak ______________
+
+db = <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x000001DE2C0519A0>
+
+    @pytest_asyncio.fixture
+    async def cleanup_insight_data(db: AsyncSession):
+        """Cleanup data before/after tests."""
+        await db.execute(delete(JournalEntry))
+        await db.execute(delete(ReflectionPrompt))
+        await db.commit()
+        yield
+>       await db.execute(delete(JournalEntry))
+
+tests\integration\features\test_insight_engine.py:69: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv\Lib\site-packages\sqlalchemy\ext\asyncio\session.py:449: in execute
+    result = await greenlet_spawn(
+.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py:190: in greenlet_spawn
+    result = context.switch(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sqlalchemy\orm\session.py:2351: in execute
+    return self._execute_internal(
+.venv\Lib\site-packages\sqlalchemy\orm\session.py:2239: in _execute_internal
+    conn = self._connection_for_bind(bind)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sqlalchemy\orm\session.py:2108: in _connection_for_bind
+    return trans._connection_for_bind(engine, execution_options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<string>:2: in _connection_for_bind
+    ???
+.venv\Lib\site-packages\sqlalchemy\orm\state_changes.py:101: in _go
+    self._raise_for_prerequisite_state(fn.__name__, current_state)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <sqlalchemy.orm.session.SessionTransaction object at 0x000001DE2C0B6450>
+operation_name = '_connection_for_bind'
+state = <SessionTransactionState.DEACTIVE: 4>
+
+    def _raise_for_prerequisite_state(
+        self, operation_name: str, state: _StateChangeState
+    ) -> NoReturn:
+        if state is SessionTransactionState.DEACTIVE:
+            if self._rollback_exception:
+>               raise sa_exc.PendingRollbackError(
+                    "This Session's transaction has been rolled back "
+                    "due to a previous exception during flush."
+                    " To begin a new transaction with this Session, "
+                    "first issue Session.rollback()."
+                    f" Original exception was: {self._rollback_exception}",
+                    code="7s2a",
+                )
+E               sqlalchemy.exc.PendingRollbackError: This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (builtins.TypeError) Object of type datetime is not JSON serializable
+E               [SQL: INSERT INTO reflection_prompts (user_id, prompt_text, topic, trigger_context, event_phase, status, created_at, expires_at) VALUES ($1::INTEGER, $2::VARCHAR, $3::VARCHAR, $4::JSON, $5::VARCHAR, $6::VARCHAR, $7::TIMESTAMP WITH TIME ZONE, $8::TIMESTAMP WITH TIME ZONE) RETURNING reflection_prompts.id]
+E               [parameters: [{'topic': 'solar_sensitivity', 'trigger_context': {'source_type': 'cosmic_event', 'source_id': None, 'metric': 'kp_index', 'value': 8.0, 'timestamp':  ... (202 characters truncated) ...  mocked reflection question based on high KP.', 'user_id': 79, 'status': <PromptStatus.PENDING: 'pending'>, 'event_phase': <PromptPhase.PEAK: 'peak'>}]] (Background on this error at: https://sqlalche.me/e/20/7s2a)
+
+.venv\Lib\site-packages\sqlalchemy\orm\session.py:971: PendingRollbackError
+---------------------------- Captured stderr call -----------------------------
+[2m2026-01-26T08:14:16.737693Z[0m [[32m[1minfo     [0m] [1mEvaluating triggers for user 79 with data {'kp_index': 8, 'moon_phase': 'Waxing'}[0m [[0m[1m[34msrc.app.modules.intelligence.insight.manager[0m][0m
+------------------------------ Captured log call ------------------------------
+INFO     src.app.modules.intelligence.insight.manager:manager.py:45 Evaluating triggers for user 79 with data {'kp_index': 8, 'moon_phase': 'Waxing'}
+================================== FAILURES ===================================
+________________________ test_insight_flow_solar_peak _________________________
+
+self = <sqlalchemy.engine.base.Connection object at 0x000001DE2C08FB00>
+dialect = <sqlalchemy.dialects.postgresql.asyncpg.PGDialect_asyncpg object at 0x000001DE75AE6A20>
+constructor = <bound method DefaultExecutionContext._init_compiled of <class 'sqlalchemy.dialects.postgresql.asyncpg.PGExecutionContext_asyncpg'>>
+statement = <sqlalchemy.dialects.postgresql.asyncpg.PGCompiler_asyncpg object at 0x000001DE2C0C54F0>
+parameters = [{'event_phase': <PromptPhase.PEAK: 'peak'>, 'expires_at': datetime.datetime(2026, 1, 27, 8, 14, 16, 946039, tzinfo=da...mpt_text': 'This is a mocked reflection question based on high KP.', 'status': <PromptStatus.PENDING: 'pending'>, ...}]
+execution_options = immutabledict({'compiled_cache': <sqlalchemy.util._collections.LRUCache object at 0x000001DE2C0B28E0>})
+args = (<sqlalchemy.dialects.postgresql.asyncpg.PGCompiler_asyncpg object at 0x000001DE2C0C54F0>, [{'event_phase': <PromptPha...KP.', 'status': <PromptStatus.PENDING: 'pending'>, ...}], <sqlalchemy.sql.dml.Insert object at 0x000001DE2C0C5520>, [])
+kw = {'cache_hit': <CacheStats.CACHE_MISS: 1>}, yp = None
+conn = <sqlalchemy.pool.base._ConnectionFairy object at 0x000001DE2C0ACD70>
+
+    def _execute_context(
+        self,
+        dialect: Dialect,
+        constructor: Callable[..., ExecutionContext],
+        statement: Union[str, Compiled],
+        parameters: Optional[_AnyMultiExecuteParams],
+        execution_options: _ExecuteOptions,
+        *args: Any,
+        **kw: Any,
+    ) -> CursorResult[Any]:
+        """Create an :class:`.ExecutionContext` and execute, returning
+        a :class:`_engine.CursorResult`."""
+    
+        if execution_options:
+            yp = execution_options.get("yield_per", None)
+            if yp:
+                execution_options = execution_options.union(
+                    {"stream_results": True, "max_row_buffer": yp}
+                )
+        try:
+            conn = self._dbapi_connection
+            if conn is None:
+                conn = self._revalidate_connection()
+    
+>           context = constructor(
+                dialect, self, conn, execution_options, *args, **kw
+            )
+
+.venv\Lib\site-packages\sqlalchemy\engine\base.py:1815: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv\Lib\site-packages\sqlalchemy\engine\default.py:1496: in _init_compiled
+    flattened_processors[key](compiled_params[key])
+.venv\Lib\site-packages\sqlalchemy\sql\sqltypes.py:2801: in process
+    return json_serializer(value)
+           ^^^^^^^^^^^^^^^^^^^^^^
+C:\Python312\Lib\json\__init__.py:231: in dumps
+    return _default_encoder.encode(obj)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Python312\Lib\json\encoder.py:200: in encode
+    chunks = self.iterencode(o, _one_shot=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Python312\Lib\json\encoder.py:258: in iterencode
+    return _iterencode(o, 0)
+           ^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <json.encoder.JSONEncoder object at 0x000001DE6FEF0080>
+o = datetime.datetime(2026, 1, 26, 8, 14, 16, 773447, tzinfo=datetime.timezone.utc)
+
+    def default(self, o):
+        """Implement this method in a subclass such that it returns
+        a serializable object for ``o``, or calls the base implementation
+        (to raise a ``TypeError``).
+    
+        For example, to support arbitrary iterators, you could
+        implement default like this::
+    
+            def default(self, o):
+                try:
+                    iterable = iter(o)
+                except TypeError:
+                    pass
+                else:
+                    return list(iterable)
+                # Let the base class default method raise the TypeError
+                return super().default(o)
+    
+        """
+>       raise TypeError(f'Object of type {o.__class__.__name__} '
+                        f'is not JSON serializable')
+E       TypeError: Object of type datetime is not JSON serializable
+
+C:\Python312\Lib\json\encoder.py:180: TypeError
+
+The above exception was the direct cause of the following exception:
+
+db = <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x000001DE2C0519A0>
+cleanup_insight_data = None
+mock_managers = <test_insight_engine.MockNotificationService object at 0x000001DE2C050440>
+ensure_profile = <src.app.models.user.User object at 0x000001DE2C08E840>
+
+    @pytest.mark.asyncio
+    async def test_insight_flow_solar_peak(db: AsyncSession, cleanup_insight_data, mock_managers, ensure_profile):
+        """
+        Test Phase 11 Flow:
+        1. Seed Observer Pattern (Solar Sensitivity)
+        2. Simulate COSMIC_UPDATE (Kp=8) -> Trigger PEAK phase
+        3. Verify ReflectionPrompt created
+        4. Verify Notification sent
+        5. Verify Journal Entry creation with Prompt Link
+        """
+        user_id = ensure_profile.id
+    
+        # Setup Manager with mocked notification
+        manager = InsightManager()
+        manager.notification_service = mock_managers
+    
+        # 1. Seed Observer Pattern
+        storage = ObserverFindingStorage()
+        await storage.store_finding(
+            user_id,
+            {
+                "pattern_type": "solar_symptom",
+                "symptom": "fatigue",
+                "correlation": 0.85,
+                "confidence": 0.9,
+                "finding": "User reports fatigue when Kp > 5",
+            },
+            db,
+        )
+    
+        # 2. Simulate Trigger (PEAK Phase)
+        cosmic_data = {
+            "kp_index": 8,
+            "moon_phase": "Waxing",
+        }
+    
+>       prompts = await manager.evaluate_cosmic_triggers(user_id, cosmic_data, db)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\integration\features\test_insight_engine.py:110: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\app\modules\intelligence\insight\manager.py:77: in evaluate_cosmic_triggers
+    prompt = await self._create_prompt(user_id, finding, trigger_ctx, phase, "solar_sensitivity", db)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src\app\modules\intelligence\insight\manager.py:156: in _create_prompt
+    await db.commit()
+.venv\Lib\site-packages\sqlalchemy\ext\asyncio\session.py:1000: in commit
+    await greenlet_spawn(self.sync_session.commit)
+.venv\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py:203: in greenlet_spawn
+    result = context.switch(value)
+             ^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sqlalchemy\orm\session.py:2030: in commit
+    trans.commit(_to_root=True)
+<string>:2: in commit
+    ???
+.venv\Lib\site-packages\sqlalchemy\orm\state_changes.py:137: in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sqlalchemy\orm\session.py:1311: in commit
+    self._prepare_impl()
+<string>:2: in _prepare_impl
+    ???
+.venv\Lib\site-packages\sqlalchemy\orm\state_changes.py:137: in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sqlalchemy\orm\session.py:1286: in _prepare_impl
+    self.session.flush()
+.venv\Lib\site-packages\sqlalchemy\orm\session.py:4331: in flush
+    self._flush(objects)
+.venv\Lib\site-packages\sqlalchemy\orm\session.py:4466: in _flush
+    with util.safe_reraise():
+         ^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\sqlalchemy\util\langhelpers.py:224: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv\Lib\site-packages\sqlalchemy\orm\session.py:4427: in _flush
+    flush_context.execute()
+.venv\Lib\site-packages\sqlalchemy\orm\unitofwork.py:466: in execute
+    rec.execute(self)
+.venv\Lib\site-packages\sqlalchemy\orm\unitofwork.py:642: in execute
+    util.preloaded.orm_persistence.save_obj(
+.venv\Lib\site-packages\sqlalchemy\orm\persistence.py:93: in save_obj
+    _emit_insert_statements(
+.venv\Lib\site-packages\sqlalchemy\orm\persistence.py:1233: in _emit_insert_statements
+    result = connection.execute(
+.venv\Lib\site-packages\sqlalchemy\engine\base.py:1419: in execute
+    return meth(
+.venv\Lib\site-packages\sqlalchemy\sql\elements.py:527: in _execute_on_connection
+    return connection._execute_clauseelement(
+.venv\Lib\site-packages\sqlalchemy\engine\base.py:1641: in _execute_clauseelement
+    ret = self._execute_context(
+.venv\Lib\site-packages\sqlalchemy\engine\base.py:1821: in _execute_context
+    self._handle_dbapi_exception(
+.venv\Lib\site-packages\sqlalchemy\engine\base.py:2363: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+.venv\Lib\site-packages\sqlalchemy\engine\base.py:1815: in _execute_context
+    context = constructor(
+.venv\Lib\site-packages\sqlalchemy\engine\default.py:1496: in _init_compiled
+    flattened_processors[key](compiled_params[key])
+.venv\Lib\site-packages\sqlalchemy\sql\sqltypes.py:2801: in process
+    return json_serializer(value)
+           ^^^^^^^^^^^^^^^^^^^^^^
+C:\Python312\Lib\json\__init__.py:231: in dumps
+    return _default_encoder.encode(obj)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Python312\Lib\json\encoder.py:200: in encode
+    chunks = self.iterencode(o, _one_shot=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Python312\Lib\json\encoder.py:258: in iterencode
+    return _iterencode(o, 0)
+           ^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <json.encoder.JSONEncoder object at 0x000001DE6FEF0080>
+o = datetime.datetime(2026, 1, 26, 8, 14, 16, 773447, tzinfo=datetime.timezone.utc)
+
+    def default(self, o):
+        """Implement this method in a subclass such that it returns
+        a serializable object for ``o``, or calls the base implementation
+        (to raise a ``TypeError``).
+    
+        For example, to support arbitrary iterators, you could
+        implement default like this::
+    
+            def default(self, o):
+                try:
+                    iterable = iter(o)
+                except TypeError:
+                    pass
+                else:
+                    return list(iterable)
+                # Let the base class default method raise the TypeError
+                return super().default(o)
+    
+        """
+>       raise TypeError(f'Object of type {o.__class__.__name__} '
+                        f'is not JSON serializable')
+E       sqlalchemy.exc.StatementError: (builtins.TypeError) Object of type datetime is not JSON serializable
+E       [SQL: INSERT INTO reflection_prompts (user_id, prompt_text, topic, trigger_context, event_phase, status, created_at, expires_at) VALUES ($1::INTEGER, $2::VARCHAR, $3::VARCHAR, $4::JSON, $5::VARCHAR, $6::VARCHAR, $7::TIMESTAMP WITH TIME ZONE, $8::TIMESTAMP WITH TIME ZONE) RETURNING reflection_prompts.id]
+E       [parameters: [{'topic': 'solar_sensitivity', 'trigger_context': {'source_type': 'cosmic_event', 'source_id': None, 'metric': 'kp_index', 'value': 8.0, 'timestamp':  ... (202 characters truncated) ...  mocked reflection question based on high KP.', 'user_id': 79, 'status': <PromptStatus.PENDING: 'pending'>, 'event_phase': <PromptPhase.PEAK: 'peak'>}]]
+
+C:\Python312\Lib\json\encoder.py:180: StatementError
+---------------------------- Captured stderr call -----------------------------
+[2m2026-01-26T08:14:16.737693Z[0m [[32m[1minfo     [0m] [1mEvaluating triggers for user 79 with data {'kp_index': 8, 'moon_phase': 'Waxing'}[0m [[0m[1m[34msrc.app.modules.intelligence.insight.manager[0m][0m
+------------------------------ Captured log call ------------------------------
+INFO     src.app.modules.intelligence.insight.manager:manager.py:45 Evaluating triggers for user 79 with data {'kp_index': 8, 'moon_phase': 'Waxing'}
+_______________________ test_insight_lunar_anticipation _______________________
+
+db = <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x000001DE2C2AE480>
+cleanup_insight_data = None
+mock_managers = <test_insight_engine.MockNotificationService object at 0x000001DE2C2ACA40>
+ensure_profile = <src.app.models.user.User object at 0x000001DE2C2AF260>
+
+    @pytest.mark.asyncio
+    async def test_insight_lunar_anticipation(db: AsyncSession, cleanup_insight_data, mock_managers, ensure_profile):
+        """Test Predictive Trigger for Lunar Anticipation."""
+        user_id = ensure_profile.id
+        manager = InsightManager()
+        manager.notification_service = mock_managers
+    
+        storage = ObserverFindingStorage()
+        await storage.store_finding(
+            user_id, {"pattern_type": "lunar_phase", "phase": "Full", "finding": "User gets anxious during Full Moon"}, db
+        )
+    
+        # Simulate Predictive Trigger (24h before Full Moon)
+        cosmic_data = {
+            "moon_event_type": "anticipation",
+            "moon_phase_name": "Full",  # Approaching Full
+            "time_until": 24,
+        }
+    
+        prompts = await manager.evaluate_cosmic_triggers(user_id, cosmic_data, db)
+    
+>       assert len(prompts) == 1
+E       assert 0 == 1
+E        +  where 0 = len([])
+
+tests\integration\features\test_insight_engine.py:173: AssertionError
+---------------------------- Captured stderr call -----------------------------
+[2m2026-01-26T08:14:18.362277Z[0m [[32m[1minfo     [0m] [1mEvaluating triggers for user 79 with data {'moon_event_type': 'anticipation', 'moon_phase_name': 'Full', 'time_until': 24}[0m [[0m[1m[34msrc.app.modules.intelligence.insight.manager[0m][0m
+------------------------------ Captured log call ------------------------------
+INFO     src.app.modules.intelligence.insight.manager:manager.py:45 Evaluating triggers for user 79 with data {'moon_event_type': 'anticipation', 'moon_phase_name': 'Full', 'time_until': 24}
+============================== warnings summary ===============================
+src\app\modules\intelligence\insight\schemas.py:27
+  C:\dev\GUTTERS\src\app\modules\intelligence\insight\schemas.py:27: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ReflectionPromptRead(BaseModel):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/integration/features/test_insight_engine.py::test_insight_flow_solar_peak
+FAILED tests/integration/features/test_insight_engine.py::test_insight_lunar_anticipation
+ERROR tests/integration/features/test_insight_engine.py::test_insight_flow_solar_peak
+==================== 2 failed, 1 warning, 1 error in 2.60s ====================

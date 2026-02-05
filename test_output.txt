@@ -1,0 +1,27 @@
+2026-01-26T06:31:29.796142Z [info     ] Registered calculation module: human_design (v1.0.0) [src.app.modules.calculation.registry]
+2026-01-26T06:31:29.797647Z [info     ] Registered module: human_design (layer: calculation) [src.app.modules.registry]
+2026-01-26T06:31:31.591534Z [info     ] Registered calculation module: numerology (v1.0.0) [src.app.modules.calculation.registry]
+2026-01-26T06:31:31.593052Z [info     ] Registered module: numerology (layer: calculation) [src.app.modules.registry]
+2026-01-26T06:31:31.687959Z [info     ] Registered calculation module: astrology (v1.0.0) [src.app.modules.calculation.registry]
+2026-01-26T06:31:31.705467Z [info     ] Registered module: astrology (layer: calculation) [src.app.modules.registry]
+ImportError while loading conftest 'C:\dev\GUTTERS\tests\conftest.py'.
+tests\conftest.py:17: in <module>
+    from src.app.main import app
+src\app\main.py:7: in <module>
+    from .api import router
+src\app\api\__init__.py:3: in <module>
+    from ..api.v1 import router as v1_router
+src\app\api\v1\__init__.py:6: in <module>
+    from .intelligence import router as intelligence_router
+src\app\api\v1\intelligence.py:16: in <module>
+    from ...modules.intelligence.query import QueryEngine, QueryRequest, QueryResponse
+src\app\modules\intelligence\query\__init__.py:6: in <module>
+    from .engine import QueryEngine
+src\app\modules\intelligence\query\engine.py:33: in <module>
+    from src.app.modules.intelligence.tools.registry import ToolRegistry  # NEW: Import Registry
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src\app\modules\intelligence\tools\registry.py:9: in <module>
+    from .library import astrology, human_design, numerology, journal, quests
+src\app\modules\intelligence\tools\library\quests.py:3: in <module>
+    from langchain.tools import StructuredTool
+E   ImportError: cannot import name 'StructuredTool' from 'langchain.tools' (C:\dev\GUTTERS\.venv\Lib\site-packages\langchain\tools\__init__.py)

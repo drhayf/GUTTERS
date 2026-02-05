@@ -83,7 +83,7 @@ class HypothesisStorage:
                 hypotheses_data = profile.data["hypotheses"]
 
                 # Cache
-                await memory.set_json(f"hypotheses:{user_id}", hypotheses_data, ex=604800)
+                await memory.set(f"hypotheses:{user_id}", hypotheses_data, ttl=604800)
 
         # Parse and filter
         hypotheses = [Hypothesis(**h) for h in hypotheses_data]

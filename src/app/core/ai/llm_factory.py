@@ -30,7 +30,7 @@ def get_llm(model_id: str, temperature: float = 0.7) -> ChatOpenAI:
         ValueError: If OPENROUTER_API_KEY environment variable is not set
 
     Example:
-        >>> from app.core.ai.llm_factory import get_llm
+        >>> from src.app.core.ai.llm_factory import get_llm
         >>>
         >>> # Get Claude Sonnet 4.5 for synthesis
         >>> llm = get_llm("anthropic/claude-sonnet-4.5", temperature=0.7)

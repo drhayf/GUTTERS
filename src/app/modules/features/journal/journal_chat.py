@@ -161,6 +161,30 @@ If NOT a journal entry (question, request), set is_entry to false."""
         result = await db.execute(select(UserProfile).where(UserProfile.user_id == user_id))
         profile = result.scalar_one()
 
+        # Inject Magi chronos context
+        context_snapshot = {}
+        try:
+            from src.app.core.state.chronos import get_chronos_manager
+            chronos_manager = get_chronos_manager()
+            chronos_state = await chronos_manager.get_user_chronos(user_id)
+            
+            if chronos_state:
+                context_snapshot["magi"] = {
+                    "period_card": chronos_state.get("current_card", {}).get("name"),
+                    "period_day": 52 - (chronos_state.get("days_remaining", 0) or 0),
+                    "period_total": 52,
+                    "planetary_ruler": chronos_state.get("current_planet"),
+                    "theme": chronos_state.get("theme"),
+                    "guidance": chronos_state.get("guidance"),
+                    "period_start": chronos_state.get("period_start"),
+                    "period_end": chronos_state.get("period_end"),
+                    "progress_percent": round(
+                        ((52 - (chronos_state.get("days_remaining", 0) or 0)) / 52) * 100, 2
+                    ),
+                }
+        except Exception as e:
+            print(f"[JournalChat] Failed to inject magi context: {e}")
+
         # Create entry
         entry_id = str(uuid.uuid4())
         entry = {
@@ -171,6 +195,7 @@ If NOT a journal entry (question, request), set is_entry to false."""
             "energy_score": structured_data.get("energy_score", 5),
             "tags": structured_data.get("tags", []),
             "themes": structured_data.get("themes", []),
+            "context_snapshot": context_snapshot,
         }
 
         # Add to journal_entries
@@ -240,7 +265,7 @@ Be helpful and encourage them to share their thoughts."""
 
             await event_bus.publish(
                 "journal.entry.created",
-                {"user_id": user_id, "entry_id": entry_id},
+                {"user_id": user_id, "entry_id": entry_id, "title": "Journal Entry"},
                 source="journal.chat",
                 user_id=str(user_id),
             )

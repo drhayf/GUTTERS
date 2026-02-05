@@ -19,6 +19,13 @@ from .synthesis import router as synthesis_router
 from .hypothesis import router as hypothesis_router
 from .vector import router as vector_router
 from .chat import router as chat_router
+from .profile import router as profile_router
+from .dashboard import router as dashboard_router
+from .system import router as system_router
+from .push import router as push_router
+from .quests import router as quests_router
+from .insights import router as insights_router
+from .progression import router as progression_router
 
 router = APIRouter(prefix="/v1")
 router.include_router(birth_data_router)
@@ -40,3 +47,10 @@ router.include_router(synthesis_router)
 router.include_router(hypothesis_router)
 router.include_router(vector_router)
 router.include_router(chat_router)
+router.include_router(profile_router)
+router.include_router(dashboard_router)
+router.include_router(system_router)
+router.include_router(push_router)
+router.include_router(quests_router, prefix="/quests", tags=["quests"])
+router.include_router(insights_router)
+router.include_router(progression_router)

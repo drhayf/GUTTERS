@@ -1,0 +1,114 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-9.0.2, pluggy-1.6.0
+rootdir: C:\dev\GUTTERS
+configfile: pyproject.toml
+plugins: anyio-4.12.1, Faker-37.3.0, langsmith-0.6.4, asyncio-1.3.0, mock-3.14.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 2 items
+
+tests\integration\features\test_insight_engine.py FE                     [100%]
+
+=================================== ERRORS ====================================
+______________ ERROR at setup of test_insight_lunar_anticipation ______________
+file c:\dev\GUTTERS\tests\integration\features\test_insight_engine.py, line 136
+  @pytest.mark.asyncio
+  async def test_insight_lunar_anticipation(db: AsyncSession, cleanup_insight_data, mock_managers, ensure_user_profile):
+      """Test Predictive Trigger for Lunar Anticipation."""
+      user_id = 1
+      manager = InsightManager()
+      manager.notification_service = mock_managers
+
+      storage = ObserverFindingStorage()
+      await storage.store_finding(
+          user_id, {"pattern_type": "lunar_phase", "phase": "Full", "finding": "User gets anxious during Full Moon"}, db
+      )
+
+      # Simulate Predictive Trigger (24h before Full Moon)
+      cosmic_data = {
+          "moon_event_type": "anticipation",
+          "moon_phase_name": "Full",  # Approaching Full
+          "time_until": 24,
+      }
+
+      prompts = await manager.evaluate_cosmic_triggers(user_id, cosmic_data, db)
+
+      assert len(prompts) == 1
+      prompt = prompts[0]
+      assert prompt.event_phase == PromptPhase.ANTICIPATION
+      assert prompt.topic == "lunar_pattern"
+
+      # Verify Notification Title
+      assert "Cosmic Reflection (Anticipation)" in mock_managers.sent[0]["title"]
+E       fixture 'ensure_user_profile' not found
+>       available fixtures: _class_scoped_runner, _function_scoped_runner, _module_scoped_runner, _package_scoped_runner, _session_faker, _session_scoped_runner, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, class_mocker, clean_redis, cleanup_insight_data, cleanup_test_state, client, current_user_dict, db, doctest_namespace, event_loop_policy, faker, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, memory, mock_db, mock_managers, mock_redis, mocker, module_mocker, monkeypatch, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_user_data, sample_user_read, seeded_user, session_mocker, subtests, sync_db, test_user, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+c:\dev\GUTTERS\tests\integration\features\test_insight_engine.py:136
+================================== FAILURES ===================================
+________________________ test_insight_flow_solar_peak _________________________
+
+db = <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x000001CD64F81940>
+cleanup_insight_data = None
+mock_managers = <test_insight_engine.MockNotificationService object at 0x000001CD64F81700>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001CD64F81A00>
+
+    @pytest.mark.asyncio
+    async def test_insight_flow_solar_peak(db: AsyncSession, cleanup_insight_data, mock_managers, monkeypatch):
+        """
+        Test Phase 11 Flow:
+        1. Seed Observer Pattern (Solar Sensitivity)
+        2. Simulate COSMIC_UPDATE (Kp=8) -> Trigger PEAK phase
+        3. Verify ReflectionPrompt created
+        4. Verify Notification sent
+        5. Verify Journal Entry creation with Prompt Link
+        """
+        user_id = 1  # Assuming test user exists or we don't need FK constraints if checking logic only?
+        # Usually integration tests use real DB, so constraints verify user exists.
+        # We'll assume user 1 exists from previous seeding or we use a fixture.
+        # If not, this might fail on FK. Let's create a dummy user logic if strict.
+    
+        # Setup Manager with mocked notification
+        manager = InsightManager()
+        manager.notification_service = mock_managers
+    
+        # 1. Seed Observer Pattern
+        storage = ObserverFindingStorage()
+        await storage.store_finding(
+            user_id,
+            {
+                "pattern_type": "solar_symptom",
+                "symptom": "fatigue",
+                "correlation": 0.85,
+                "confidence": 0.9,
+                "finding": "User reports fatigue when Kp > 5",
+            },
+            db,
+        )
+    
+        # 2. Simulate Trigger (PEAK Phase)
+        cosmic_data = {
+            "kp_index": 8,
+            "moon_phase": "Waxing",
+        }
+    
+        prompts = await manager.evaluate_cosmic_triggers(user_id, cosmic_data, db)
+    
+>       assert len(prompts) == 1
+E       assert 0 == 1
+E        +  where 0 = len([])
+
+tests\integration\features\test_insight_engine.py:96: AssertionError
+---------------------------- Captured stderr call -----------------------------
+[2m2026-01-26T08:02:27.188249Z[0m [[32m[1minfo     [0m] [1mEvaluating triggers for user 1 with data {'kp_index': 8, 'moon_phase': 'Waxing'}[0m [[0m[1m[34msrc.app.modules.intelligence.insight.manager[0m][0m
+------------------------------ Captured log call ------------------------------
+INFO     src.app.modules.intelligence.insight.manager:manager.py:45 Evaluating triggers for user 1 with data {'kp_index': 8, 'moon_phase': 'Waxing'}
+============================== warnings summary ===============================
+src\app\modules\intelligence\insight\schemas.py:27
+  C:\dev\GUTTERS\src\app\modules\intelligence\insight\schemas.py:27: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ReflectionPromptRead(BaseModel):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/integration/features/test_insight_engine.py::test_insight_flow_solar_peak
+ERROR tests/integration/features/test_insight_engine.py::test_insight_lunar_anticipation
+==================== 1 failed, 1 warning, 1 error in 1.90s ====================

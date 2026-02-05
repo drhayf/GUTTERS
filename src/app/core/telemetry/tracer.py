@@ -5,7 +5,7 @@ Records system events for observability and debugging.
 All events are stored in Redis with 24-hour TTL.
 
 Example:
-    >>> from app.core.telemetry.tracer import get_tracer
+    >>> from src.app.core.telemetry.tracer import get_tracer
     >>> tracer = get_tracer()
     >>> tracer.record_event(packet)
     >>> events = await tracer.get_trace("trace-123")

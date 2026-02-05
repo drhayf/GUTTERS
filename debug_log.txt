@@ -1,0 +1,28 @@
+2026-01-28 01:18:43,316 - INFO - --- 1. CHECKING VAPID KEYS ---
+2026-01-28 01:18:43,316 - INFO - VAPID_PUBLIC_KEY found: BPgH9uCSp1uGOfM...
+2026-01-28 01:18:43,316 - INFO - VAPID_PRIVATE_KEY loaded. First 20 chars: '-----BEGIN PRIVATE K'
+2026-01-28 01:18:43,316 - INFO - VAPID_PRIVATE_KEY total length: 240
+2026-01-28 01:18:43,316 - INFO - --- 2. CHECKING SUBSCRIPTIONS ---
+2026-01-28 01:18:43,669 - INFO - Total Push Subscriptions in DB: 13
+2026-01-28 01:18:43,711 - INFO - Testing Subscription ID: 2
+2026-01-28 01:18:43,712 - INFO - Endpoint: https://web.push.apple.com/QFJM8kUmukV89B7OsyKomyz...
+2026-01-28 01:18:43,712 - INFO - User Agent: None
+2026-01-28 01:18:43,712 - INFO - --- 3. FORCE SENDING NOTIFICATION ---
+2026-01-28 01:18:43,712 - INFO - Attempting webpush call...
+2026-01-28 01:18:43,716 - ERROR - General Exception CAUGHT!
+2026-01-28 01:18:43,718 - ERROR - Traceback (most recent call last):
+  File "c:\dev\GUTTERS\scripts\debug_push.py", line 84, in run_smoke_test
+    response = webpush(
+               ^^^^^^^^
+  File "C:\dev\GUTTERS\.venv\Lib\site-packages\pywebpush\__init__.py", line 517, in webpush
+    vv = Vapid.from_string(private_key=vapid_private_key)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dev\GUTTERS\.venv\Lib\site-packages\py_vapid\__init__.py", line 148, in from_string
+    return cls.from_der(pkey)
+           ^^^^^^^^^^^^^^^^^^
+  File "C:\dev\GUTTERS\.venv\Lib\site-packages\py_vapid\__init__.py", line 102, in from_der
+    key = serialization.load_der_private_key(
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: Could not deserialize key data. The data may be in an incorrect format, it may be encrypted with an unsupported algorithm, or it may be an unsupported key type (e.g. EC curves with explicit parameters). Details: ASN.1 parsing error: invalid length
+
+2026-01-28 01:18:43,718 - INFO - --- SMOKE TEST COMPLETE ---

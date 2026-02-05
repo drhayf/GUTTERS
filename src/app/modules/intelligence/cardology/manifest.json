@@ -1,0 +1,19 @@
+{
+    "name": "cardology",
+    "version": "1.0.0",
+    "layer": "intelligence",
+    "description": "Deterministic Time-Mapping Engine based on the Order of the Magi system",
+    "dependencies": [],
+    "subscriptions": [],
+    "exports": {
+        "calculate_profile": "Calculate complete Cardology profile from birth date",
+        "get_current_period": "Get current 52-day planetary period info",
+        "get_yearly_timeline": "Get all 7 planetary periods for a year",
+        "analyze_relationship": "Analyze card connections between two people"
+    },
+    "configuration": {
+        "enabled": true,
+        "requires_birth_time": false,
+        "requires_birth_date": true
+    }
+}

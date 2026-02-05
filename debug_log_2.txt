@@ -1,0 +1,15 @@
+2026-01-28 01:31:18,346 - INFO - --- 1. CHECKING VAPID KEYS ---
+2026-01-28 01:31:18,346 - INFO - VAPID_PUBLIC_KEY found: BI1vWeZaISMUsV6...
+2026-01-28 01:31:18,346 - INFO - VAPID_PRIVATE_KEY loaded. First 20 chars: 'NDros1-uNJyxCtWJWrv_'
+2026-01-28 01:31:18,346 - INFO - VAPID_PRIVATE_KEY total length: 43
+2026-01-28 01:31:18,346 - INFO - --- 2. CHECKING SUBSCRIPTIONS ---
+2026-01-28 01:31:18,660 - INFO - Total Push Subscriptions in DB: 13
+2026-01-28 01:31:18,700 - INFO - Testing Subscription ID: 2
+2026-01-28 01:31:18,700 - INFO - Endpoint: https://web.push.apple.com/QFJM8kUmukV89B7OsyKomyz...
+2026-01-28 01:31:18,701 - INFO - User Agent: None
+2026-01-28 01:31:18,701 - INFO - --- 3. FORCE SENDING NOTIFICATION ---
+2026-01-28 01:31:18,701 - INFO - Attempting webpush call...
+2026-01-28 01:31:19,506 - ERROR - WebPushException CAUGHT!
+2026-01-28 01:31:19,506 - ERROR - Message: WebPushException: Push failed: 403 Forbidden
+Response body:{"reason":"BadJwtToken"}, Response {"reason":"BadJwtToken"}
+2026-01-28 01:31:19,506 - INFO - --- SMOKE TEST COMPLETE ---

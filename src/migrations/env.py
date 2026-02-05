@@ -9,10 +9,10 @@ from pathlib import Path
 from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
-from sqlalchemy.ext.asyncio import async_engine_from_config
+from sqlalchemy.ext.asyncio import create_async_engine
 
-from app.core.config import settings
-from app.core.db.database import Base
+from src.app.core.config import settings
+from src.app.core.db.database import Base
 
 # ============================================================================
 # PRE-MIGRATION VALIDATION
@@ -23,19 +23,15 @@ if validation_script.exists():
     print("=" * 60)
     print("Running pre-migration validation...")
     print("=" * 60)
-    
-    result = subprocess.run(
-        [sys.executable, str(validation_script)],
-        capture_output=True,
-        text=True
-    )
-    
+
+    result = subprocess.run([sys.executable, str(validation_script)], capture_output=True, text=True)
+
     # Print validation output (both stdout and stderr)
     if result.stdout:
         print(result.stdout)
     if result.stderr:
         print("STDERR:", result.stderr, file=sys.stderr)
-    
+
     if result.returncode != 0:
         print("\n" + "=" * 60)
         print("[ERROR] MIGRATION BLOCKED: Model validation failed!")
@@ -54,6 +50,7 @@ if validation_script.exists():
 # access to the values within the .ini file in use.
 config = context.config
 
+# Set URL safely without query params first
 config.set_main_option(
     "sqlalchemy.url",
     f"{settings.POSTGRES_ASYNC_PREFIX}{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_SERVER}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}",
@@ -64,12 +61,22 @@ if config.config_file_name is not None:
 
 
 def import_models(package_name):
+    # Explicitly import User first to avoid NoReferencedTableError in Alembic
+    if package_name == "src.app.models":
+        importlib.import_module("src.app.models.user")
+
     package = importlib.import_module(package_name)
     for _, module_name, _ in pkgutil.walk_packages(package.__path__, package.__name__ + "."):
         importlib.import_module(module_name)
 
 
-import_models("app.models")
+import_models("src.app.models")
+# Register feature modules that have their own models
+try:
+    importlib.import_module("src.app.modules.features.quests.models")
+except ImportError:
+    pass  # Quests module might not exist yet or have models
+
 target_metadata = Base.metadata
 
 
@@ -103,17 +110,22 @@ def do_run_migrations(connection: Connection) -> None:
 async def run_async_migrations() -> None:
     """In this scenario we need to create an Engine and associate a connection with the context."""
 
-    connectable = async_engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
+    url = config.get_main_option("sqlalchemy.url")
+
+    # CRITICAL: Switch to Session Pooler (5432) if configured for Transaction Pooler (6543)
+    # This enables prepared statements support required by Alembic introspection
+    if ":6543/" in url:
+        url = url.replace(":6543/", ":5432/")
+
+    # Use create_async_engine directly
+    connectable = create_async_engine(
+        url,
         poolclass=pool.NullPool,
         connect_args={
-            "statement_cache_size": 0,  # CRITICAL for Supabase pooler (pgbouncer transaction mode)
-            "prepared_statement_cache_size": 0,  # Also disable prepared statement cache
             "server_settings": {
-                "jit": "off",  # Disable JIT for compatibility
+                "jit": "off",
             }
-        }
+        },
     )
 
     async with connectable.connect() as connection:

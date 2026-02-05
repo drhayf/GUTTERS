@@ -21,8 +21,21 @@ DEFAULT_LIMIT = settings.DEFAULT_RATE_LIMIT_LIMIT
 DEFAULT_PERIOD = settings.DEFAULT_RATE_LIMIT_PERIOD
 
 
+async def get_token_from_header_or_query(request: Request, token: str | None = Depends(oauth2_scheme)) -> str:
+    """Helper to get token from header (via oauth2_scheme) or query param."""
+    if token:
+        return token
+
+    # Fallback to query parameter for EventSource/SSE
+    query_token = request.query_params.get("token")
+    if query_token:
+        return query_token
+
+    raise UnauthorizedException("User not authenticated.")
+
+
 async def get_current_user(
-    token: Annotated[str, Depends(oauth2_scheme)], db: Annotated[AsyncSession, Depends(async_get_db)]
+    token: Annotated[str, Depends(get_token_from_header_or_query)], db: Annotated[AsyncSession, Depends(async_get_db)]
 ) -> dict[str, Any]:
     token_data = await verify_token(token, TokenType.ACCESS, db)
     if token_data is None:
