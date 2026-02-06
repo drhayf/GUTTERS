@@ -4,10 +4,10 @@ GUTTERS Synthesis Module Schemas
 Data models for profile synthesis across all calculation modules.
 """
 
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from typing import Any
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class SynthesisPattern(BaseModel):

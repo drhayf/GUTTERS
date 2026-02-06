@@ -1,13 +1,11 @@
 import asyncio
-import sys
 import os
-import json
+import sys
 
 # Add src to path
 sys.path.append(os.getcwd())
 
 from src.app.core.events.bus import EventBus
-from src.app.protocol.packet import Packet
 
 
 async def verify_sse_wiring():
@@ -31,7 +29,7 @@ async def verify_sse_wiring():
         print("Waiting for event in queue...")
         packet = await asyncio.wait_for(event_queue.get(), timeout=2.0)
         print(f"SUCCESS: Received packet: {packet.event_type}")
-    except asyncio.TimeoutError:
+    except TimeoutError:
         print("FAILURE: Timed out waiting for event.")
     finally:
         await bus.cleanup()

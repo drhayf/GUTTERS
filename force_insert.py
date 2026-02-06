@@ -4,8 +4,10 @@ import sys
 
 sys.path.append(os.path.join(os.getcwd(), "src"))
 
-from app.core.db.database import local_session
 from sqlalchemy import text
+
+from app.core.db.database import local_session
+
 
 async def main():
     async with local_session() as db:

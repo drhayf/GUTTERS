@@ -7,7 +7,6 @@ Uses dual storage:
 - Redis cache for fast session-based access
 """
 
-from datetime import datetime
 from typing import Any
 
 import redis.asyncio as redis
@@ -124,6 +123,7 @@ class GenesisPersistence:
         """
         try:
             from sqlalchemy import select
+
             from src.app.models.user_profile import UserProfile
 
             # Get user profile
@@ -175,6 +175,7 @@ class GenesisPersistence:
         """
         try:
             from sqlalchemy import select
+
             from src.app.models.user_profile import UserProfile
 
             result = await db_session.execute(select(UserProfile).where(UserProfile.user_id == user_id))
@@ -205,6 +206,7 @@ class GenesisPersistence:
 
         try:
             from sqlalchemy import select
+
             from src.app.models.user_profile import UserProfile
 
             result = await db_session.execute(select(UserProfile).where(UserProfile.user_id == user_id))

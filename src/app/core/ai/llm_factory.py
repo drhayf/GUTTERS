@@ -7,7 +7,6 @@ OpenRouter provides access to multiple AI models through a unified API.
 This factory handles configuration, caching, and error handling.
 """
 
-import os
 from functools import lru_cache
 
 from langchain_openai import ChatOpenAI

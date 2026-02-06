@@ -1,22 +1,30 @@
+from datetime import UTC, datetime
 from typing import Any, Optional
+
 from langchain_core.tools import StructuredTool
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from datetime import datetime, UTC
 
-from src.app.models.insight import JournalEntry, ReflectionPrompt, PromptStatus
+from src.app.models.insight import JournalEntry, PromptStatus, ReflectionPrompt
 
 
 class JournalEntryInput(BaseModel):
     """Input for creating a journal entry."""
 
     content: str = Field(
-        ..., description="The content of the journal entry. Should be the user's thoughts, feelings, or experiences."
+        ...,
+        description=(
+            "The content of the journal entry. Should be the user's thoughts, "
+            "feelings, or experiences."
+        ),
     )
     mood_score: int = Field(
         ...,
-        description="A score from 1-10 representing the user's mood (1=Worst, 10=Best). Infer if not explicitly stated.",
+        description=(
+            "A score from 1-10 representing the user's mood "
+            "(1=Worst, 10=Best). Infer if not explicitly stated."
+        ),
         ge=1,
         le=10,
     )
@@ -58,16 +66,16 @@ def get_tool(user_id: int, db: AsyncSession) -> StructuredTool:
                     # Copy prompt context if available
                     if prompt.trigger_context:
                         entry.context_snapshot = prompt.trigger_context
-            
+
             # Inject Magi chronos context before commit
             if not entry.context_snapshot:
                 entry.context_snapshot = {}
-            
+
             try:
                 from src.app.core.state.chronos import get_chronos_manager
                 chronos_manager = get_chronos_manager()
                 chronos_state = await chronos_manager.get_user_chronos(user_id)
-                
+
                 if chronos_state:
                     entry.context_snapshot["magi"] = {
                         "period_card": chronos_state.get("current_card", {}).get("name"),
@@ -82,12 +90,12 @@ def get_tool(user_id: int, db: AsyncSession) -> StructuredTool:
                             ((52 - (chronos_state.get("days_remaining", 0) or 0)) / 52) * 100, 2
                         ),
                     }
-                
+
                 # Add Council of Systems hexagram context
                 from src.app.modules.intelligence.council import get_council_service
                 council = get_council_service()
                 hexagram = council.get_current_hexagram()
-                
+
                 if hexagram:
                     entry.context_snapshot["council"] = {
                         "sun_gate": hexagram.sun_gate,
@@ -99,7 +107,7 @@ def get_tool(user_id: int, db: AsyncSession) -> StructuredTool:
                         "earth_gate_name": hexagram.earth_gate_name,
                         "polarity_theme": hexagram.polarity_theme,
                     }
-                    
+
             except Exception as e:
                 # Don't fail journal creation if context injection fails
                 print(f"[JournalTool] Failed to inject magi context: {e}")
@@ -121,6 +129,10 @@ def get_tool(user_id: int, db: AsyncSession) -> StructuredTool:
         func=None,
         coroutine=_log_journal_entry_async,
         name="log_journal_entry",
-        description="Log a user's thoughts, feelings, or experiences into their personal journal. Use this when the user explicitly asks to 'note this down', 'journal this', or 'log this'. Can be linked to a specific prompt IDs.",
+        description=(
+            "Log a user's thoughts, feelings, or experiences into their personal "
+            "journal. Use this when the user explicitly asks to 'note this down', "
+            "'journal this', or 'log this'. Can be linked to a specific prompt IDs."
+        ),
         args_schema=JournalEntryInput,
     )

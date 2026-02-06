@@ -1,5 +1,7 @@
 import asyncio
+
 from sqlalchemy import text
+
 from src.app.core.db.database import local_session
 
 
@@ -7,7 +9,7 @@ async def check_constraints():
     async with local_session() as session:
         # SQL query from user request
         query = text("""
-            SELECT 
+            SELECT
                 conname AS constraint_name,
                 contype AS constraint_type
             FROM pg_constraint
@@ -24,8 +26,8 @@ async def check_constraints():
         # Also check indices just in case
         print("\nChecking indices:")
         query_idx = text("""
-            SELECT indexname, indexdef 
-            FROM pg_indexes 
+            SELECT indexname, indexdef
+            FROM pg_indexes
             WHERE tablename = 'chat_sessions';
         """)
         result_idx = await session.execute(query_idx)

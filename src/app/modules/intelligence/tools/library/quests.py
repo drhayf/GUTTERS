@@ -1,10 +1,11 @@
 from typing import List, Optional
-from pydantic import BaseModel, Field
+
 from langchain_core.tools import StructuredTool
+from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.app.modules.features.quests.manager import QuestManager
-from src.app.modules.features.quests.models import RecurrenceType, QuestSource, QuestCategory, QuestDifficulty
+from src.app.modules.features.quests.models import QuestCategory, QuestDifficulty, QuestSource, RecurrenceType
 
 
 class CreateQuestInput(BaseModel):
@@ -84,7 +85,10 @@ def get_create_quest_tool(user_id: int, db: AsyncSession) -> StructuredTool:
         func=None,
         coroutine=_create_quest,
         name="create_quest",
-        description="Create a new Quest or Task for the user. System can assign difficulty and category based on user state.",
+        description=(
+            "Create a new Quest or Task for the user. System can assign "
+            "difficulty and category based on user state."
+        ),
         args_schema=CreateQuestInput,
     )
 
@@ -102,11 +106,16 @@ def get_list_quests_tool(user_id: int, db: AsyncSession) -> StructuredTool:
             if not pending:
                 output += "None.\n"
             for log in pending:
-                output += f"- [ID:{log.id}] {log.quest.title} (Difficulty: {log.quest.difficulty.value}, XP: {log.quest.xp_reward})\n"
+                output += (
+                    f"- [ID:{log.id}] {log.quest.title} (Difficulty: "
+                    f"{log.quest.difficulty.value}, XP: {log.quest.xp_reward})\n"
+                )
 
             output += "\nActive Quest Definitions:\n"
             for q in active:
-                output += f"- {q.title} ({q.recurrence}, {q.category})\n"
+                output += (
+                    f"- {q.title} ({q.recurrence}, {q.category})\n"
+                )
 
             return output
         except Exception as e:

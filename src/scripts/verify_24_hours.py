@@ -4,8 +4,8 @@ Full 24-hour verification of HD Calculator for Hayford.
 Shows type range across all hours for verification against Jovian Archive.
 """
 import sys
-from pathlib import Path
 from datetime import date, time
+from pathlib import Path
 
 src_path = Path(__file__).parent.parent
 sys.path.insert(0, str(src_path))
@@ -33,7 +33,7 @@ for hour in range(24):
         longitude=-0.1870,
         timezone="Africa/Accra"
     )
-    
+
     results.append({
         'hour': hour,
         'type': chart.type,
@@ -43,13 +43,14 @@ for hour in range(24):
         'defined_centers': chart.defined_centers,
         'channels': [ch.name for ch in chart.channels]
     })
-    
+
     print(f"{hour:02}:00   | {chart.type:<25} | {chart.authority:<25} | {chart.profile:<10} | {chart.definition:<20}")
 
 print("-" * 95)
 
 # Summary
 from collections import Counter
+
 type_counts = Counter(r['type'] for r in results)
 print("\nSUMMARY:")
 print("-" * 40)

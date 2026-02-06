@@ -1,4 +1,4 @@
-from collections.abc import Callable, Generator, AsyncGenerator
+from collections.abc import AsyncGenerator, Callable, Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock
 
@@ -6,27 +6,21 @@ import pytest
 import pytest_asyncio
 from faker import Faker
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.session import Session
 
-from datetime import datetime, timezone as dt_timezone
-
 from src.app.core.config import settings
+from src.app.core.db.database import Base
+from src.app.core.db.database import local_session as async_session_maker
+from src.app.core.security import get_password_hash
 from src.app.main import app
-from src.app.core.db.database import async_engine, local_session as async_session_maker, Base
 
 # CRITICAL: Import all models to register with SQLAlchemy registry
 # This must happen BEFORE any database operations
 from src.app.models.user import User
 from src.app.models.user_profile import UserProfile
-from src.app.models.embedding import Embedding
-from src.app.models.chat_session import ChatSession, ChatMessage
-from src.app.models.progression import PlayerStats
-from src.app.modules.features.quests.models import Quest, QuestLog
-from src.app.core.security import get_password_hash
-from sqlalchemy import select, delete
 from tests.fixtures.seed_data import SeedDataGenerator
 
 
@@ -40,7 +34,7 @@ def configure_mappers():
     try:
         # This triggers mapper compilation for all models
         Base.registry.configure()
-    except Exception as e:
+    except Exception:
         # If already configured, ignore
         pass
 

@@ -4,21 +4,24 @@ Profile API Endpoints
 Handles profile creation, calculation, and retrieval for onboarding flow.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
-from typing import Annotated
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from pydantic import BaseModel, Field
-from datetime import date, time as time_type
 import logging
+from datetime import date
+from datetime import time as time_type
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm.attributes import flag_modified
 
 from src.app.api.dependencies import get_current_user
+from src.app.core.db.database import async_get_db
 from src.app.models.user import User
 from src.app.models.user_profile import UserProfile
-from src.app.core.db.database import async_get_db
 from src.app.modules.calculation.registry import CalculationModuleRegistry
+from src.app.core.state.chronos import get_chronos_manager
 from src.app.modules.intelligence.synthesis.synthesizer import ProfileSynthesizer
-from sqlalchemy.orm.attributes import flag_modified
 
 logger = logging.getLogger(__name__)
 
@@ -441,7 +444,7 @@ async def get_synthesis(
 
 class ChronosStateResponse(BaseModel):
     """Response schema for Chronos state endpoint."""
-    
+
     birth_card: dict | None = None
     current_planet: str | None = None
     current_card: dict | None = None
@@ -467,47 +470,45 @@ async def get_chronos_state(
 ):
     """
     Get user's current Chronos/MAGI state.
-    
+
     Returns the current 52-day planetary period information including:
     - Birth card (core identity)
     - Current planet and period card
     - Period progress (days elapsed, remaining, percentage)
     - Theme and guidance text
     - Karma cards (debts and gifts)
-    
+
     This data powers the TimelineScrubber and BirthCardWidget on the dashboard.
     """
-    from src.app.core.state.chronos import get_chronos_manager
-    from datetime import datetime, UTC
-    
+
     user_id = current_user["id"]
-    
+
     # Get user's birth date from profile
     result = await db.execute(
         select(UserProfile).where(UserProfile.user_id == user_id)
     )
     profile = result.scalar_one_or_none()
-    
+
     if not profile or not profile.birth_date:
         raise HTTPException(
-            status_code=400, 
+            status_code=400,
             detail="Birth data required. Please complete onboarding first."
         )
-    
+
     # Get chronos state from manager
-    chronos = get_chronos_state_manager()
+    chronos = get_chronos_manager()
     state = await chronos.get_user_chronos(user_id, birth_date=profile.birth_date)
-    
+
     if not state:
         # Calculate fresh if no cached state
         state = await chronos.refresh_user_chronos(user_id, profile.birth_date)
-    
+
     # Calculate days elapsed and progress percentage
     days_remaining = state.get("days_remaining", 0)
     period_total = 52
     days_elapsed = period_total - days_remaining
     progress_percent = round((days_elapsed / period_total) * 100, 1)
-    
+
     # Get karma cards from full profile data if available
     karma_cards = None
     if profile.data and profile.data.get("cardology"):
@@ -516,7 +517,7 @@ async def get_chronos_state(
             karma_cards = cardology_data["karma_cards"]
         elif "profile" in cardology_data:
             karma_cards = cardology_data["profile"].get("karma_cards")
-    
+
     return ChronosStateResponse(
         birth_card=state.get("birth_card"),
         current_planet=state.get("current_planet"),

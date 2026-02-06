@@ -58,13 +58,18 @@ COSMIC_TRANSIT_EXACT = "cosmic.transit.exact"
 # --- Granular Tracking Events ---
 
 COSMIC_SOLAR_ALERT = "cosmic.solar.alert"
-"""Solar weather alert (Kp spike, Bz flip, high-speed stream). Payload: {event_name: str, kp_index: float, bz: float, shield_integrity: str, user_id: int}"""
+"""Solar weather alert (Kp spike, Bz flip, high-speed stream).
+Payload: {event_name: str, kp_index: float, bz: float, shield_integrity: str,
+user_id: int}"""
 
 COSMIC_AURORA_ALERT = "cosmic.aurora.alert"
-"""Aurora visible or possible at user location. Payload: {aurora_status: str, probability: float, latitude: float, hemisphere: str, user_id: int}"""
+"""Aurora visible or possible at user location.
+Payload: {aurora_status: str, probability: float, latitude: float, hemisphere: str,
+user_id: int}"""
 
 COSMIC_GEOMAGNETIC_IMPACT = "cosmic.geomagnetic.impact"
-"""Location-specific geomagnetic impact alert. Payload: {severity: str, effects: list, geomag_lat: float, user_id: int}"""
+"""Location-specific geomagnetic impact alert.
+Payload: {severity: str, effects: list, geomag_lat: float, user_id: int}"""
 
 COSMIC_LUNAR_VOC_START = "cosmic.lunar.voc_start"
 """Void of Course period begins. Payload: {moon_sign: str, duration_hours: float, next_ingress: str, user_id: int}"""
@@ -73,7 +78,8 @@ COSMIC_LUNAR_VOC_END = "cosmic.lunar.voc_end"
 """Void of Course period ends (sign ingress). Payload: {new_sign: str, user_id: int}"""
 
 COSMIC_LUNAR_PHASE = "cosmic.lunar.phase"
-"""Significant lunar phase (New/Full Moon). Payload: {phase_name: str, moon_sign: str, illumination: float, user_id: int}"""
+"""Significant lunar phase (New/Full Moon).
+Payload: {phase_name: str, moon_sign: str, illumination: float, user_id: int}"""
 
 COSMIC_RETROGRADE_START = "cosmic.retrograde.start"
 """Planet enters retrograde. Payload: {planet: str, sign: str, duration_days: int, user_id: int}"""
@@ -121,10 +127,14 @@ MAGI_PROFILE_CALCULATED = "magi.profile.calculated"
 """Cardology profile computed for user. Payload: {user_id: int, birth_card: str, planetary_card: str, year: int}"""
 
 MAGI_PERIOD_SHIFT = "magi.period.shift"
-"""52-day planetary period changed. Payload: {user_id: int, old_planet: str, new_planet: str, old_card: str, new_card: str, period_number: int}"""
+"""52-day planetary period changed.
+Payload: {user_id: int, old_planet: str, new_planet: str, old_card: str,
+new_card: str, period_number: int}"""
 
 MAGI_YEAR_SHIFT = "magi.year.shift"
-"""Personal cardology year rolled over. Payload: {user_id: int, old_age: int, new_age: int, old_planetary_card: str, new_planetary_card: str}"""
+"""Personal cardology year rolled over.
+Payload: {user_id: int, old_age: int, new_age: int, old_planetary_card: str,
+new_planetary_card: str}"""
 
 MAGI_STATE_CACHED = "magi.state.cached"
 """Chronos state cached to Redis. Payload: {user_id: int, current_planet: str, current_card: str, ttl: int}"""
@@ -136,13 +146,19 @@ MAGI_STATE_CACHED = "magi.state.cached"
 # Triggered by the I-Ching Logic Kernel (Council of Systems)
 
 MAGI_HEXAGRAM_CHANGE = "magi.hexagram.change"
-"""Sun/Earth gates shifted to new hexagram. Payload: {user_id: int, old_sun_gate: int, new_sun_gate: int, old_earth_gate: int, new_earth_gate: int, sun_line: int, earth_line: int, timestamp: str}"""
+"""Sun/Earth gates shifted to new hexagram.
+Payload: {user_id: int, old_sun_gate: int, new_sun_gate: int, old_earth_gate: int,
+new_earth_gate: int, sun_line: int, earth_line: int, timestamp: str}"""
 
 MAGI_COUNCIL_SYNTHESIS = "magi.council.synthesis"
-"""Council of Systems generated unified synthesis. Payload: {user_id: int, resonance_score: float, resonance_type: str, macro_theme: str, micro_theme: str, quest_suggestions: list}"""
+"""Council of Systems generated unified synthesis.
+Payload: {user_id: int, resonance_score: float, resonance_type: str,
+macro_theme: str, micro_theme: str, quest_suggestions: list}"""
 
 MAGI_RESONANCE_SHIFT = "magi.resonance.shift"
-"""Cross-system resonance level changed significantly. Payload: {user_id: int, old_resonance: str, new_resonance: str, elemental_profile: dict}"""
+"""Cross-system resonance level changed significantly.
+Payload: {user_id: int, old_resonance: str, new_resonance: str,
+elemental_profile: dict}"""
 
 
 # ============================================================================
@@ -157,7 +173,9 @@ GENESIS_REFINEMENT_REQUESTED = "genesis.refinement.requested"
 """Refinement probe ready. Payload: {user_id: int, session_id: str, field: str, strategy: str, probe_question: str}"""
 
 GENESIS_CONFIDENCE_UPDATED = "genesis.confidence.updated"
-"""Field confidence changed. Payload: {user_id: int, field: str, module: str, old_confidence: float, new_confidence: float}"""
+"""Field confidence changed.
+Payload: {user_id: int, field: str, module: str, old_confidence: float,
+new_confidence: float}"""
 
 GENESIS_FIELD_CONFIRMED = "genesis.field.confirmed"
 """Field reached confirmation threshold. Payload: GenesisFieldConfirmedPayload"""

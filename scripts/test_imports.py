@@ -1,15 +1,13 @@
-import sys
 import os
+import sys
 
 # Add project root to sys.path explicitly just in case
 sys.path.append(os.getcwd())
 
 print("1. Importing Base...")
-from src.app.core.db.database import Base
 
 print("2. Importing User...")
 try:
-    from src.app.models.user import User
 
     print("   User imported successfully.")
 except Exception as e:
@@ -17,7 +15,6 @@ except Exception as e:
 
 print("3. Importing PlayerStats...")
 try:
-    from src.app.models.progression import PlayerStats
 
     print("   PlayerStats imported successfully.")
 except Exception as e:

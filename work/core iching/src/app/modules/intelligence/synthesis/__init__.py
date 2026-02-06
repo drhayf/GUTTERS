@@ -5,33 +5,28 @@ Provides cross-system integration for multiple metaphysical frameworks.
 """
 
 from .harmonic import (
-    # Main Classes
-    CouncilOfSystems,
-    HarmonicSynthesis,
-    SystemReading,
-    
-    # Adapters
-    IChingAdapter,
-    CardologyAdapter,
-    
-    # Resonance
-    ResonanceType,
-    ElementalResonance,
-    get_elemental_resonance,
-    
-    # Elements
-    Element,
-    FrequencyBand,
-    FrequencyState,
-    
-    # Core Functions
-    cross_system_synthesis,
-    
     # Constants
     CARDOLOGY_SUIT_ELEMENTS,
+    ELEMENTAL_MATRIX,
     HD_CENTER_ELEMENTS,
     TRIGRAM_ELEMENTS,
-    ELEMENTAL_MATRIX,
+    CardologyAdapter,
+    # Main Classes
+    CouncilOfSystems,
+    # Elements
+    Element,
+    ElementalResonance,
+    FrequencyBand,
+    FrequencyState,
+    HarmonicSynthesis,
+    # Adapters
+    IChingAdapter,
+    # Resonance
+    ResonanceType,
+    SystemReading,
+    # Core Functions
+    cross_system_synthesis,
+    get_elemental_resonance,
 )
 
 __all__ = [

@@ -1,12 +1,14 @@
 from typing import List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, field_validator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel, field_validator
 
-from src.app.api.dependencies import async_get_db, get_current_user as get_current_active_user
+from src.app.api.dependencies import async_get_db
+from src.app.api.dependencies import get_current_user as get_current_active_user
 from src.app.modules.features.quests.manager import QuestManager
-from src.app.modules.features.quests.models import RecurrenceType, QuestSource, Quest
+from src.app.modules.features.quests.models import Quest, QuestSource, RecurrenceType
 
 router = APIRouter()
 

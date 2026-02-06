@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Test VAPID with REAL app endpoint
 Calls the ACTUAL app /api/v1/push/test endpoint to see real BadJwtToken errors
 """
 
-import sys
 import io
+import sys
 
 if sys.platform == "win32":
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
-import requests
 import json
+
+import requests
 
 API_URL = "http://localhost:8000"
 TEST_USER = "testeruser"
@@ -47,7 +47,7 @@ try:
         print(f"No access token in response: {token_data}")
         sys.exit(1)
 
-    print(f"OK - Login successful")
+    print("OK - Login successful")
     print(f"Token: {access_token[:30]}...\n")
 
 except requests.exceptions.ConnectionError:
@@ -71,12 +71,12 @@ try:
 
     if test_response.status_code == 200:
         results = test_response.json()
-        print(f"OK - Test endpoint responded")
+        print("OK - Test endpoint responded")
         print(f"\nResults: {json.dumps(results, indent=2)}")
 
         if "results" in results:
             res = results["results"]
-            print(f"\nSummary:")
+            print("\nSummary:")
             print(f"  Success: {res.get('success', 0)}")
             print(f"  Failed: {res.get('failed', 0)}")
             print(f"  Expired: {res.get('expired', 0)}")

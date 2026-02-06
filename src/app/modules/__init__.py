@@ -4,6 +4,7 @@ GUTTERS Module System
 Auto-discovery and registration of all GUTTERS modules.
 """
 from typing import Dict, Type
+
 from .base import BaseModule
 
 # Module registry will be populated at runtime

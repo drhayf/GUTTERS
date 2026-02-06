@@ -11,30 +11,29 @@ import json
 import logging
 import time
 import uuid
-import re
-from datetime import datetime, UTC
 from typing import TYPE_CHECKING, Any, Optional
 
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ....core.config import settings
-from ....core.activity.logger import get_activity_logger
-from ....models.embedding import Embedding
-from ...registry import ModuleRegistry
-from ..vector.embedding_service import EmbeddingService
-from ..vector.search_engine import VectorSearchEngine
-from ..trace.context import TraceContext
-from ..trace.models import ToolType
-from .schemas import QueryResponse
-from src.app.core.llm.config import get_premium_llm, LLMTier, LLMConfig
+from src.app.core.llm.config import LLMConfig, LLMTier, get_premium_llm
 from src.app.modules.intelligence.generative_ui.generator import ComponentGenerator
 from src.app.modules.intelligence.generative_ui.models import ComponentType
 from src.app.modules.intelligence.tools.registry import ToolRegistry  # NEW: Import Registry
 
+from ....core.activity.logger import get_activity_logger
+from ....core.config import settings
+from ....models.embedding import Embedding
+from ...registry import ModuleRegistry
+from ..trace.context import TraceContext
+from ..trace.models import ToolType
+from ..vector.embedding_service import EmbeddingService
+from ..vector.search_engine import VectorSearchEngine
+from .schemas import QueryResponse
+
 if TYPE_CHECKING:
     from langchain_openai import ChatOpenAI
-    from langchain_core.language_models import BaseChatModel
+
     from ....core.memory import ActiveMemory
 
 logger = logging.getLogger(__name__)
@@ -53,9 +52,9 @@ class QueryEngine:
     def __init__(
         self,
         llm: Optional[ChatOpenAI] = None,
-        memory: Optional["ActiveMemory"] = None,
-        embedding_service: Optional["EmbeddingService"] = None,
-        search_engine: Optional["VectorSearchEngine"] = None,
+        memory: Optional[ActiveMemory] = None,
+        embedding_service: Optional[EmbeddingService] = None,
+        search_engine: Optional[VectorSearchEngine] = None,
         tier: LLMTier = LLMTier.PREMIUM,
         enable_generative_ui: bool = True,
     ):
@@ -200,7 +199,8 @@ class QueryEngine:
             # REFACTOR: We skip legacy classification for now and rely on Tool Calling or RAG context.
             # But to keep existing RAG flow working, we might want to default to ALL modules
             # or rely on Vector Search context.
-            # For this phase, let's include all modules in context to be safe, or just relying on what's in memory/vector.
+            # For this phase, let's include all modules in context to be safe, or just
+            # relying on what's in memory/vector.
             relevant_modules = ["astrology", "human_design", "numerology"]  # Default to all for context building
 
             # STEP 2.5: Generative UI Decision
@@ -332,7 +332,9 @@ class QueryEngine:
 
 **INSTRUCTIONS:**
 1. Answer warmly and specifically, speaking directly to the person.
-2. Cite technical insights from their cosmic profile (e.g., "Your Projector type (Human Design)...") AND correlate them with their personal context (journal entries/patterns) if provided.
+2. Cite technical insights from their cosmic profile (e.g., "Your Projector type (Human
+   Design)...") AND correlate them with their personal context (journal entries/patterns)
+   if provided.
 3. Draw connections between their design and their lived experience.
 4. Be practical and actionable.
 5. Keep your answer concise but complete (250-450 words).
@@ -378,77 +380,80 @@ Your answer:"""
     def _format_magi_context(self, cardology_data: dict) -> str:
         """
         Format Cardology/Magi timeline data for LLM context injection.
-        
+
         This gives the Chat Agent awareness of:
         1. User's current planetary period from Cardology (52-day cycles)
         2. Current I-Ching hexagram (Sun/Earth gates from Council of Systems)
         """
         lines = ["\n## MAGI TIMELINE CONTEXT"]
-        
+
         # Current state from ChronosStateManager
         current_state = cardology_data.get("current_state", {})
-        
+
         # ===== CARDOLOGY (MACRO) =====
         # Birth card (static identity)
         birth_card = cardology_data.get("birth_card", {})
         if birth_card:
             card_name = f"{birth_card.get('rank_name', '')} of {birth_card.get('suit', '')}"
             lines.append(f"Birth Card (Core Identity): {card_name}")
-        
+
         # Current planetary period (dynamic)
         current_planet = current_state.get("current_planet")
         if current_planet:
             current_card = current_state.get("current_card", {})
             card_display = current_card.get("name") or current_card.get("card", "Unknown")
             lines.append(f"Current Period: {current_planet} (Card: {card_display})")
-        
+
         # Days remaining in period
         days_remaining = current_state.get("days_remaining")
         if days_remaining is not None:
             lines.append(f"Days Remaining in Period: {days_remaining}")
-        
+
         # Theme and guidance
         theme = current_state.get("theme")
         if theme:
             lines.append(f"Period Theme: {theme}")
-        
+
         guidance = current_state.get("guidance")
         if guidance:
             lines.append(f"Period Guidance: {guidance}")
-        
+
         # Planetary ruling card for the year
         planetary_ruler = cardology_data.get("planetary_ruling_card", {})
         if planetary_ruler:
             ruler_name = f"{planetary_ruler.get('rank_name', '')} of {planetary_ruler.get('suit', '')}"
             lines.append(f"Yearly Planetary Ruler: {ruler_name}")
-        
+
         # Age context
         age = cardology_data.get("age")
         if age:
             lines.append(f"Cardology Age: {age}")
-        
+
         # ===== I-CHING / HEXAGRAM (MICRO) =====
         # Get current hexagram from CouncilService (no async needed)
         try:
             from ....modules.intelligence.council import get_council_service
-            
+
             council = get_council_service()
             hexagram = council.get_current_hexagram()
-            
+
             if hexagram:
                 lines.append("")
                 lines.append("### I-Ching Daily Code (Council of Systems)")
                 lines.append(f"Sun Gate: {hexagram.sun_gate}.{hexagram.sun_line} - {hexagram.sun_gate_name}")
                 lines.append(f"Earth Gate: {hexagram.earth_gate}.{hexagram.earth_line} - {hexagram.earth_gate_name}")
-                
+
                 if hexagram.sun_gene_key_gift:
-                    lines.append(f"Sun Gene Key: {hexagram.sun_gene_key_shadow} → {hexagram.sun_gene_key_gift} → {hexagram.sun_gene_key_siddhi}")
+                    lines.append(
+                        f"Sun Gene Key: {hexagram.sun_gene_key_shadow} → "
+                        f"{hexagram.sun_gene_key_gift} → {hexagram.sun_gene_key_siddhi}"
+                    )
                 if hexagram.earth_gene_key_gift:
                     lines.append(f"Earth Gene Key Gift: {hexagram.earth_gene_key_gift}")
-                
+
                 if hexagram.polarity_theme:
                     lines.append(f"Polarity Theme: {hexagram.polarity_theme}")
-                    
+
                 # Add Council synthesis for richer context
                 synthesis = council.get_council_synthesis()
                 if synthesis:
@@ -457,7 +462,7 @@ Your answer:"""
                         lines.append(f"Today's Guidance: {synthesis.guidance[0]}")
         except Exception as e:
             logger.debug(f"Council context not available: {e}")
-        
+
         return "\n".join(lines)
 
     def _calculate_confidence_enhanced(self, context: dict, vector_context: dict, trace: TraceContext) -> float:
@@ -529,21 +534,30 @@ Your answer:"""
                             context_parts.append(self._format_magi_context({"current_state": chronos_state}))
                     except Exception as e:
                         logger.debug(f"Chronos state not available: {e}")
-                
+
                 # Add Council of Systems synthesis (I-Ching + Cross-system resonance)
                 try:
                     from ....modules.intelligence.council import get_council_service
                     council = get_council_service()
                     hexagram = council.get_current_hexagram()
                     synthesis = council.get_council_synthesis()
-                    
+
                     if hexagram or synthesis:
                         council_lines = ["\n## Council of Systems (Unified Cosmic Intelligence)"]
                         if hexagram:
-                            council_lines.append(f"Sun Gate: {hexagram.sun_gate}.{hexagram.sun_line} - {hexagram.sun_gate_name}")
-                            council_lines.append(f"Gene Key: {hexagram.sun_gene_key_shadow} → {hexagram.sun_gene_key_gift}")
+                            council_lines.append(
+                                f"Sun Gate: {hexagram.sun_gate}.{hexagram.sun_line} "
+                                f"- {hexagram.sun_gate_name}"
+                            )
+                            council_lines.append(
+                                f"Gene Key: {hexagram.sun_gene_key_shadow} "
+                                f"→ {hexagram.sun_gene_key_gift}"
+                            )
                         if synthesis:
-                            council_lines.append(f"Resonance: {synthesis.resonance_type} ({synthesis.resonance_score:.0%})")
+                            council_lines.append(
+                                f"Resonance: {synthesis.resonance_type} "
+                                f"({synthesis.resonance_score:.0%})"
+                            )
                             if synthesis.guidance:
                                 council_lines.append(f"Guidance: {synthesis.guidance[0]}")
                         context_parts.append("\n".join(council_lines))
@@ -622,7 +636,10 @@ Your answer (JSON array only):"""
             response = await self.llm.ainvoke(
                 [
                     SystemMessage(
-                        content="You are a classifier that determines which wisdom systems are relevant to a question. Respond only with a JSON array."
+                        content=(
+                            "You are a classifier that determines which wisdom systems are "
+                            "relevant to a question. Respond only with a JSON array."
+                        )
                     ),
                     HumanMessage(content=classification_prompt),
                 ]
@@ -822,7 +839,9 @@ Your answer (JSON array only):"""
 
 **INSTRUCTIONS:**
 1. Answer warmly and specifically, speaking directly to the person.
-2. Cite technical insights from their cosmic profile (e.g., "Your Projector type (Human Design)...") AND correlate them with their personal context (journal entries/patterns) if provided.
+2. Cite technical insights from their cosmic profile (e.g., "Your Projector type (Human
+   Design)...") AND correlate them with their personal context (journal entries/patterns)
+   if provided.
 3. Draw connections between their design and their lived experience.
 4. Be practical and actionable.
 5. Keep your answer concise but complete (250-450 words).
@@ -852,18 +871,22 @@ Your answer:"""
             # Create message history
             messages = [
                 SystemMessage(
-                    content="You are a compassionate guide with deep knowledge of astrology, Human Design, and numerology.\n"
-                    "CRITICAL INSTRUCTION: You must think step-by-step before answering.\n"
-                    "1. First, inside <thinking> tags, analyze the user's profile, check for contradictions, and outline your answer structure.\n"
-                    "2. Then, provide your final response to the user.\n"
-                    "3. If the user asks for a calculation or to log something, USE THE AVAILABLE TOOLS."
+                    content=(
+                        "You are a compassionate guide with deep knowledge of astrology, "
+                        "Human Design, and numerology.\n"
+                        "CRITICAL INSTRUCTION: You must think step-by-step before answering.\n"
+                        "1. First, inside <thinking> tags, analyze the user's profile, check "
+                        "for contradictions, and outline your answer structure.\n"
+                        "2. Then, provide your final response to the user.\n"
+                        "3. If the user asks for a calculation or to log something, "
+                        "USE THE AVAILABLE TOOLS."
+                    )
                 ),
                 HumanMessage(content=answer_prompt),
             ]
 
             # EXECUTION LOOP
             # We allow up to 3 tool round-trips
-            final_answer = ""
 
             # Initial Call
             response = await llm_with_tools.ainvoke(messages)
@@ -894,7 +917,8 @@ Your answer:"""
                             latency = int((time.time() - start_time) * 1000)
 
                             trace.tool_call(
-                                ToolType.CALCULATOR,  # We classify all as CALCULATOR for now, or trace specialized types
+                                ToolType.CALCULATOR,  # Classify as CALCULATOR for now,
+                                # or trace specialized types
                                 tool_name,
                                 latency,
                                 f"Executed {tool_name} successfully",

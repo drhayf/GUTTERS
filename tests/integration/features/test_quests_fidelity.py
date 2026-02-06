@@ -1,18 +1,16 @@
-import pytest
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from datetime import datetime
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.app.models.push import PushSubscription
 from src.app.modules.features.quests.manager import QuestManager
-from src.app.modules.features.quests.models import RecurrenceType, QuestStatus, Quest, QuestSource
+from src.app.modules.features.quests.models import Quest, QuestSource, RecurrenceType
+from src.app.modules.infrastructure.push.service import notification_service
 from src.app.modules.intelligence.tools.library.quests import (
     get_create_quest_tool,
-    get_list_quests_tool,
-    get_complete_quest_tool,
 )
-from src.app.modules.infrastructure.push.service import notification_service
-from src.app.models.push import PushSubscription
 
 # Fixtures are assumed from conftest.py (db, test_user)
 

@@ -4,25 +4,26 @@ Component generator for Generative UI.
 AI-powered component generation based on conversation context.
 """
 
-from typing import Optional, List, Any
-from langchain_core.messages import SystemMessage, HumanMessage
 import json
-import uuid
 import logging
-from datetime import datetime, timezone as dt_timezone
+import uuid
+from typing import List, Optional
+
+from langchain_core.messages import HumanMessage, SystemMessage
 
 from src.app.core.llm.config import get_premium_llm
+
 from .models import (
+    ChecklistItem,
     ComponentSpec,
     ComponentType,
     HypothesisProbeSpec,
     MoodSliderSpec,
     MultiSliderSpec,
-    VoteComponentSpec,
     PatternConfirmationSpec,
-    ChecklistItem,
-    VoteOption,
     SliderConfig,
+    VoteComponentSpec,
+    VoteOption,
 )
 
 logger = logging.getLogger(__name__)

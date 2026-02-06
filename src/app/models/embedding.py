@@ -4,13 +4,13 @@ Embedding model for vector search.
 Stores semantic embeddings of all user content with JSONB metadata.
 """
 
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, Integer, Text, ForeignKey, Index, DateTime, text
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import relationship, Mapped, mapped_column
 from pgvector.sqlalchemy import Vector
+from sqlalchemy import DateTime, ForeignKey, Index, Integer, Text
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.app.core.db.database import Base
 

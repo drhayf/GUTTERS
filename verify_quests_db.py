@@ -6,10 +6,10 @@ Diagnostic script to check quest data in the database.
 import asyncio
 import os
 import sys
-from datetime import datetime, UTC
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
+
 from sqlalchemy import select, text
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
 
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))

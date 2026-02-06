@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Sparkles, Check, BookOpen, Loader2 } from 'lucide-react'
 import { useMutation } from '@tanstack/react-query'
@@ -19,6 +19,7 @@ interface OracleReading {
     }
     synthesis: string
     diagnostic_question: string
+    entropy_source: 'QUANTUM' | 'LOCAL_CHAOS'
     accepted: boolean
     reflected: boolean
     created_at: string
@@ -124,6 +125,43 @@ export default function OraclePage() {
         return suit === 'Hearts' || suit === 'Diamonds' ? 'text-red-500' : 'text-gray-900 dark:text-white'
     }
 
+    // Quantum phase text component
+    const QuantumPhaseText = () => {
+        const [phase, setPhase] = useState(0)
+        const phases = [
+            'Connecting to Quantum Field...',
+            'Sampling Vacuum Fluctuations...',
+            'Collapsing Wavefunction...',
+            'Entangling Symbols...',
+            'Decohering Pattern...',
+        ]
+
+        useEffect(() => {
+            const timer = setInterval(() => {
+                setPhase(p => (p + 1) % phases.length)
+            }, 1800)
+            return () => clearInterval(timer)
+        }, [])
+
+        return (
+            <div className="text-center space-y-2">
+                <motion.p
+                    key={phase}
+                    initial={{ opacity: 0, y: 8, filter: 'blur(4px)' }}
+                    animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                    exit={{ opacity: 0, y: -8, filter: 'blur(4px)' }}
+                    transition={{ duration: 0.4 }}
+                    className="text-xl font-medium bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent"
+                >
+                    {phases[phase]}
+                </motion.p>
+                <p className="text-xs font-mono text-gray-500 dark:text-gray-500 tracking-widest">
+                    ANU QRNG // PHOTONIC ENTROPY
+                </p>
+            </div>
+        )
+    }
+
     return (
         <div className="min-h-screen w-full overflow-y-auto bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-purple-950 dark:to-indigo-950">
             <div className="max-w-6xl mx-auto px-4 py-12 space-y-12">
@@ -183,15 +221,56 @@ export default function OraclePage() {
                             animate={{ opacity: 1 }}
                             className="flex flex-col items-center gap-6"
                         >
-                            <motion.div
-                                animate={{ rotate: 360 }}
-                                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                            >
-                                <Loader2 className="w-16 h-16 text-purple-600" />
-                            </motion.div>
-                            <p className="text-xl text-purple-600 dark:text-purple-400 font-medium">
-                                Shuffling the cosmic deck...
-                            </p>
+                            {/* Quantum static / glitch overlay */}
+                            <div className="relative w-24 h-24">
+                                {/* Pulsing quantum field ring */}
+                                <motion.div
+                                    className="absolute inset-0 rounded-full border-2 border-cyan-400/60"
+                                    animate={{
+                                        scale: [1, 1.5, 1],
+                                        opacity: [0.6, 0, 0.6],
+                                        borderColor: ['rgba(34,211,238,0.6)', 'rgba(168,85,247,0.6)', 'rgba(34,211,238,0.6)']
+                                    }}
+                                    transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                                />
+                                <motion.div
+                                    className="absolute inset-2 rounded-full border border-purple-400/40"
+                                    animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0, 0.4] }}
+                                    transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
+                                />
+                                {/* Glitch core */}
+                                <motion.div
+                                    className="absolute inset-4 rounded-full bg-gradient-to-br from-cyan-500/30 to-purple-600/30 backdrop-blur-sm"
+                                    animate={{
+                                        opacity: [0.3, 0.8, 0.2, 0.9, 0.3],
+                                        scale: [1, 1.05, 0.95, 1.02, 1],
+                                    }}
+                                    transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
+                                />
+                                {/* Static noise dots */}
+                                {Array.from({ length: 12 }).map((_, i) => (
+                                    <motion.div
+                                        key={i}
+                                        className="absolute w-1 h-1 rounded-full bg-cyan-300"
+                                        style={{
+                                            top: `${20 + Math.sin(i * 30 * Math.PI / 180) * 40}%`,
+                                            left: `${50 + Math.cos(i * 30 * Math.PI / 180) * 40}%`,
+                                        }}
+                                        animate={{
+                                            opacity: [0, 1, 0],
+                                            scale: [0, 1.5, 0],
+                                        }}
+                                        transition={{
+                                            duration: 0.3 + Math.random() * 0.5,
+                                            repeat: Infinity,
+                                            delay: Math.random() * 1,
+                                        }}
+                                    />
+                                ))}
+                            </div>
+
+                            {/* Phase text */}
+                            <QuantumPhaseText />
                         </motion.div>
                     )}
 
@@ -267,6 +346,24 @@ export default function OraclePage() {
                                                 <circle cx="200" cy="300" r="90" stroke="currentColor" fill="none" strokeWidth="1" />
                                             </svg>
                                         </div>
+
+                                        {/* Entropy Source Badge */}
+                                        {reading.entropy_source && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: 1.8 }}
+                                                className="absolute bottom-4 right-4"
+                                            >
+                                                <span className={`text-xs font-mono px-2 py-1 rounded-full ${
+                                                    reading.entropy_source === 'QUANTUM'
+                                                        ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                                                        : 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                                                }`}>
+                                                    {reading.entropy_source === 'QUANTUM' ? 'Quantum Seeded' : 'Chaos Seeded'}
+                                                </span>
+                                            </motion.div>
+                                        )}
                                     </div>
                                 </Card>
                             </motion.div>

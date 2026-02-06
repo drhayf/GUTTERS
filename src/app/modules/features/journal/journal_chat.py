@@ -4,17 +4,18 @@ Journal Branch chat handler.
 Focused conversational interface for creating journal entries.
 """
 
-from typing import Dict, Any, Optional
-from sqlalchemy.ext.asyncio import AsyncSession
-from langchain_core.messages import SystemMessage, HumanMessage
 import json
-
-from src.app.modules.features.chat.session_manager import SessionManager
-from src.app.core.llm.config import get_standard_llm, LLMTier
-from src.app.models.user_profile import UserProfile
-from sqlalchemy import select
 import uuid
-from datetime import datetime, timezone as dt_timezone
+from datetime import UTC, datetime
+from typing import Any, Dict, Optional
+
+from langchain_core.messages import HumanMessage, SystemMessage
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.app.core.llm.config import LLMTier, get_standard_llm
+from src.app.models.user_profile import UserProfile
+from src.app.modules.features.chat.session_manager import SessionManager
 
 
 class JournalChatHandler:
@@ -167,7 +168,7 @@ If NOT a journal entry (question, request), set is_entry to false."""
             from src.app.core.state.chronos import get_chronos_manager
             chronos_manager = get_chronos_manager()
             chronos_state = await chronos_manager.get_user_chronos(user_id)
-            
+
             if chronos_state:
                 context_snapshot["magi"] = {
                     "period_card": chronos_state.get("current_card", {}).get("name"),
@@ -189,7 +190,7 @@ If NOT a journal entry (question, request), set is_entry to false."""
         entry_id = str(uuid.uuid4())
         entry = {
             "id": entry_id,
-            "timestamp": datetime.now(dt_timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "text": text,
             "mood_score": structured_data.get("mood_score", 5),
             "energy_score": structured_data.get("energy_score", 5),
@@ -233,7 +234,7 @@ Acknowledge their feelings, be supportive. Don't give advice unless they ask."""
                 [SystemMessage(content="You are a compassionate journaling companion."), HumanMessage(content=prompt)]
             )
             return response.content.strip() if hasattr(response, "content") else str(response).strip()
-        except:
+        except Exception:
             return "Thank you for sharing that. I've recorded it in your journal."
 
     async def _generate_conversational_response(self, message: str) -> str:
@@ -249,7 +250,7 @@ Be helpful and encourage them to share their thoughts."""
                 [SystemMessage(content="You are a helpful journaling assistant."), HumanMessage(content=prompt)]
             )
             return response.content.strip() if hasattr(response, "content") else str(response).strip()
-        except:
+        except Exception:
             return "I'm here to help you journal. What's on your mind?"
 
     async def _trigger_embedding_creation(self, user_id: int, entry_id: str):

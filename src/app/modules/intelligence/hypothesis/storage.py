@@ -5,12 +5,14 @@ Stores hypotheses in UserProfile.data['hypotheses'] and caches in Redis.
 """
 
 from typing import List, Optional
-from sqlalchemy.ext.asyncio import AsyncSession
+
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.attributes import flag_modified
 
-from .models import Hypothesis
 from src.app.models.user_profile import UserProfile
+
+from .models import Hypothesis
 
 
 class HypothesisStorage:

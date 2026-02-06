@@ -58,32 +58,32 @@ IGING_CIRCLE_LIST = [
 GATE_TO_CENTER = {
     # Head Center (3 gates) - Inspiration & Mental Pressure
     64: "Head", 61: "Head", 63: "Head",
-    
+
     # Ajna Center (6 gates) - Mental Awareness & Conceptualization
     47: "Ajna", 24: "Ajna", 4: "Ajna", 17: "Ajna", 43: "Ajna", 11: "Ajna",
-    
+
     # Throat Center (11 gates) - Communication & Manifestation
     62: "Throat", 23: "Throat", 56: "Throat", 35: "Throat", 12: "Throat",
     45: "Throat", 33: "Throat", 8: "Throat", 31: "Throat", 20: "Throat", 16: "Throat",
-    
+
     # G Center (8 gates) - Identity & Direction
     7: "G", 1: "G", 13: "G", 10: "G", 15: "G", 46: "G", 25: "G", 2: "G",
-    
+
     # Heart/Ego Center (4 gates) - Willpower & Ego
     26: "Heart", 51: "Heart", 21: "Heart", 40: "Heart",
-    
+
     # Sacral Center (9 gates) - Life Force & Response
     5: "Sacral", 14: "Sacral", 29: "Sacral", 59: "Sacral", 9: "Sacral",
     3: "Sacral", 42: "Sacral", 27: "Sacral", 34: "Sacral",
-    
+
     # Solar Plexus Center (7 gates) - Emotions & Awareness
     6: "Solar Plexus", 37: "Solar Plexus", 22: "Solar Plexus",
     36: "Solar Plexus", 30: "Solar Plexus", 55: "Solar Plexus", 49: "Solar Plexus",
-    
+
     # Spleen Center (7 gates) - Intuition & Survival
     48: "Spleen", 57: "Spleen", 44: "Spleen", 50: "Spleen",
     28: "Spleen", 32: "Spleen", 18: "Spleen",
-    
+
     # Root Center (9 gates) - Pressure & Adrenal
     38: "Root", 54: "Root", 53: "Root", 60: "Root", 52: "Root",
     19: "Root", 39: "Root", 41: "Root", 58: "Root",
@@ -310,74 +310,330 @@ IC_CROSS_TYPE = {
 # Value: Dict with RAC, JC, LAC cross names
 INCARNATION_CROSS_DB = {
     # Quarter of Initiation (Purpose via Mind)
-    13: {"RAC": "Right Angle Cross of the Sphinx (1)", "JC": "Juxtaposition Cross of Listening", "LAC": "Left Angle Cross of Masks (1)"},
-    49: {"RAC": "Right Angle Cross of Explanation (1)", "JC": "Juxtaposition Cross of Principles", "LAC": "Left Angle Cross of Revolution (1)"},
-    30: {"RAC": "Right Angle Cross of Contagion (1)", "JC": "Juxtaposition Cross of Fates", "LAC": "Left Angle Cross of Industry (1)"},
-    55: {"RAC": "Right Angle Cross of the Sleeping Phoenix (1)", "JC": "Juxtaposition Cross of Moods", "LAC": "Left Angle Cross of Spirit (1)"},
-    37: {"RAC": "Right Angle Cross of Planning (1)", "JC": "Juxtaposition Cross of Bargains", "LAC": "Left Angle Cross of Migration (1)"},
-    63: {"RAC": "Right Angle Cross of Consciousness (1)", "JC": "Juxtaposition Cross of Doubts", "LAC": "Left Angle Cross of Dominion (1)"},
-    22: {"RAC": "Right Angle Cross of Rulership (1)", "JC": "Juxtaposition Cross of Grace", "LAC": "Left Angle Cross of Informing (1)"},
-    36: {"RAC": "Right Angle Cross of Eden (1)", "JC": "Juxtaposition Cross of Crisis", "LAC": "Left Angle Cross of the Plane (1)"},
-    25: {"RAC": "Right Angle Cross of the Vessel of Love (1)", "JC": "Juxtaposition Cross of Innocence", "LAC": "Left Angle Cross of Healing (1)"},
-    17: {"RAC": "Right Angle Cross of Service (1)", "JC": "Juxtaposition Cross of Opinions", "LAC": "Left Angle Cross of Upheaval (1)"},
-    21: {"RAC": "Right Angle Cross of Tension (1)", "JC": "Juxtaposition Cross of Control", "LAC": "Left Angle Cross of Endeavor (1)"},
-    51: {"RAC": "Right Angle Cross of Penetration (1)", "JC": "Juxtaposition Cross of Shock", "LAC": "Left Angle Cross of the Clarion (1)"},
-    42: {"RAC": "Right Angle Cross of the Maya (1)", "JC": "Juxtaposition Cross of Completion", "LAC": "Left Angle Cross of Limitation (1)"},
-    3: {"RAC": "Right Angle Cross of Laws (1)", "JC": "Juxtaposition Cross of Mutation", "LAC": "Left Angle Cross of Wishes (1)"},
-    27: {"RAC": "Right Angle Cross of the Unexpected (1)", "JC": "Juxtaposition Cross of Caring", "LAC": "Left Angle Cross of Alignment (1)"},
-    24: {"RAC": "Right Angle Cross of the Four Ways (1)", "JC": "Juxtaposition Cross of Rationalization", "LAC": "Left Angle Cross of Incarnation (1)"},
-    
+    13: {
+        "RAC": "Right Angle Cross of the Sphinx (1)",
+        "JC": "Juxtaposition Cross of Listening",
+        "LAC": "Left Angle Cross of Masks (1)",
+    },
+    49: {
+        "RAC": "Right Angle Cross of Explanation (1)",
+        "JC": "Juxtaposition Cross of Principles",
+        "LAC": "Left Angle Cross of Revolution (1)",
+    },
+    30: {
+        "RAC": "Right Angle Cross of Contagion (1)",
+        "JC": "Juxtaposition Cross of Fates",
+        "LAC": "Left Angle Cross of Industry (1)",
+    },
+    55: {
+        "RAC": "Right Angle Cross of the Sleeping Phoenix (1)",
+        "JC": "Juxtaposition Cross of Moods",
+        "LAC": "Left Angle Cross of Spirit (1)",
+    },
+    37: {
+        "RAC": "Right Angle Cross of Planning (1)",
+        "JC": "Juxtaposition Cross of Bargains",
+        "LAC": "Left Angle Cross of Migration (1)",
+    },
+    63: {
+        "RAC": "Right Angle Cross of Consciousness (1)",
+        "JC": "Juxtaposition Cross of Doubts",
+        "LAC": "Left Angle Cross of Dominion (1)",
+    },
+    22: {
+        "RAC": "Right Angle Cross of Rulership (1)",
+        "JC": "Juxtaposition Cross of Grace",
+        "LAC": "Left Angle Cross of Informing (1)",
+    },
+    36: {
+        "RAC": "Right Angle Cross of Eden (1)",
+        "JC": "Juxtaposition Cross of Crisis",
+        "LAC": "Left Angle Cross of the Plane (1)",
+    },
+    25: {
+        "RAC": "Right Angle Cross of the Vessel of Love (1)",
+        "JC": "Juxtaposition Cross of Innocence",
+        "LAC": "Left Angle Cross of Healing (1)",
+    },
+    17: {
+        "RAC": "Right Angle Cross of Service (1)",
+        "JC": "Juxtaposition Cross of Opinions",
+        "LAC": "Left Angle Cross of Upheaval (1)",
+    },
+    21: {
+        "RAC": "Right Angle Cross of Tension (1)",
+        "JC": "Juxtaposition Cross of Control",
+        "LAC": "Left Angle Cross of Endeavor (1)",
+    },
+    51: {
+        "RAC": "Right Angle Cross of Penetration (1)",
+        "JC": "Juxtaposition Cross of Shock",
+        "LAC": "Left Angle Cross of the Clarion (1)",
+    },
+    42: {
+        "RAC": "Right Angle Cross of the Maya (1)",
+        "JC": "Juxtaposition Cross of Completion",
+        "LAC": "Left Angle Cross of Limitation (1)",
+    },
+    3: {
+        "RAC": "Right Angle Cross of Laws (1)",
+        "JC": "Juxtaposition Cross of Mutation",
+        "LAC": "Left Angle Cross of Wishes (1)",
+    },
+    27: {
+        "RAC": "Right Angle Cross of the Unexpected (1)",
+        "JC": "Juxtaposition Cross of Caring",
+        "LAC": "Left Angle Cross of Alignment (1)",
+    },
+    24: {
+        "RAC": "Right Angle Cross of the Four Ways (1)",
+        "JC": "Juxtaposition Cross of Rationalization",
+        "LAC": "Left Angle Cross of Incarnation (1)",
+    },
+
     # Quarter of Civilization (Purpose via Form)
-    2: {"RAC": "Right Angle Cross of the Sphinx (2)", "JC": "Juxtaposition Cross of the Driver", "LAC": "Left Angle Cross of Defiance (1)"},
-    23: {"RAC": "Right Angle Cross of Explanation (2)", "JC": "Juxtaposition Cross of Assimilation", "LAC": "Left Angle Cross of Dedication (1)"},
-    8: {"RAC": "Right Angle Cross of Contagion (2)", "JC": "Juxtaposition Cross of Contribution", "LAC": "Left Angle Cross of Uncertainty (1)"},
-    20: {"RAC": "Right Angle Cross of the Sleeping Phoenix (2)", "JC": "Juxtaposition Cross of the Now", "LAC": "Left Angle Cross of Duality (1)"},
-    16: {"RAC": "Right Angle Cross of Planning (2)", "JC": "Juxtaposition Cross of Experimentation", "LAC": "Left Angle Cross of Identification (1)"},
-    35: {"RAC": "Right Angle Cross of Consciousness (2)", "JC": "Juxtaposition Cross of Experience", "LAC": "Left Angle Cross of Separation (1)"},
-    45: {"RAC": "Right Angle Cross of Rulership (2)", "JC": "Juxtaposition Cross of Possession", "LAC": "Left Angle Cross of Confrontation (1)"},
-    12: {"RAC": "Right Angle Cross of Eden (2)", "JC": "Juxtaposition Cross of Articulation", "LAC": "Left Angle Cross of Education (1)"},
-    15: {"RAC": "Right Angle Cross of the Vessel of Love (2)", "JC": "Juxtaposition Cross of Extremes", "LAC": "Left Angle Cross of Prevention (1)"},
-    52: {"RAC": "Right Angle Cross of Service (2)", "JC": "Juxtaposition Cross of Stillness", "LAC": "Left Angle Cross of Demands (1)"},
-    39: {"RAC": "Right Angle Cross of Tension (2)", "JC": "Juxtaposition Cross of Provocation", "LAC": "Left Angle Cross of Individualism (1)"},
-    53: {"RAC": "Right Angle Cross of Penetration (2)", "JC": "Juxtaposition Cross of Beginnings", "LAC": "Left Angle Cross of Cycles (1)"},
-    62: {"RAC": "Right Angle Cross of the Maya (2)", "JC": "Juxtaposition Cross of Detail", "LAC": "Left Angle Cross of Obscuration (1)"},
-    56: {"RAC": "Right Angle Cross of Laws (2)", "JC": "Juxtaposition Cross of Stimulation", "LAC": "Left Angle Cross of Distraction (1)"},
-    31: {"RAC": "Right Angle Cross of the Unexpected (2)", "JC": "Juxtaposition Cross of Influence", "LAC": "Left Angle Cross of the Alpha (1)"},
-    33: {"RAC": "Right Angle Cross of the Four Ways (2)", "JC": "Juxtaposition Cross of Retreat", "LAC": "Left Angle Cross of Refinement (1)"},
-    
+    2: {
+        "RAC": "Right Angle Cross of the Sphinx (2)",
+        "JC": "Juxtaposition Cross of the Driver",
+        "LAC": "Left Angle Cross of Defiance (1)",
+    },
+    23: {
+        "RAC": "Right Angle Cross of Explanation (2)",
+        "JC": "Juxtaposition Cross of Assimilation",
+        "LAC": "Left Angle Cross of Dedication (1)",
+    },
+    8: {
+        "RAC": "Right Angle Cross of Contagion (2)",
+        "JC": "Juxtaposition Cross of Contribution",
+        "LAC": "Left Angle Cross of Uncertainty (1)",
+    },
+    20: {
+        "RAC": "Right Angle Cross of the Sleeping Phoenix (2)",
+        "JC": "Juxtaposition Cross of the Now",
+        "LAC": "Left Angle Cross of Duality (1)",
+    },
+    16: {
+        "RAC": "Right Angle Cross of Planning (2)",
+        "JC": "Juxtaposition Cross of Experimentation",
+        "LAC": "Left Angle Cross of Identification (1)",
+    },
+    35: {
+        "RAC": "Right Angle Cross of Consciousness (2)",
+        "JC": "Juxtaposition Cross of Experience",
+        "LAC": "Left Angle Cross of Separation (1)",
+    },
+    45: {
+        "RAC": "Right Angle Cross of Rulership (2)",
+        "JC": "Juxtaposition Cross of Possession",
+        "LAC": "Left Angle Cross of Confrontation (1)",
+    },
+    12: {
+        "RAC": "Right Angle Cross of Eden (2)",
+        "JC": "Juxtaposition Cross of Articulation",
+        "LAC": "Left Angle Cross of Education (1)",
+    },
+    15: {
+        "RAC": "Right Angle Cross of the Vessel of Love (2)",
+        "JC": "Juxtaposition Cross of Extremes",
+        "LAC": "Left Angle Cross of Prevention (1)",
+    },
+    52: {
+        "RAC": "Right Angle Cross of Service (2)",
+        "JC": "Juxtaposition Cross of Stillness",
+        "LAC": "Left Angle Cross of Demands (1)",
+    },
+    39: {
+        "RAC": "Right Angle Cross of Tension (2)",
+        "JC": "Juxtaposition Cross of Provocation",
+        "LAC": "Left Angle Cross of Individualism (1)",
+    },
+    53: {
+        "RAC": "Right Angle Cross of Penetration (2)",
+        "JC": "Juxtaposition Cross of Beginnings",
+        "LAC": "Left Angle Cross of Cycles (1)",
+    },
+    62: {
+        "RAC": "Right Angle Cross of the Maya (2)",
+        "JC": "Juxtaposition Cross of Detail",
+        "LAC": "Left Angle Cross of Obscuration (1)",
+    },
+    56: {
+        "RAC": "Right Angle Cross of Laws (2)",
+        "JC": "Juxtaposition Cross of Stimulation",
+        "LAC": "Left Angle Cross of Distraction (1)",
+    },
+    31: {
+        "RAC": "Right Angle Cross of the Unexpected (2)",
+        "JC": "Juxtaposition Cross of Influence",
+        "LAC": "Left Angle Cross of the Alpha (1)",
+    },
+    33: {
+        "RAC": "Right Angle Cross of the Four Ways (2)",
+        "JC": "Juxtaposition Cross of Retreat",
+        "LAC": "Left Angle Cross of Refinement (1)",
+    },
+
     # Quarter of Duality (Purpose via Bonding)
-    7: {"RAC": "Right Angle Cross of the Sphinx (3)", "JC": "Juxtaposition Cross of Interaction", "LAC": "Left Angle Cross of Masks (2)"},
-    4: {"RAC": "Right Angle Cross of Explanation (3)", "JC": "Juxtaposition Cross of Formulation", "LAC": "Left Angle Cross of Revolution (2)"},
-    29: {"RAC": "Right Angle Cross of Contagion (3)", "JC": "Juxtaposition Cross of Commitment", "LAC": "Left Angle Cross of Industry (2)"},
-    59: {"RAC": "Right Angle Cross of the Sleeping Phoenix (3)", "JC": "Juxtaposition Cross of Strategy", "LAC": "Left Angle Cross of Spirit (2)"},
-    40: {"RAC": "Right Angle Cross of Planning (3)", "JC": "Juxtaposition Cross of Denial", "LAC": "Left Angle Cross of Migration (2)"},
-    64: {"RAC": "Right Angle Cross of Consciousness (3)", "JC": "Juxtaposition Cross of Confusion", "LAC": "Left Angle Cross of Dominion (2)"},
-    47: {"RAC": "Right Angle Cross of Rulership (3)", "JC": "Juxtaposition Cross of Oppression", "LAC": "Left Angle Cross of Informing (2)"},
-    6: {"RAC": "Right Angle Cross of Eden (3)", "JC": "Juxtaposition Cross of Conflict", "LAC": "Left Angle Cross of the Plane (2)"},
-    46: {"RAC": "Right Angle Cross of the Vessel of Love (3)", "JC": "Juxtaposition Cross of Serendipity", "LAC": "Left Angle Cross of Healing (2)"},
-    18: {"RAC": "Right Angle Cross of Service (3)", "JC": "Juxtaposition Cross of Correction", "LAC": "Left Angle Cross of Upheaval (2)"},
-    48: {"RAC": "Right Angle Cross of Tension (3)", "JC": "Juxtaposition Cross of Depth", "LAC": "Left Angle Cross of Endeavor (2)"},
-    57: {"RAC": "Right Angle Cross of Penetration (3)", "JC": "Juxtaposition Cross of Intuition", "LAC": "Left Angle Cross of the Clarion (2)"},
-    32: {"RAC": "Right Angle Cross of the Maya (3)", "JC": "Juxtaposition Cross of Conservation", "LAC": "Left Angle Cross of Limitation (2)"},
-    50: {"RAC": "Right Angle Cross of Laws (3)", "JC": "Juxtaposition Cross of Values", "LAC": "Left Angle Cross of Wishes (2)"},
-    28: {"RAC": "Right Angle Cross of the Unexpected (3)", "JC": "Juxtaposition Cross of Risks", "LAC": "Left Angle Cross of Alignment (2)"},
-    44: {"RAC": "Right Angle Cross of the Four Ways (3)", "JC": "Juxtaposition Cross of Alertness", "LAC": "Left Angle Cross of Incarnation (2)"},
-    
+    7: {
+        "RAC": "Right Angle Cross of the Sphinx (3)",
+        "JC": "Juxtaposition Cross of Interaction",
+        "LAC": "Left Angle Cross of Masks (2)",
+    },
+    4: {
+        "RAC": "Right Angle Cross of Explanation (3)",
+        "JC": "Juxtaposition Cross of Formulation",
+        "LAC": "Left Angle Cross of Revolution (2)",
+    },
+    29: {
+        "RAC": "Right Angle Cross of Contagion (3)",
+        "JC": "Juxtaposition Cross of Commitment",
+        "LAC": "Left Angle Cross of Industry (2)",
+    },
+    59: {
+        "RAC": "Right Angle Cross of the Sleeping Phoenix (3)",
+        "JC": "Juxtaposition Cross of Strategy",
+        "LAC": "Left Angle Cross of Spirit (2)",
+    },
+    40: {
+        "RAC": "Right Angle Cross of Planning (3)",
+        "JC": "Juxtaposition Cross of Denial",
+        "LAC": "Left Angle Cross of Migration (2)",
+    },
+    64: {
+        "RAC": "Right Angle Cross of Consciousness (3)",
+        "JC": "Juxtaposition Cross of Confusion",
+        "LAC": "Left Angle Cross of Dominion (2)",
+    },
+    47: {
+        "RAC": "Right Angle Cross of Rulership (3)",
+        "JC": "Juxtaposition Cross of Oppression",
+        "LAC": "Left Angle Cross of Informing (2)",
+    },
+    6: {
+        "RAC": "Right Angle Cross of Eden (3)",
+        "JC": "Juxtaposition Cross of Conflict",
+        "LAC": "Left Angle Cross of the Plane (2)",
+    },
+    46: {
+        "RAC": "Right Angle Cross of the Vessel of Love (3)",
+        "JC": "Juxtaposition Cross of Serendipity",
+        "LAC": "Left Angle Cross of Healing (2)",
+    },
+    18: {
+        "RAC": "Right Angle Cross of Service (3)",
+        "JC": "Juxtaposition Cross of Correction",
+        "LAC": "Left Angle Cross of Upheaval (2)",
+    },
+    48: {
+        "RAC": "Right Angle Cross of Tension (3)",
+        "JC": "Juxtaposition Cross of Depth",
+        "LAC": "Left Angle Cross of Endeavor (2)",
+    },
+    57: {
+        "RAC": "Right Angle Cross of Penetration (3)",
+        "JC": "Juxtaposition Cross of Intuition",
+        "LAC": "Left Angle Cross of the Clarion (2)",
+    },
+    32: {
+        "RAC": "Right Angle Cross of the Maya (3)",
+        "JC": "Juxtaposition Cross of Conservation",
+        "LAC": "Left Angle Cross of Limitation (2)",
+    },
+    50: {
+        "RAC": "Right Angle Cross of Laws (3)",
+        "JC": "Juxtaposition Cross of Values",
+        "LAC": "Left Angle Cross of Wishes (2)",
+    },
+    28: {
+        "RAC": "Right Angle Cross of the Unexpected (3)",
+        "JC": "Juxtaposition Cross of Risks",
+        "LAC": "Left Angle Cross of Alignment (2)",
+    },
+    44: {
+        "RAC": "Right Angle Cross of the Four Ways (3)",
+        "JC": "Juxtaposition Cross of Alertness",
+        "LAC": "Left Angle Cross of Incarnation (2)",
+    },
+
     # Quarter of Mutation (Purpose via Transformation)
-    1: {"RAC": "Right Angle Cross of the Sphinx (4)", "JC": "Juxtaposition Cross of Self-Expression", "LAC": "Left Angle Cross of Defiance (2)"},
-    43: {"RAC": "Right Angle Cross of Explanation (4)", "JC": "Juxtaposition Cross of Insight", "LAC": "Left Angle Cross of Dedication (2)"},
-    14: {"RAC": "Right Angle Cross of Contagion (4)", "JC": "Juxtaposition Cross of Empowering", "LAC": "Left Angle Cross of Uncertainty (2)"},
-    34: {"RAC": "Right Angle Cross of the Sleeping Phoenix (4)", "JC": "Juxtaposition Cross of Power", "LAC": "Left Angle Cross of Duality (2)"},
-    9: {"RAC": "Right Angle Cross of Planning (4)", "JC": "Juxtaposition Cross of Focus", "LAC": "Left Angle Cross of Identification (2)"},
-    5: {"RAC": "Right Angle Cross of Consciousness (4)", "JC": "Juxtaposition Cross of Habits", "LAC": "Left Angle Cross of Separation (2)"},
-    26: {"RAC": "Right Angle Cross of Rulership (4)", "JC": "Juxtaposition Cross of the Trickster", "LAC": "Left Angle Cross of Control (2)"},
-    11: {"RAC": "Right Angle Cross of Eden (4)", "JC": "Juxtaposition Cross of Ideas", "LAC": "Left Angle Cross of Education (2)"},
-    10: {"RAC": "Right Angle Cross of the Vessel of Love (4)", "JC": "Juxtaposition Cross of Behavior", "LAC": "Left Angle Cross of Prevention (2)"},
-    58: {"RAC": "Right Angle Cross of Service (4)", "JC": "Juxtaposition Cross of Vitality", "LAC": "Left Angle Cross of Demands (2)"},
-    38: {"RAC": "Right Angle Cross of Tension (4)", "JC": "Juxtaposition Cross of Opposition", "LAC": "Left Angle Cross of Individualism (2)"},
-    54: {"RAC": "Right Angle Cross of Penetration (4)", "JC": "Juxtaposition Cross of Ambition", "LAC": "Left Angle Cross of Cycles (2)"},
-    61: {"RAC": "Right Angle Cross of the Maya (4)", "JC": "Juxtaposition Cross of Thinking", "LAC": "Left Angle Cross of Obscuration (2)"},
-    60: {"RAC": "Right Angle Cross of Laws (4)", "JC": "Juxtaposition Cross of Limitation", "LAC": "Left Angle Cross of Distraction (2)"},
-    41: {"RAC": "Right Angle Cross of the Unexpected (4)", "JC": "Juxtaposition Cross of Fantasy", "LAC": "Left Angle Cross of the Alpha (2)"},
-    19: {"RAC": "Right Angle Cross of the Four Ways (4)", "JC": "Juxtaposition Cross of Need", "LAC": "Left Angle Cross of Refinement (2)"},
+    1: {
+        "RAC": "Right Angle Cross of the Sphinx (4)",
+        "JC": "Juxtaposition Cross of Self-Expression",
+        "LAC": "Left Angle Cross of Defiance (2)",
+    },
+    43: {
+        "RAC": "Right Angle Cross of Explanation (4)",
+        "JC": "Juxtaposition Cross of Insight",
+        "LAC": "Left Angle Cross of Dedication (2)",
+    },
+    14: {
+        "RAC": "Right Angle Cross of Contagion (4)",
+        "JC": "Juxtaposition Cross of Empowering",
+        "LAC": "Left Angle Cross of Uncertainty (2)",
+    },
+    34: {
+        "RAC": "Right Angle Cross of the Sleeping Phoenix (4)",
+        "JC": "Juxtaposition Cross of Power",
+        "LAC": "Left Angle Cross of Duality (2)",
+    },
+    9: {
+        "RAC": "Right Angle Cross of Planning (4)",
+        "JC": "Juxtaposition Cross of Focus",
+        "LAC": "Left Angle Cross of Identification (2)",
+    },
+    5: {
+        "RAC": "Right Angle Cross of Consciousness (4)",
+        "JC": "Juxtaposition Cross of Habits",
+        "LAC": "Left Angle Cross of Separation (2)",
+    },
+    26: {
+        "RAC": "Right Angle Cross of Rulership (4)",
+        "JC": "Juxtaposition Cross of the Trickster",
+        "LAC": "Left Angle Cross of Control (2)",
+    },
+    11: {
+        "RAC": "Right Angle Cross of Eden (4)",
+        "JC": "Juxtaposition Cross of Ideas",
+        "LAC": "Left Angle Cross of Education (2)",
+    },
+    10: {
+        "RAC": "Right Angle Cross of the Vessel of Love (4)",
+        "JC": "Juxtaposition Cross of Behavior",
+        "LAC": "Left Angle Cross of Prevention (2)",
+    },
+    58: {
+        "RAC": "Right Angle Cross of Service (4)",
+        "JC": "Juxtaposition Cross of Vitality",
+        "LAC": "Left Angle Cross of Demands (2)",
+    },
+    38: {
+        "RAC": "Right Angle Cross of Tension (4)",
+        "JC": "Juxtaposition Cross of Opposition",
+        "LAC": "Left Angle Cross of Individualism (2)",
+    },
+    54: {
+        "RAC": "Right Angle Cross of Penetration (4)",
+        "JC": "Juxtaposition Cross of Ambition",
+        "LAC": "Left Angle Cross of Cycles (2)",
+    },
+    61: {
+        "RAC": "Right Angle Cross of the Maya (4)",
+        "JC": "Juxtaposition Cross of Thinking",
+        "LAC": "Left Angle Cross of Obscuration (2)",
+    },
+    60: {
+        "RAC": "Right Angle Cross of Laws (4)",
+        "JC": "Juxtaposition Cross of Limitation",
+        "LAC": "Left Angle Cross of Distraction (2)",
+    },
+    41: {
+        "RAC": "Right Angle Cross of the Unexpected (4)",
+        "JC": "Juxtaposition Cross of Fantasy",
+        "LAC": "Left Angle Cross of the Alpha (2)",
+    },
+    19: {
+        "RAC": "Right Angle Cross of the Four Ways (4)",
+        "JC": "Juxtaposition Cross of Need",
+        "LAC": "Left Angle Cross of Refinement (2)",
+    },
 }

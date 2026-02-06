@@ -4,7 +4,7 @@ Genesis Probe System
 Defines probe types, packets, and the LLM-powered probe generator.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 from uuid import uuid4
@@ -16,16 +16,16 @@ from .hypothesis import Hypothesis
 
 class ProbeType(str, Enum):
     """Types of probes for gathering evidence."""
-    
+
     BINARY_CHOICE = "binary_choice"
     """Two options: 'Which resonates more? [A] or [B]'"""
-    
+
     SLIDER = "slider"
     """Scale response: 'On a scale of 1-10...'"""
-    
+
     REFLECTION = "reflection"
     """Open-ended: 'Tell me more about...'"""
-    
+
     CONFIRMATION = "confirmation"
     """Verify assumption: 'It sounds like you... Is that accurate?'"""
 
@@ -33,10 +33,10 @@ class ProbeType(str, Enum):
 class ProbePacket(BaseModel):
     """
     A generated probe question ready to present to user.
-    
+
     Contains the question, response options (if applicable),
     and mapping of responses to confidence adjustments.
-    
+
     Example:
         ProbePacket(
             hypothesis_id="a1b2c3d4",
@@ -50,7 +50,7 @@ class ProbePacket(BaseModel):
             }
         )
     """
-    
+
     id: str = Field(default_factory=lambda: str(uuid4())[:8])
     hypothesis_id: str = Field(description="Which hypothesis this probes")
     field: str = Field(description="Field being probed (e.g., 'rising_sign')")
@@ -62,7 +62,7 @@ class ProbePacket(BaseModel):
         description="Options for BINARY_CHOICE type"
     )
     strategy_used: str = Field(description="Which refinement strategy generated this")
-    
+
     # Response handling
     confidence_mappings: dict[str, dict[str, float]] | None = Field(
         default=None,
@@ -72,44 +72,44 @@ class ProbePacket(BaseModel):
         default=None,
         description="Hints for analyzing REFLECTION responses"
     )
-    
+
     # Metadata
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc)
+        default_factory=lambda: datetime.now(UTC)
     )
     expires_at: datetime | None = Field(
         default=None,
         description="When this probe expires (optional)"
     )
-    
+
     def get_confidence_delta(
-        self, 
-        response_key: str, 
+        self,
+        response_key: str,
         candidate: str
     ) -> float:
         """
         Get confidence delta for a candidate based on response.
-        
+
         Args:
             response_key: Response index ("0", "1") or value
             candidate: Candidate value to get delta for
-            
+
         Returns:
             Confidence delta (positive = boost, negative = reduce)
         """
         if not self.confidence_mappings:
             return 0.0
-        
+
         response_mapping = self.confidence_mappings.get(response_key, {})
         return response_mapping.get(candidate, 0.0)
 
 
 class ProbeResponse(BaseModel):
     """User's response to a probe."""
-    
+
     probe_id: str = Field(description="ID of the probe being responded to")
     response_type: ProbeType = Field(description="Type of response")
-    
+
     # Response data (one of these will be set based on type)
     selected_option: int | None = Field(
         default=None,
@@ -129,32 +129,32 @@ class ProbeResponse(BaseModel):
         default=None,
         description="True/False for CONFIRMATION"
     )
-    
+
     responded_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc)
+        default_factory=lambda: datetime.now(UTC)
     )
 
 
 class ProbeGenerator:
     """
     Generates conversational probes using LLM.
-    
+
     Uses strategy templates to create natural questions that
     don't feel like interrogations.
     """
-    
+
     # Default model for probe generation
     DEFAULT_MODEL = "anthropic/claude-3-haiku"
-    
+
     def __init__(self, llm=None):
         """
         Initialize probe generator.
-        
+
         Args:
             llm: LangChain LLM instance (optional, will create if not provided)
         """
         self._llm = llm
-    
+
     @property
     def llm(self):
         """Lazy-load LLM."""
@@ -162,7 +162,7 @@ class ProbeGenerator:
             from ....core.ai.llm_factory import get_llm
             self._llm = get_llm(self.DEFAULT_MODEL, temperature=0.7)
         return self._llm
-    
+
     async def generate_probe(
         self,
         hypothesis: Hypothesis,
@@ -172,13 +172,13 @@ class ProbeGenerator:
     ) -> ProbePacket:
         """
         Generate a conversational probe for this hypothesis.
-        
+
         Args:
             hypothesis: The hypothesis to probe
             strategy_name: Which strategy to use
             probe_type: Type of probe to generate
             strategy_prompt: Custom prompt template (optional)
-            
+
         Returns:
             ProbePacket ready to present to user
         """
@@ -186,7 +186,7 @@ class ProbeGenerator:
         prompt = strategy_prompt or self._build_default_prompt(
             hypothesis, strategy_name, probe_type
         )
-        
+
         # Log activity: probe generation started
         trace_id = f"genesis_{hypothesis.user_id}_{hypothesis.id}"
         try:
@@ -206,12 +206,12 @@ class ProbeGenerator:
             )
         except Exception:
             pass
-        
+
         try:
             # Generate with LLM
             response = await self.llm.ainvoke(prompt)
             result = self._parse_llm_response(response.content, probe_type)
-            
+
             probe = ProbePacket(
                 hypothesis_id=hypothesis.id,
                 field=hypothesis.field,
@@ -223,7 +223,7 @@ class ProbeGenerator:
                 confidence_mappings=result.get("mappings"),
                 analysis_hints=result.get("analysis_hints"),
             )
-            
+
             # Log activity: probe generated
             try:
                 from ....core.activity.logger import get_activity_logger
@@ -241,13 +241,13 @@ class ProbeGenerator:
                 )
             except Exception:
                 pass
-            
+
             return probe
-            
-        except Exception as e:
+
+        except Exception:
             # Fallback to simple template if LLM fails
             return self._fallback_probe(hypothesis, strategy_name, probe_type)
-    
+
     def _build_default_prompt(
         self,
         hypothesis: Hypothesis,
@@ -265,7 +265,7 @@ Return JSON: {"question": "...", "analysis_hints": {...}}""",
             ProbeType.CONFIRMATION: """Generate a confirmation question.
 Return JSON: {"question": "...", "mappings": {"yes": {...}, "no": {...}}}""",
         }
-        
+
         return f"""You are helping determine someone's {hypothesis.field} in {hypothesis.module}.
 
 We're testing if their {hypothesis.field} might be {hypothesis.suspected_value}.
@@ -286,15 +286,15 @@ The mappings should show confidence adjustments for each candidate:
 - Negative values or 0 = doesn't support
 
 Generate the probe now:"""
-    
+
     def _parse_llm_response(
-        self, 
-        content: str, 
+        self,
+        content: str,
         probe_type: ProbeType
     ) -> dict:
         """Parse LLM response into probe components."""
         import json
-        
+
         # Try to extract JSON from response
         try:
             # Look for JSON block
@@ -307,9 +307,9 @@ Generate the probe now:"""
                 json_str = content[start:end]
             else:
                 raise ValueError("No JSON found")
-            
+
             return json.loads(json_str)
-            
+
         except Exception:
             # Return minimal structure
             return {
@@ -317,7 +317,7 @@ Generate the probe now:"""
                 "options": None,
                 "mappings": None,
             }
-    
+
     def _fallback_probe(
         self,
         hypothesis: Hypothesis,
@@ -326,19 +326,28 @@ Generate the probe now:"""
     ) -> ProbePacket:
         """Generate fallback probe if LLM fails."""
         fallback_questions = {
-            "morning_routine": "Do you tend to be an early riser who jumps into action, or do you prefer easing into your day?",
-            "energy_pattern": "Do you experience consistent energy throughout the day, or do you have natural peaks and valleys?",
-            "decision_style": "When making important decisions, do you tend to act quickly or do you need time to process?",
+            "morning_routine": (
+                "Do you tend to be an early riser who jumps into action, or do you "
+                "prefer easing into your day?"
+            ),
+            "energy_pattern": (
+                "Do you experience consistent energy throughout the day, or do you "
+                "have natural peaks and valleys?"
+            ),
+            "decision_style": (
+                "When making important decisions, do you tend to act quickly or do "
+                "you need time to process?"
+            ),
             "first_impression": "How do people typically describe their first impression of you?",
         }
-        
+
         return ProbePacket(
             hypothesis_id=hypothesis.id,
             field=hypothesis.field,
             module=hypothesis.module,
             probe_type=probe_type,
             question=fallback_questions.get(
-                strategy_name, 
+                strategy_name,
                 f"Tell me about your typical {strategy_name.replace('_', ' ')}..."
             ),
             options=["Option A", "Option B"] if probe_type == ProbeType.BINARY_CHOICE else None,

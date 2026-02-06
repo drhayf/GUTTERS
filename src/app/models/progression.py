@@ -1,7 +1,9 @@
-from datetime import datetime, UTC
-from sqlalchemy import Integer, ForeignKey, Float, DateTime
+from datetime import UTC, datetime
+
+from sqlalchemy import DateTime, Float, ForeignKey, Integer
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from src.app.core.db.database import Base
 
 

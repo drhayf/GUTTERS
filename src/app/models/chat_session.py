@@ -6,11 +6,12 @@ Chat session models.
 Supports Master Chat + Branch Sessions architecture.
 """
 
-from sqlalchemy import Column, Integer, String, Boolean, Text, ForeignKey, DateTime
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import relationship, Mapped, mapped_column
-from datetime import datetime, timezone as dt_timezone
+from datetime import UTC, datetime
 from enum import Enum
+
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.app.core.db.database import Base
 
@@ -33,10 +34,10 @@ class MessageRole(str, Enum):
     SYSTEM = "system"
 
 
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from src.app.models.user import User
+    pass
 
 
 class ChatSession(Base):
@@ -53,11 +54,11 @@ class ChatSession(Base):
     conversation_name: Mapped[str | None] = mapped_column(String(255), nullable=True, default=None)
     contribute_to_memory: Mapped[bool] = mapped_column(Boolean, default=True)
     meta: Mapped[dict] = mapped_column("metadata", JSONB, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(dt_timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(dt_timezone.utc),
-        onupdate=lambda: datetime.now(dt_timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
     # Relationships
@@ -87,7 +88,7 @@ class ChatMessage(Base):
     content: Mapped[str] = mapped_column(Text, nullable=False)
 
     meta: Mapped[dict] = mapped_column("metadata", JSONB, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(dt_timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
     # Relationships
-    session: Mapped["ChatSession"] = relationship("ChatSession", back_populates="messages", lazy="select")
+    session: Mapped[ChatSession] = relationship("ChatSession", back_populates="messages", lazy="select")

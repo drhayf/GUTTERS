@@ -4,9 +4,9 @@ Tests for multi-tier LLM system.
 Verifies Claude 4.5 integration and model selection.
 """
 
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
-import pytest_asyncio
-from unittest.mock import MagicMock, AsyncMock
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from src.app.core.llm.config import LLMConfig, LLMTier, get_premium_llm, get_standard_llm
@@ -105,9 +105,10 @@ async def test_query_engine_cot_parsing(mocker):
     Test that QueryEngine correctly parses <thinking> tags and logs them to trace.
     MAXIMUM SCRUTINY: verifies reasoning capture and clean output.
     """
+    from langchain_openai import ChatOpenAI
+
     from src.app.modules.intelligence.query.engine import QueryEngine
     from src.app.modules.intelligence.trace.context import TraceContext
-    from langchain_openai import ChatOpenAI
 
     # Mock the LLM response with Chain of Thought
     mock_response = MagicMock()
@@ -124,7 +125,6 @@ async def test_query_engine_cot_parsing(mocker):
 
     # Mock dependencies
     mock_memory = AsyncMock()
-    mock_db = AsyncMock()
     mock_activity_logger = AsyncMock()
 
     # Initialize Engine

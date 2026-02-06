@@ -62,7 +62,7 @@ def parse_model_fields(file_path: Path) -> list[dict[str, Any]]:
     Returns:
         List of field info dicts: {name, has_default, line_number}
     """
-    with open(file_path, "r", encoding="utf-8") as f:
+    with open(file_path, encoding="utf-8") as f:
         tree = ast.parse(f.read(), filename=str(file_path))
 
     fields = []
@@ -139,7 +139,7 @@ def check_required_imports(file_path: Path) -> tuple[bool, list[str]]:
     Returns:
         (all_present, missing_imports)
     """
-    with open(file_path, "r", encoding="utf-8") as f:
+    with open(file_path, encoding="utf-8") as f:
         content = f.read()
 
     missing = []
@@ -223,7 +223,6 @@ def validate_protocol() -> tuple[int, list[str], list[str]]:
     errors = []
 
     try:
-        from app.protocol import events, packet
 
         passed.extend(["events", "packet"])
     except Exception as e:
@@ -260,7 +259,6 @@ def validate_schemas() -> tuple[int, list[str], list[str]]:
     errors = []
 
     try:
-        from app.schemas import profile
 
         passed.append("profile")
     except Exception as e:
@@ -276,7 +274,6 @@ def validate_utils() -> tuple[int, list[str], list[str]]:
     errors = []
 
     try:
-        from app.core.utils import geocoding
 
         passed.append("geocoding")
     except Exception as e:

@@ -10,10 +10,10 @@ Provides three-layer memory architecture:
 """
 from .active_memory import ActiveMemory, get_active_memory
 from .synthesis_orchestrator import (
+    CRITICAL_TRIGGERS,
     SynthesisOrchestrator,
     SynthesisTrigger,
     get_orchestrator,
-    CRITICAL_TRIGGERS,
 )
 
 __all__ = [

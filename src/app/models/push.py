@@ -1,8 +1,10 @@
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, Integer, ForeignKey
-from src.app.core.db.database import Base
-from typing import Optional
 import datetime
+from typing import Optional
+
+from sqlalchemy import ForeignKey, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from src.app.core.db.database import Base
 
 
 class PushSubscription(Base):

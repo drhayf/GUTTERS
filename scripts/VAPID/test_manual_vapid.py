@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Test Manual VAPID Header Generation
 
@@ -23,12 +22,13 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root / "src"))
 
 try:
-    from dotenv import load_dotenv
-    from cryptography.hazmat.primitives import serialization
-    from cryptography.hazmat.backends import default_backend
-    import jwt
-    import time
     import base64
+    import time
+
+    import jwt
+    from cryptography.hazmat.backends import default_backend
+    from cryptography.hazmat.primitives import serialization
+    from dotenv import load_dotenv
 except ImportError as e:
     print(f"❌ Missing dependencies: {e}")
     print("Install with: pip install python-dotenv cryptography pyjwt")
@@ -92,7 +92,7 @@ def main():
     print("-" * 70)
     private_key, public_key, claims_sub = load_vapid_keys()
 
-    print(f"✅ Loaded keys")
+    print("✅ Loaded keys")
     print(f"   Private key length: {len(private_key)} chars")
     print(f"   Public key length: {len(public_key)} chars")
     print(f"   Claims sub: {claims_sub}\n")

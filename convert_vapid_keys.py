@@ -1,12 +1,11 @@
+import base64
+
+from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.serialization import (
-    load_pem_private_key,
     Encoding,
     PublicFormat,
-    PrivateFormat,
-    NoEncryption,
+    load_pem_private_key,
 )
-from cryptography.hazmat.backends import default_backend
-import base64
 
 # Read private key PEM
 with open("private_key.pem", "rb") as f:
@@ -14,7 +13,6 @@ with open("private_key.pem", "rb") as f:
 
 # Extract raw EC private key number (32 bytes for P-256)
 # This is what pywebpush expects - just the raw 32-byte secret
-from cryptography.hazmat.primitives.asymmetric import ec
 
 private_numbers = private_key.private_numbers()
 private_value_bytes = private_numbers.private_value.to_bytes(32, byteorder="big")

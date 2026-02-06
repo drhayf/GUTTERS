@@ -13,10 +13,10 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 class BirthDataInput(BaseModel):
     """
     User-provided birth data for cosmic profile calculation.
-    
+
     Birth time is optional but recommended for accurate calculations.
     Location will be geocoded to get coordinates and timezone.
-    
+
     Example:
         {
             "name": "John Doe",
@@ -26,9 +26,9 @@ class BirthDataInput(BaseModel):
         }
     """
     model_config = ConfigDict(str_strip_whitespace=True)
-    
+
     name: str = Field(
-        min_length=1, 
+        min_length=1,
         max_length=100,
         description="User's full name"
     )
@@ -48,7 +48,7 @@ class BirthDataInput(BaseModel):
         default=None,
         description="IANA timezone (e.g., 'America/New_York'). Auto-detected if not provided."
     )
-    
+
     @field_validator("birth_date")
     @classmethod
     def validate_birth_date(cls, v: date) -> date:
@@ -59,7 +59,7 @@ class BirthDataInput(BaseModel):
         if v.year < 1800:
             raise ValueError("Birth date must be after 1800")
         return v
-    
+
     @field_validator("timezone")
     @classmethod
     def validate_timezone(cls, v: str | None) -> str | None:
@@ -77,7 +77,7 @@ class BirthDataInput(BaseModel):
 class BirthDataComplete(BirthDataInput):
     """
     Complete birth data with geocoded coordinates and timezone.
-    
+
     Used internally after geocoding the user's birth location.
     All fields required for accurate cosmic calculations.
     """
@@ -97,17 +97,17 @@ class BirthDataComplete(BirthDataInput):
     birth_location_formatted: str = Field(
         description="Geocoded address (normalized/formatted)"
     )
-    
+
     @property
     def has_birth_time(self) -> bool:
         """Check if exact birth time is known"""
         return self.birth_time is not None
-    
+
     @property
     def accuracy_level(self) -> str:
         """Determine calculation accuracy level"""
         return "full" if self.has_birth_time else "solar"
-    
+
     @property
     def missing_fields(self) -> list[str]:
         """List fields that affect calculation accuracy"""
@@ -120,46 +120,46 @@ class BirthDataComplete(BirthDataInput):
 class UserProfileRead(BaseModel):
     """
     User cosmic profile read schema.
-    
+
     Contains all calculated module profiles as JSONB fields.
     Each module adds its section during profile calculation.
     """
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: int
     user_id: int
-    
+
     # Module profile data (from JSONB)
     # Each module contributes its own section
     data: dict[str, Any] = Field(
         default_factory=dict,
         description="All module profile data"
     )
-    
+
     created_at: datetime
     updated_at: datetime | None = None
-    
+
     # Convenience accessors for common modules
     @property
     def natal_chart(self) -> dict[str, Any] | None:
         """Get astrology natal chart data."""
         return self.data.get("astrology")
-    
+
     @property
     def human_design(self) -> dict[str, Any] | None:
         """Get Human Design profile data."""
         return self.data.get("human_design")
-    
+
     @property
     def numerology(self) -> dict[str, Any] | None:
         """Get numerology calculations."""
         return self.data.get("numerology")
-    
+
     @property
     def vedic_astrology(self) -> dict[str, Any] | None:
         """Get Vedic astrology data."""
         return self.data.get("vedic_astrology")
-    
+
     @property
     def gene_keys(self) -> dict[str, Any] | None:
         """Get Gene Keys profile."""
@@ -180,7 +180,7 @@ class UserProfileUpdate(BaseModel):
 class BirthDataUpdate(BaseModel):
     """Schema for updating birth data (partial updates allowed)."""
     model_config = ConfigDict(str_strip_whitespace=True)
-    
+
     name: str | None = Field(default=None, min_length=1, max_length=100)
     birth_date: date | None = None
     birth_time: time | None = None

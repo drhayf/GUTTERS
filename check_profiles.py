@@ -4,10 +4,11 @@ import sys
 
 sys.path.append(os.path.join(os.getcwd(), "src"))
 
-from app.core.db.database import local_session, Base
-from app.models.user import User
-from app.models.user_profile import UserProfile
 from sqlalchemy import select
+
+from app.core.db.database import Base, local_session
+from app.models.user_profile import UserProfile
+
 
 async def main():
     print(f"Metadata tables: {Base.metadata.tables.keys()}")

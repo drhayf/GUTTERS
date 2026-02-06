@@ -5,7 +5,6 @@ GUTTERS Setup Script
 This script helps you set up the GUTTERS project for different deployment scenarios.
 """
 
-import os
 import shutil
 import sys
 from pathlib import Path

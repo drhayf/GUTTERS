@@ -1,12 +1,14 @@
-from typing import Annotated, Dict, Any
+from typing import Annotated, Any, Dict
+
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
+from pydantic import BaseModel
 from sqlalchemy import select
-from src.app.core.db.database import async_get_db
-from src.app.models.push import PushSubscription
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.app.api.dependencies import get_current_user
 from src.app.core.config import settings
-from pydantic import BaseModel
+from src.app.core.db.database import async_get_db
+from src.app.models.push import PushSubscription
 
 router = APIRouter(prefix="/push", tags=["push"])
 

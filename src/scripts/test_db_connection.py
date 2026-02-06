@@ -21,14 +21,15 @@ async def test_connection():
     """Test database connection and list tables."""
     try:
         import asyncpg
+
         from app.core.config import settings
-        
+
         print("[*] Testing Database Connection...")
         print("=" * 60)
-        
+
         # Show configuration (hide password)
         password_display = settings.POSTGRES_PASSWORD[:3] + "*" * (len(settings.POSTGRES_PASSWORD) - 3) if settings.POSTGRES_PASSWORD else "NOT SET"
-        
+
         print("Configuration:")
         print(f"  Host: {settings.POSTGRES_SERVER}")
         print(f"  Port: {settings.POSTGRES_PORT}")
@@ -37,10 +38,10 @@ async def test_connection():
         print(f"  Password: {password_display}")
         print(f"  Connection URL: {settings.POSTGRES_ASYNC_PREFIX}{settings.POSTGRES_USER}@{settings.POSTGRES_SERVER}...")
         print("=" * 60)
-        
+
         # Attempt connection
         print("\nAttempting connection...")
-        
+
         conn = await asyncpg.connect(
             host=settings.POSTGRES_SERVER,
             port=settings.POSTGRES_PORT,
@@ -48,20 +49,20 @@ async def test_connection():
             password=settings.POSTGRES_PASSWORD,
             database=settings.POSTGRES_DB
         )
-        
+
         print("[OK] Connected successfully!")
-        
+
         # List tables
         print("\nQuerying tables...")
         tables = await conn.fetch(
             """
-            SELECT tablename 
-            FROM pg_tables 
+            SELECT tablename
+            FROM pg_tables
             WHERE schemaname = 'public'
             ORDER BY tablename
             """
         )
-        
+
         if tables:
             print(f"\nTables found ({len(tables)}):")
             for table in tables:
@@ -70,14 +71,14 @@ async def test_connection():
             print("\n[WARNING] No tables found in database")
             print("Run migrations to create tables:")
             print("  cd src && python -m alembic upgrade head")
-        
+
         await conn.close()
-        
+
         print("\n" + "=" * 60)
         print("[OK] Database connection test passed!")
         print("=" * 60)
         return 0
-        
+
     except ImportError as e:
         print("\n" + "=" * 60)
         print("[FAIL] Missing dependency")
@@ -86,7 +87,7 @@ async def test_connection():
         print("\nInstall required packages:")
         print("  pip install asyncpg")
         return 1
-        
+
     except Exception as e:
         print("\n" + "=" * 60)
         print("[FAIL] Connection failed")

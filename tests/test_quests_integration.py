@@ -10,21 +10,21 @@ No mocks for core logic. Verifies:
 5. Control Room visibility (view=definitions)
 """
 
+
 import pytest
-from datetime import datetime, timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.app.api.v1.quests import QuestRead
 from src.app.modules.features.quests.manager import QuestManager
 from src.app.modules.features.quests.models import (
     Quest,
+    QuestDifficulty,
     QuestLog,
+    QuestSource,
     QuestStatus,
     RecurrenceType,
-    QuestSource,
-    QuestDifficulty,
 )
-from src.app.api.v1.quests import QuestRead, QuestCreate
 
 
 @pytest.mark.asyncio
@@ -285,9 +285,10 @@ async def test_quest_visibility_isolation_by_user(db: AsyncSession, test_user):
     HIGH FIDELITY: Ensures user1's quest doesn't appear in user2's dashboard.
     """
     # Create second user
-    from src.app.models.user import User
-    from src.app.core.security import get_password_hash
     import uuid
+
+    from src.app.core.security import get_password_hash
+    from src.app.models.user import User
 
     unique_id = str(uuid.uuid4())[:8]
     user2 = User(

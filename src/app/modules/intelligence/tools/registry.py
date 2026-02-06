@@ -1,12 +1,11 @@
 import logging
-from typing import List, Optional  # keeping for compatibility if needed, but fixing usage below
+from typing import List  # keeping for compatibility if needed, but fixing usage below
 
 # actually let's just use list as per modern python
-from typing import Optional
 from langchain_core.tools import StructuredTool
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .library import astrology, human_design, numerology, journal, quests
+from .library import astrology, human_design, journal, numerology, quests
 
 logger = logging.getLogger(__name__)
 

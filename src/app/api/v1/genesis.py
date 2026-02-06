@@ -4,13 +4,11 @@ Genesis API Endpoints
 REST API for interacting with the Genesis hypothesis refinement system.
 """
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from ...modules.intelligence.genesis.engine import get_genesis_engine
-from ...modules.intelligence.genesis.hypothesis import Hypothesis
 from ...modules.intelligence.genesis.probes import ProbePacket, ProbeResponse, ProbeType
-
 
 router = APIRouter(prefix="/genesis", tags=["genesis"])
 
@@ -62,7 +60,7 @@ async def get_hypotheses(user_id: int):
     """Get all active hypotheses for a user."""
     engine = get_genesis_engine()
     hypotheses = engine.get_active_hypotheses(user_id)
-    
+
     return [
         HypothesisResponse(
             id=h.id,
@@ -90,16 +88,16 @@ async def get_hypotheses(user_id: int):
 async def get_next_probe(user_id: int, preferred_type: ProbeType | None = None):
     """Get next probe for user."""
     engine = get_genesis_engine()
-    
+
     # Select hypothesis
     hypothesis = await engine.select_next_hypothesis(user_id)
-    
+
     if not hypothesis:
         return None
-    
+
     # Generate probe
     probe = await engine.generate_probe(hypothesis, preferred_type)
-    
+
     return probe
 
 
@@ -112,17 +110,13 @@ async def get_next_probe(user_id: int, preferred_type: ProbeType | None = None):
 async def respond_to_probe(response: ProbeResponse):
     """Submit response to a probe."""
     engine = get_genesis_engine()
-    
+
     # Process response
     updated = await engine.process_response(response.probe_id, response)
-    
+
     if not updated:
         raise HTTPException(status_code=404, detail="Probe not found or no updates made")
-    
-    # Check for confirmations
-    user_id = updated[0].user_id
-    confirmations = await engine.check_confirmations(user_id)
-    
+
     return [
         HypothesisResponse(
             id=h.id,
@@ -151,7 +145,7 @@ async def get_confirmations(user_id: int):
     """Get confirmed fields for a user."""
     engine = get_genesis_engine()
     confirmed = engine.get_confirmed_hypotheses(user_id)
-    
+
     return [
         ConfirmationResponse(
             field=h.field,
@@ -172,21 +166,18 @@ async def get_confirmations(user_id: int):
 async def initialize_hypotheses(user_id: int, session_id: str = "api"):
     """
     Manually initialize hypotheses for a user.
-    
+
     Useful for testing or when events aren't working.
     """
-    from ...modules.intelligence.genesis.registry import UncertaintyRegistry
-    from ...modules.intelligence.genesis.persistence import get_genesis_persistence
-    
+
     engine = get_genesis_engine()
-    persistence = get_genesis_persistence()
-    
+
     # Get current uncertainties from profile
     # This is a simplified version - in production, fetch from DB
-    
+
     # For now, return existing hypotheses
     hypotheses = engine.get_active_hypotheses(user_id)
-    
+
     return [
         HypothesisResponse(
             id=h.id,
@@ -220,7 +211,7 @@ class GenesisConversationRequest(BaseModel):
         description="Probe being responded to."
     )
     response: ProbeResponse | None = Field(
-        default=None, 
+        default=None,
         description="Response to probe. If None with session_id, returns current probe."
     )
     user_id: int = Field(description="User ID")
@@ -255,7 +246,7 @@ class GenesisConversationResponse(BaseModel):
 async def genesis_conversation(request: GenesisConversationRequest):
     """
     Conversational Genesis interface.
-    
+
     Flow:
     1. If no session_id: Start new session, return first probe
     2. If session_id but no response: Return current probe
@@ -263,12 +254,11 @@ async def genesis_conversation(request: GenesisConversationRequest):
     """
     from ...modules.intelligence.genesis.session import (
         get_session_manager,
-        SessionProgress,
     )
-    
+
     engine = get_genesis_engine()
     manager = get_session_manager()
-    
+
     # Get or create session
     if request.session_id:
         session = await manager.get_session(request.session_id)
@@ -277,7 +267,7 @@ async def genesis_conversation(request: GenesisConversationRequest):
         is_new = False
     else:
         session, is_new = await manager.get_or_create_session(request.user_id, engine)
-    
+
     # If session is already complete
     if session.state == "complete":
         summary = await manager._generate_summary(session, engine)
@@ -288,7 +278,7 @@ async def genesis_conversation(request: GenesisConversationRequest):
             summary=summary,
             message="Session already complete."
         )
-    
+
     # Process response if provided
     confirmations = []
     if request.response:
@@ -296,7 +286,7 @@ async def genesis_conversation(request: GenesisConversationRequest):
         confirmations = [
             ConfirmationResponse(**c) for c in result["confirmations"]
         ]
-        
+
         if result["session_complete"]:
             progress = manager.get_progress(session, engine)
             return GenesisConversationResponse(
@@ -308,14 +298,14 @@ async def genesis_conversation(request: GenesisConversationRequest):
                 summary=result["summary"],
                 message="Refinement complete! Your profile has been updated."
             )
-        
+
         next_probe = result["next_probe"]
     else:
         # Get next (or first) probe
         next_probe = await manager.get_next_probe(session, engine)
-    
+
     progress = manager.get_progress(session, engine)
-    
+
     if not next_probe:
         # No more probes available
         session.mark_complete("no_probes_available")
@@ -328,7 +318,7 @@ async def genesis_conversation(request: GenesisConversationRequest):
             progress=SessionProgressResponse(**progress.model_dump()),
             summary=summary,
         )
-    
+
     return GenesisConversationResponse(
         session_id=session.session_id,
         probe=next_probe,
@@ -348,16 +338,16 @@ async def genesis_conversation(request: GenesisConversationRequest):
 async def end_conversation(session_id: str):
     """End a Genesis session and get summary."""
     from ...modules.intelligence.genesis.session import get_session_manager
-    
+
     engine = get_genesis_engine()
     manager = get_session_manager()
-    
+
     session = await manager.get_session(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
-    
+
     result = await manager.complete_session(session, engine, "user_ended")
-    
+
     return GenesisConversationResponse(
         session_id=session_id,
         probe=None,

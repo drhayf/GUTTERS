@@ -14,11 +14,11 @@ This module orchestrates all tracking modules to create a comprehensive
 cosmic fingerprint that can be attached to any user activity.
 """
 
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from typing import Any, Optional
 
-from .solar.tracker import SolarTracker
 from .lunar.tracker import LunarTracker
+from .solar.tracker import SolarTracker
 from .transits.tracker import TransitTracker
 
 
@@ -31,28 +31,28 @@ async def get_cosmic_context(
 ) -> dict[str, Any]:
     """
     Get comprehensive cosmic context for a moment.
-    
+
     Creates a snapshot of all cosmic conditions that can be
     attached to journal entries, used for correlation analysis,
     or displayed to the user.
-    
+
     Args:
         user_id: User ID for natal-relative calculations
         timestamp: Specific moment (defaults to now)
         include_transits: Whether to include planetary transit data
         include_solar: Whether to include solar/geomagnetic data
         include_lunar: Whether to include lunar data
-    
+
     Returns:
         Dictionary with comprehensive cosmic context
     """
     timestamp = timestamp or datetime.now(UTC)
-    
+
     context = {
         "timestamp": timestamp.isoformat(),
         "user_id": user_id,
     }
-    
+
     # Solar conditions (geomagnetic activity)
     if include_solar:
         try:
@@ -70,7 +70,7 @@ async def get_cosmic_context(
             }
         except Exception as e:
             context["solar"] = {"error": str(e), "kp_index": 0}
-    
+
     # Lunar conditions
     if include_lunar:
         try:
@@ -87,7 +87,7 @@ async def get_cosmic_context(
             }
         except Exception as e:
             context["lunar"] = {"error": str(e), "phase_name": "Unknown"}
-    
+
     # Planetary transits
     if include_transits:
         try:
@@ -95,16 +95,16 @@ async def get_cosmic_context(
             transit_result = await transit_tracker.update(user_id)
             comparison = transit_result.get("comparison", {})
             positions = transit_result.get("current_data", {}).get("data", {}).get("positions", {})
-            
+
             # Extract active retrogrades
             retrogrades = [
                 planet for planet, data in positions.items()
                 if data.get("is_retrograde", False)
             ]
-            
+
             # Extract exact aspects
             exact_transits = comparison.get("exact_transits", [])
-            
+
             context["transits"] = {
                 "retrogrades": retrogrades,
                 "retrograde_count": len(retrogrades),
@@ -121,20 +121,20 @@ async def get_cosmic_context(
             }
         except Exception as e:
             context["transits"] = {"error": str(e), "retrogrades": []}
-    
+
     # Generate summary tags for easy filtering
     context["tags"] = _generate_cosmic_tags(context)
-    
+
     # Generate overall cosmic intensity score (0-10)
     context["intensity_score"] = _calculate_cosmic_intensity(context)
-    
+
     return context
 
 
 def _generate_cosmic_tags(context: dict[str, Any]) -> list[str]:
     """Generate searchable tags from cosmic context."""
     tags = []
-    
+
     # Solar tags
     solar = context.get("solar", {})
     if solar.get("geomagnetic_storm"):
@@ -145,7 +145,7 @@ def _generate_cosmic_tags(context: dict[str, Any]) -> list[str]:
         tags.append("bz_south")
     if solar.get("shield_integrity") in ["CRACKED", "CRITICAL FAILURE"]:
         tags.append("shield_compromised")
-    
+
     # Lunar tags
     lunar = context.get("lunar", {})
     if lunar.get("is_voc"):
@@ -156,7 +156,7 @@ def _generate_cosmic_tags(context: dict[str, Any]) -> list[str]:
         tags.append("new_moon")
     if sign := lunar.get("sign"):
         tags.append(f"moon_in_{sign.lower()}")
-    
+
     # Transit tags
     transits = context.get("transits", {})
     if transits.get("retrograde_count", 0) >= 3:
@@ -165,24 +165,24 @@ def _generate_cosmic_tags(context: dict[str, Any]) -> list[str]:
         tags.append("exact_transit_active")
     for planet in transits.get("retrogrades", []):
         tags.append(f"{planet.lower()}_retrograde")
-    
+
     return tags
 
 
 def _calculate_cosmic_intensity(context: dict[str, Any]) -> float:
     """
     Calculate overall cosmic intensity score (0-10).
-    
+
     Higher scores indicate more active/intense cosmic conditions
     that may affect sensitive individuals.
     """
     score = 0.0
-    
+
     # Solar contribution (0-4)
     solar = context.get("solar", {})
     kp = solar.get("kp_index", 0)
     score += min(4.0, kp / 2.25)  # Kp 9 = 4 points
-    
+
     # Lunar contribution (0-3)
     lunar = context.get("lunar", {})
     if lunar.get("is_full_moon") or lunar.get("is_new_moon"):
@@ -192,15 +192,15 @@ def _calculate_cosmic_intensity(context: dict[str, Any]) -> float:
     illumination = lunar.get("illumination", 0.5)
     # Higher illumination = slightly higher intensity
     score += illumination * 1.0
-    
+
     # Transit contribution (0-3)
     transits = context.get("transits", {})
     retrograde_count = transits.get("retrograde_count", 0)
     score += min(1.5, retrograde_count * 0.5)
-    
+
     exact_count = len(transits.get("exact_aspects", []))
     score += min(1.5, exact_count * 0.3)
-    
+
     return round(min(10.0, score), 1)
 
 
@@ -212,28 +212,28 @@ async def get_location_aware_context(
 ) -> dict[str, Any]:
     """
     Get cosmic context with location-specific solar impact.
-    
+
     Extends the standard cosmic context with aurora visibility
     and geomagnetic impact calculations for the user's location.
     """
     # Get base context
     context = await get_cosmic_context(user_id, timestamp)
-    
+
     # Add location-aware solar data
     try:
         solar_tracker = SolarTracker()
         location_data = await solar_tracker.fetch_location_aware(latitude, longitude)
-        
+
         context["location_solar"] = location_data["local_impact"]
         context["aurora"] = location_data["aurora_guidance"]
-        
+
         # Add location-specific tags
         if location_data["local_impact"]["aurora"]["status"] in ["VISIBLE", "POSSIBLE"]:
             context["tags"].append("aurora_possible")
         if location_data["local_impact"]["local_impact"]["severity"] >= 2:
             context["tags"].append("high_local_impact")
-            
+
     except Exception as e:
         context["location_solar"] = {"error": str(e)}
-    
+
     return context

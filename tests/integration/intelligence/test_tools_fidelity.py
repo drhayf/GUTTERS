@@ -1,15 +1,11 @@
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
-import time
-from unittest.mock import MagicMock, AsyncMock
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
+from langchain_core.messages import AIMessage
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.app.modules.intelligence.query.engine import QueryEngine
 from src.app.modules.intelligence.tools.registry import ToolRegistry
-from src.app.modules.intelligence.tools.library.astrology import AstrologyInput
-from src.app.modules.intelligence.tools.library.journal import JournalEntryInput
-from src.app.modules.intelligence.trace.context import TraceContext
-from src.app.core.memory import get_active_memory
 
 
 @pytest.mark.asyncio

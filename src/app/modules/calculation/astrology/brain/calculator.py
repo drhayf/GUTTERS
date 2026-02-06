@@ -13,6 +13,7 @@ This makes the brain:
 
 from datetime import date, time
 from typing import Any
+
 from src.app.modules.calculation.registry import CalculationModuleRegistry
 
 
@@ -170,7 +171,11 @@ def calculate_natal_chart(
                 "rising_probabilities": rising_data["probabilities"],
                 "planet_stability": rising_data["planet_stability"],
                 "aspect_stability": rising_data["aspect_stability"],
-                "note": f"Rising sign is {rising_data['most_likely_sign']} with {rising_data['confidence']:.0%} confidence. Exact birth time needed for houses and precise rising degree.",
+                "note": (
+                    f"Rising sign is {rising_data['most_likely_sign']} with "
+                    f"{rising_data['confidence']:.0%} confidence. Exact birth time "
+                    f"needed for houses and precise rising degree."
+                ),
                 "available_data": ["planets", "aspects", "rising_probability", "planet_stability", "aspect_stability"],
             }
         )
@@ -348,9 +353,9 @@ def _calculate_probabilistic_rising(birth_date: date, latitude: float, longitude
     - Planet stability (sign/house consistency)
     - Aspect stability (which aspects are certain)
     """
-    from kerykeion import AstrologicalSubjectFactory
     from collections import Counter, defaultdict
-    from datetime import time
+
+    from kerykeion import AstrologicalSubjectFactory
 
     rising_counts = Counter()
     planet_signs = defaultdict(Counter)  # planet -> {sign: count}

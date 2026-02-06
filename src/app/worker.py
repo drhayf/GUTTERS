@@ -1,8 +1,9 @@
-import asyncio
 import logging
+
 from arq import run_worker
-from src.app.core.scheduler import WorkerSettings
+
 from src.app.core.db.database import init_db
+from src.app.core.scheduler import WorkerSettings
 
 # Ensure logging is configured
 logging.basicConfig(level=logging.INFO)

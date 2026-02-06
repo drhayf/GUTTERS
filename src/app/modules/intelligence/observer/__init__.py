@@ -1,13 +1,13 @@
-from .module import ObserverModule
-from .observer import Observer
 from .cyclical import (
-    Planet,
-    CyclicalPatternType,
-    PeriodSnapshot,
     CyclicalPattern,
     CyclicalPatternDetector,
     CyclicalPatternStorage,
+    CyclicalPatternType,
+    PeriodSnapshot,
+    Planet,
 )
+from .module import ObserverModule
+from .observer import Observer
 
 __all__ = [
     "ObserverModule",

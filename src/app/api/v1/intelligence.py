@@ -35,7 +35,7 @@ router = APIRouter(prefix="/intelligence", tags=["intelligence"])
 
 class ModelInfo:
     """Model information for API response."""
-    
+
     MODELS = [
         {
             "id": "anthropic/claude-3.5-sonnet",
@@ -62,7 +62,7 @@ class ModelInfo:
 async def get_available_models():
     """
     Get list of available LLM models.
-    
+
     Returns all configured models with metadata for UI display.
     """
     return {
@@ -91,7 +91,7 @@ async def set_preferred_model(
 ):
     """
     Set user's preferred LLM model.
-    
+
     Validates model is in allowed list before saving.
     """
     if model not in ALLOWED_MODELS:
@@ -99,9 +99,9 @@ async def set_preferred_model(
             status_code=400,
             detail=f"Invalid model. Allowed: {ALLOWED_MODELS}"
         )
-    
+
     await update_user_preference(current_user["id"], "llm_model", model, db)
-    
+
     return {"model": model, "status": "updated"}
 
 
@@ -116,7 +116,7 @@ async def get_synthesis(
 ):
     """
     Get existing synthesis for current user.
-    
+
     Returns cached synthesis if available, otherwise None.
     Use POST to trigger new synthesis.
     """
@@ -124,14 +124,14 @@ async def get_synthesis(
         select(UserProfile).where(UserProfile.user_id == current_user["id"])
     )
     profile = result.scalar_one_or_none()
-    
+
     if not profile or not profile.data:
         return None
-    
+
     synthesis_data = profile.data.get("synthesis")
     if not synthesis_data:
         return None
-    
+
     return UnifiedProfile(**synthesis_data)
 
 
@@ -144,14 +144,14 @@ async def trigger_synthesis(
 ):
     """
     Trigger profile synthesis.
-    
+
     Queues synthesis as a background task and returns immediately.
     Uses specified model, user's preferred model, or default.
-    
+
     If force_regenerate is True, regenerates even if synthesis exists.
     """
     user_id = current_user["id"]
-    
+
     # Determine model to use
     request = request or SynthesisRequest()
     if request.model:
@@ -163,14 +163,14 @@ async def trigger_synthesis(
         model = request.model
     else:
         model = await get_user_preferred_model(user_id, db)
-    
+
     # Check if synthesis already exists
     if not request.force_regenerate:
         result = await db.execute(
             select(UserProfile).where(UserProfile.user_id == user_id)
         )
         profile = result.scalar_one_or_none()
-        
+
         if profile and profile.data and profile.data.get("synthesis"):
             return SynthesisResponse(
                 status="exists",
@@ -178,7 +178,7 @@ async def trigger_synthesis(
                 model=model,
                 synthesis=UnifiedProfile(**profile.data["synthesis"])
             )
-    
+
     # Check if there are modules to synthesize
     calculated = await ModuleRegistry.get_calculated_modules_for_user(user_id, db)
     if not calculated:
@@ -186,14 +186,14 @@ async def trigger_synthesis(
             status_code=400,
             detail="No calculated modules found. Submit birth data first."
         )
-    
+
     # Queue synthesis in background
     background_tasks.add_task(
         _run_synthesis_background,
         user_id,
         model,
     )
-    
+
     return SynthesisResponse(
         status="queued",
         message=f"Synthesis queued for {len(calculated)} modules",
@@ -204,12 +204,12 @@ async def trigger_synthesis(
 async def _run_synthesis_background(user_id: int, model: str):
     """
     Background task to run synthesis.
-    
+
     Creates its own database session since this runs after
     the request completes.
     """
     from ...core.db.database import async_session
-    
+
     async with async_session() as db:
         try:
             synthesizer = ProfileSynthesizer(model_id=model)
@@ -232,14 +232,14 @@ async def query_profile(
 ):
     """
     Answer a question about the user's cosmic profile.
-    
+
     Searches across all calculated modules and uses LLM
     to generate a personalized answer.
-    
+
     Optionally specify a model override.
     """
     user_id = current_user["id"]
-    
+
     # Determine model to use
     if request.model:
         if request.model not in ALLOWED_MODELS:
@@ -250,7 +250,7 @@ async def query_profile(
         model = request.model
     else:
         model = await get_user_preferred_model(user_id, db)
-    
+
     # Check if there's any profile data
     calculated = await ModuleRegistry.get_calculated_modules_for_user(user_id, db)
     if not calculated:
@@ -258,11 +258,11 @@ async def query_profile(
             status_code=400,
             detail="No calculated modules found. Submit birth data first."
         )
-    
+
     # Create engine with selected model and answer query
     engine = QueryEngine(model_id=model)
     response = await engine.answer_query(user_id, request.question, db)
-    
+
     return response
 
 
@@ -281,7 +281,7 @@ async def get_calculated_modules(
     calculated = await ModuleRegistry.get_calculated_modules_for_user(
         current_user["id"], db
     )
-    
+
     return {
         "user_id": current_user["id"],
         "calculated_modules": calculated,
@@ -293,11 +293,11 @@ async def get_calculated_modules(
 async def get_registered_modules():
     """
     Get list of all registered modules in the system.
-    
+
     Primarily for debugging and admin purposes.
     """
     modules = ModuleRegistry.get_all_modules()
-    
+
     return {
         "modules": [
             {
@@ -316,9 +316,10 @@ async def get_registered_modules():
 # Hypothesis Endpoints
 # ============================================================================
 
-from pydantic import BaseModel, Field
-from typing import Optional, List
 import logging
+from typing import List, Optional
+
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
@@ -358,27 +359,27 @@ async def list_hypotheses(
 ):
     """
     List all hypotheses for the current user.
-    
+
     Optionally filter by status or minimum confidence.
     """
-    from src.app.modules.intelligence.hypothesis.storage import HypothesisStorage
     from src.app.modules.intelligence.hypothesis.models import HypothesisStatus
-    
+    from src.app.modules.intelligence.hypothesis.storage import HypothesisStorage
+
     storage = HypothesisStorage()
     hypotheses = await storage.get_hypotheses(current_user["id"])
-    
+
     # Apply filters
     if status:
         hypotheses = [h for h in hypotheses if h.status.value == status]
-    
+
     if min_confidence > 0:
         hypotheses = [h for h in hypotheses if h.confidence >= min_confidence]
-    
+
     # Count by status
     confirmed_count = len([h for h in hypotheses if h.status == HypothesisStatus.CONFIRMED])
     testing_count = len([h for h in hypotheses if h.status == HypothesisStatus.TESTING])
     forming_count = len([h for h in hypotheses if h.status == HypothesisStatus.FORMING])
-    
+
     return HypothesisListResponse(
         hypotheses=[h.model_dump(mode="json") for h in hypotheses],
         total=len(hypotheses),
@@ -395,23 +396,23 @@ async def get_hypothesis(
 ):
     """
     Get detailed information about a specific hypothesis.
-    
+
     Includes evidence breakdown and top contributors.
     """
-    from src.app.modules.intelligence.hypothesis.storage import HypothesisStorage
     from src.app.modules.intelligence.hypothesis.confidence import WeightedConfidenceCalculator
-    
+    from src.app.modules.intelligence.hypothesis.storage import HypothesisStorage
+
     storage = HypothesisStorage()
     hypotheses = await storage.get_hypotheses(current_user["id"])
-    
+
     hypothesis = next((h for h in hypotheses if h.id == hypothesis_id), None)
-    
+
     if not hypothesis:
         raise HTTPException(status_code=404, detail="Hypothesis not found")
-    
+
     # Get evidence breakdown
     calculator = WeightedConfidenceCalculator()
-    
+
     evidence_summary = {}
     if hypothesis.confidence_breakdown:
         evidence_summary = hypothesis.confidence_breakdown
@@ -419,10 +420,10 @@ async def get_hypothesis(
         from src.app.modules.intelligence.hypothesis.confidence import EvidenceRecord
         records = [EvidenceRecord(**r) for r in hypothesis.evidence_records]
         evidence_summary = calculator.get_confidence_breakdown(records)
-    
+
     # Get top contributors
     top_contributors = hypothesis.get_top_contributors(limit=5)
-    
+
     return HypothesisDetailResponse(
         hypothesis=hypothesis.model_dump(mode="json"),
         evidence_summary=evidence_summary,
@@ -439,20 +440,19 @@ async def submit_hypothesis_feedback(
 ):
     """
     Submit feedback on a hypothesis.
-    
+
     User feedback is the highest-weighted evidence type:
     - 'confirm': Strongly increases confidence (+1.0 weight)
     - 'reject': Strongly decreases confidence (-1.5 weight)
     - 'partially': Moderate increase (+0.95 weight)
     - 'unsure': Neutral, recorded for context
-    
+
     User feedback can push hypotheses past confirmation threshold (0.85)
     or trigger rejection.
     """
-    from src.app.modules.intelligence.hypothesis.updater import get_hypothesis_updater
-    from src.app.modules.intelligence.hypothesis.storage import HypothesisStorage
     from src.app.core.state.chronos import get_chronos_manager
-    
+    from src.app.modules.intelligence.hypothesis.updater import get_hypothesis_updater
+
     # Validate feedback type
     valid_types = ["confirm", "reject", "partially", "unsure"]
     if feedback.feedback_type not in valid_types:
@@ -460,7 +460,7 @@ async def submit_hypothesis_feedback(
             status_code=400,
             detail=f"Invalid feedback_type. Must be one of: {valid_types}"
         )
-    
+
     # Fetch magi context for the feedback
     magi_context = None
     try:
@@ -474,10 +474,10 @@ async def submit_hypothesis_feedback(
             }
     except Exception as e:
         logger.warning(f"[HypothesisAPI] Failed to fetch magi context: {e}")
-    
+
     # Get updater and process feedback
     updater = get_hypothesis_updater()
-    
+
     updated_hypothesis = await updater.add_user_feedback(
         hypothesis_id=hypothesis_id,
         user_id=current_user["id"],
@@ -486,17 +486,17 @@ async def submit_hypothesis_feedback(
         db=db,
         magi_context=magi_context
     )
-    
+
     if not updated_hypothesis:
         raise HTTPException(status_code=404, detail="Hypothesis not found")
-    
+
     logger.info(
         f"[HypothesisAPI] User {current_user['id']} submitted '{feedback.feedback_type}' "
         f"feedback for hypothesis {hypothesis_id}. "
         f"New confidence: {updated_hypothesis.confidence:.2f}, "
         f"status: {updated_hypothesis.status.value}"
     )
-    
+
     return {
         "status": "feedback_recorded",
         "hypothesis_id": hypothesis_id,
@@ -516,28 +516,27 @@ async def recalculate_hypothesis_confidence(
 ):
     """
     Force recalculation of hypothesis confidence.
-    
+
     Useful after time has passed and recency decay should be applied
     to evidence.
     """
-    from src.app.modules.intelligence.hypothesis.updater import get_hypothesis_updater
     from src.app.modules.intelligence.hypothesis.storage import HypothesisStorage
-    
+    from src.app.modules.intelligence.hypothesis.updater import get_hypothesis_updater
+
     storage = HypothesisStorage()
     hypotheses = await storage.get_hypotheses(current_user["id"])
-    
+
     hypothesis = next((h for h in hypotheses if h.id == hypothesis_id), None)
-    
+
     if not hypothesis:
         raise HTTPException(status_code=404, detail="Hypothesis not found")
-    
+
     updater = get_hypothesis_updater()
-    
+
     # Recalculate using updater's internal method
     updated = await updater._recalculate_confidence(hypothesis, db)
-    
+
     return {
-        "status": "recalculated",
         "hypothesis_id": hypothesis_id,
         "confidence": updated.confidence,
         "status": updated.status.value,
@@ -552,19 +551,19 @@ async def get_hypothesis_confidence_trends(
 ):
     """
     Get confidence history for visualization.
-    
+
     Returns snapshots showing how confidence evolved over time.
     """
     from src.app.modules.intelligence.hypothesis.storage import HypothesisStorage
-    
+
     storage = HypothesisStorage()
     hypotheses = await storage.get_hypotheses(current_user["id"])
-    
+
     hypothesis = next((h for h in hypotheses if h.id == hypothesis_id), None)
-    
+
     if not hypothesis:
         raise HTTPException(status_code=404, detail="Hypothesis not found")
-    
+
     return {
         "hypothesis_id": hypothesis_id,
         "current_confidence": hypothesis.confidence,
@@ -585,15 +584,15 @@ async def get_current_hexagram(
 ):
     """
     Get current I-Ching hexagram (Sun/Earth gates).
-    
+
     Returns the daily cosmic code with gate names, lines, and Gene Key gifts.
     This is the micro-coordinate (~6-day cycle) in the Council of Systems.
     """
     from src.app.modules.intelligence.council import get_council_service
-    
+
     service = get_council_service()
     hexagram = service.get_current_hexagram()
-    
+
     return {
         "status": "success",
         "hexagram": {
@@ -622,23 +621,20 @@ async def get_council_synthesis(
 ):
     """
     Get unified synthesis from the Council of Systems.
-    
+
     Combines:
     - Cardology (macro: 52-day planetary periods)
     - I-Ching (micro: ~6-day gate transits)
-    
+
     Returns cross-system resonance and synthesized guidance.
     """
     from src.app.modules.intelligence.council import get_council_service
-    
+
     service = get_council_service()
-    
-    # Get hexagram
-    hexagram = service.get_current_hexagram()
-    
+
     # Get full council synthesis
     synthesis = service.get_council_synthesis()
-    
+
     return {
         "status": "success",
         "council": {
@@ -667,9 +663,9 @@ async def get_cross_system_resonance(
 ):
     """
     Get the current cross-system resonance level.
-    
+
     Calculates elemental harmony between Cardology and I-Ching systems.
-    
+
     Returns:
     - HARMONIC (0.7+): Strong alignment
     - SUPPORTIVE (0.5-0.7): Complementary energies
@@ -678,11 +674,11 @@ async def get_cross_system_resonance(
     - DISSONANT (<0.1): Tension requiring integration
     """
     from src.app.modules.intelligence.council import get_council_service
-    
+
     service = get_council_service()
     resonance_score, resonance_type = service.get_resonance_level()
     synthesis = service.get_council_synthesis()
-    
+
     return {
         "status": "success",
         "resonance_score": resonance_score,
@@ -701,36 +697,36 @@ async def get_gate_info(
 ):
     """
     Get detailed information about a specific I-Ching gate and optionally a specific line.
-    
+
     Args:
         gate_number: Gate 1-64
         line_number: Optional line 1-6
-        
+
     Returns gate data including HD name, keynote, Gene Key frequencies, and line interpretation if requested.
     """
     from src.app.modules.intelligence.council import get_council_service
-    
+
     if not 1 <= gate_number <= 64:
         raise HTTPException(
             status_code=400,
             detail="Gate number must be between 1 and 64"
         )
-    
+
     if line_number is not None and not 1 <= line_number <= 6:
         raise HTTPException(
             status_code=400,
             detail="Line number must be between 1 and 6"
         )
-    
+
     service = get_council_service()
     gate_info = service.get_gate_info(gate_number, line_number)
-    
+
     if not gate_info:
         raise HTTPException(
             status_code=404,
             detail=f"Gate {gate_number} not found in database"
         )
-    
+
     return {
         "status": "success",
         "gate": gate_info,
@@ -745,35 +741,35 @@ async def get_gate_history(
 ):
     """
     Get user's historical experience during a specific gate.
-    
+
     Analyzes journal entries, mood scores, and patterns from all times
     this gate has been active for the user.
-    
+
     Args:
         gate_number: Gate 1-64
-        
+
     Returns:
         Historical analysis including mood averages, themes, occurrences
     """
     from src.app.modules.intelligence.council import get_council_service
-    
+
     if not 1 <= gate_number <= 64:
         raise HTTPException(
             status_code=400,
             detail="Gate number must be between 1 and 64"
         )
-    
+
     user_id = current_user["id"]
     service = get_council_service()
-    
+
     history = await service.analyze_gate_history(user_id, gate_number, db)
-    
+
     if "error" in history:
         raise HTTPException(
             status_code=400,
             detail=history["error"]
         )
-    
+
     return {
         "status": "success",
         "history": history,
@@ -787,29 +783,29 @@ async def get_contextual_synthesis(
 ):
     """
     Get Council synthesis with personalized context-aware guidance.
-    
+
     This endpoint provides enhanced guidance that considers:
     - Your recent journal sentiment
     - Your active quests
     - Your historical experience with the current gate
     - Current resonance type
-    
+
     Returns:
         Synthesis with context-aware guidance
     """
     from src.app.modules.intelligence.council import get_council_service
-    
+
     user_id = current_user["id"]
     service = get_council_service()
-    
+
     # Get base synthesis
     synthesis = service.get_council_synthesis()
-    
+
     # Generate context-aware guidance
     contextual_guidance = await service.generate_context_aware_guidance(
         user_id, synthesis, db
     )
-    
+
     return {
         "status": "success",
         "synthesis": {
@@ -837,30 +833,30 @@ async def perform_oracle_draw(
 ):
     """
     Perform a cryptographically secure Oracle draw.
-    
+
     Randomly selects a Card (1-52) and Hexagram (1-64) using crypto.getRandomValues,
     then generates a synthesis via the Council of Systems and creates a diagnostic
     question using LLM.
-    
+
     Returns:
         OracleReading with full synthesis and diagnostic question
     """
+
     from src.app.modules.intelligence.oracle import OracleService
-    from datetime import datetime, UTC
-    
+
     user_id = current_user["id"]
-    
+
     # Get user's birth date for personalized context
     result = await db.execute(
         select(UserProfile).where(UserProfile.user_id == user_id)
     )
     profile = result.scalar_one_or_none()
     birth_date = profile.birth_date if profile else None
-    
+
     # Perform draw
     service = OracleService()
     reading = await service.perform_daily_draw(user_id, db, birth_date)
-    
+
     return {
         "status": "success",
         "reading": {
@@ -876,6 +872,7 @@ async def perform_oracle_draw(
             },
             "synthesis": reading.synthesis_text,
             "diagnostic_question": reading.diagnostic_question,
+            "entropy_source": reading.entropy_source,
             "accepted": reading.accepted,
             "reflected": reading.reflected,
             "created_at": reading.created_at.isoformat()
@@ -891,26 +888,26 @@ async def accept_oracle_reading(
 ):
     """
     Accept an Oracle reading - creates a Quest.
-    
+
     Quest Spec:
     - Category: MISSION
     - Source: ORACLE
     - Title: "Embodying the [Card Name]"
     - XP: 350 (250 base + 100 Oracle bonus)
-    
+
     Args:
         reading_id: ID of the Oracle reading to accept
-        
+
     Returns:
         Created Quest
     """
     from src.app.modules.intelligence.oracle import OracleService
-    
+
     user_id = current_user["id"]
-    
+
     service = OracleService()
     quest = await service.accept_reading(reading_id, user_id, db)
-    
+
     return {
         "status": "success",
         "message": "Quest created from Oracle reading",
@@ -933,22 +930,22 @@ async def reflect_on_oracle_reading(
 ):
     """
     Open journal reflection on Oracle reading.
-    
+
     Creates a ReflectionPrompt with the diagnostic question.
-    
+
     Args:
         reading_id: ID of the Oracle reading to reflect on
-        
+
     Returns:
         Created ReflectionPrompt
     """
     from src.app.modules.intelligence.oracle import OracleService
-    
+
     user_id = current_user["id"]
-    
+
     service = OracleService()
     prompt = await service.reflect_on_reading(reading_id, user_id, db)
-    
+
     return {
         "status": "success",
         "message": "Reflection prompt created",
@@ -969,26 +966,26 @@ async def get_oracle_reading(
 ):
     """
     Get a specific Oracle reading by ID.
-    
+
     Args:
         reading_id: ID of the reading
-        
+
     Returns:
         Oracle reading details
     """
     from src.app.modules.intelligence.oracle import OracleService
-    
+
     user_id = current_user["id"]
-    
+
     service = OracleService()
     reading = await service.get_reading(reading_id, user_id, db)
-    
+
     if not reading:
         raise HTTPException(
             status_code=404,
             detail="Oracle reading not found"
         )
-    
+
     return {
         "status": "success",
         "reading": {
@@ -1021,20 +1018,20 @@ async def get_user_oracle_readings(
 ):
     """
     Get user's recent Oracle readings.
-    
+
     Args:
         limit: Number of recent readings to return (default 10)
-        
+
     Returns:
         List of Oracle readings
     """
     from src.app.modules.intelligence.oracle import OracleService
-    
+
     user_id = current_user["id"]
-    
+
     service = OracleService()
     readings = await service.get_user_readings(user_id, db, limit)
-    
+
     return {
         "status": "success",
         "count": len(readings),

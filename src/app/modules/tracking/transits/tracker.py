@@ -1,9 +1,9 @@
 # src/app/modules/tracking/transits/tracker.py
 
+from datetime import UTC, datetime
+from typing import List, Optional
+
 import swisseph as swe
-from datetime import datetime, UTC
-from typing import Optional, List, Dict
-import math
 
 from ..base import BaseTrackingModule, TrackingData
 

@@ -5,8 +5,9 @@ Uses different Claude 4.5 models based on task complexity.
 """
 
 from enum import Enum
-from typing import Optional
+
 from langchain_openai import ChatOpenAI
+
 from src.app.core.config import settings
 
 
@@ -76,6 +77,7 @@ class LLMConfig:
     async def initialize_from_db(cls):
         """Load model configurations from system_configuration table."""
         from sqlalchemy import select
+
         from src.app.core.db.database import local_session
         from src.app.models.system_configuration import SystemConfiguration
 

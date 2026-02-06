@@ -1,7 +1,10 @@
 
 import asyncio
+
 from sqlalchemy import text
+
 from src.app.core.db.database import async_engine
+
 
 async def check_pgvector():
     try:

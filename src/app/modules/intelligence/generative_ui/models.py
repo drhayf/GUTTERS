@@ -5,11 +5,12 @@ Defines specifications for interactive components that can be
 streamed to the frontend during conversations.
 """
 
-from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any, Literal
-from enum import Enum
-from datetime import datetime, timezone as dt_timezone
 import uuid
+from datetime import UTC, datetime
+from enum import Enum
+from typing import Dict, List, Optional
+
+from pydantic import BaseModel, Field
 
 
 class ComponentType(str, Enum):
@@ -145,7 +146,7 @@ class ComponentSpec(BaseModel):
 
     # Metadata
     context_message: Optional[str] = None  # Message before component
-    created_at: datetime = Field(default_factory=lambda: datetime.now(dt_timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class ComponentResponse(BaseModel):
@@ -168,4 +169,4 @@ class ComponentResponse(BaseModel):
 
     # Metadata
     interaction_time_ms: Optional[int] = None  # How long user took
-    submitted_at: datetime = Field(default_factory=lambda: datetime.now(dt_timezone.utc))
+    submitted_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

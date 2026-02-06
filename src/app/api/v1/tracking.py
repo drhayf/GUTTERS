@@ -1,7 +1,8 @@
 # src/app/api/v1/tracking.py
 
-from fastapi import APIRouter, Depends, HTTPException
 from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException
 
 from ...api.dependencies import get_current_user
 from ...models.user import User
@@ -30,18 +31,18 @@ async def get_solar_location_aware(
 ):
     """
     Get location-aware solar weather impact.
-    
+
     Provides personalized solar weather information including:
     - Aurora visibility probability at user's location
     - Local impact severity based on geomagnetic latitude
     - Specific effects and recommendations for user's position
-    
+
     If latitude/longitude not provided, falls back to user's birth location.
     """
-    from ...modules.tracking.solar.tracker import SolarTracker
-    from ...core.db.database import async_get_db
-    from ...models.user import User
     from sqlalchemy import select
+
+    from ...core.db.database import async_get_db
+    from ...modules.tracking.solar.tracker import SolarTracker
 
     # Get user's birth location as fallback
     if latitude is None or longitude is None:
@@ -50,10 +51,10 @@ async def get_solar_location_aware(
                 select(User).where(User.id == current_user["id"])
             )
             user = result.scalar_one_or_none()
-            
+
             if not user:
                 raise HTTPException(status_code=404, detail="User not found")
-            
+
             # Use birth coordinates or default to mid-latitudes
             latitude = latitude or user.birth_latitude or 40.0
             longitude = longitude or user.birth_longitude or -74.0
@@ -95,8 +96,8 @@ async def get_transit_tracking(current_user: Annotated[dict, Depends(get_current
 @router.get("/all")
 async def get_all_tracking(current_user: Annotated[dict, Depends(get_current_user)]):
     """Get all tracking data (solar, lunar, transits)."""
-    from ...modules.tracking.solar.tracker import SolarTracker
     from ...modules.tracking.lunar.tracker import LunarTracker
+    from ...modules.tracking.solar.tracker import SolarTracker
     from ...modules.tracking.transits.tracker import TransitTracker
 
     try:
@@ -114,10 +115,12 @@ async def get_telemetry_history(
     condition_type: str, hours: int = 24, current_user: Annotated[dict, Depends(get_current_user)] = None
 ):
     """Get historical telemetry data for graphs."""
+    from datetime import UTC, datetime, timedelta
+
+    from sqlalchemy import select
+
     from ...core.db.database import async_get_db
     from ...models.cosmic_conditions import CosmicConditions
-    from sqlalchemy import select
-    from datetime import datetime, timedelta, UTC
 
     if condition_type not in ["solar", "lunar", "planetary"]:
         raise HTTPException(status_code=400, detail="Invalid condition type")
@@ -143,19 +146,20 @@ async def get_upcoming_events(
 ):
     """
     Get upcoming cosmic events for the specified time window.
-    
+
     Calculates upcoming:
     - Void of Course Moon periods
     - Lunar phases (New/Full Moon)
     - Planetary ingresses (sign changes)
     - Retrograde stations
     - Exact transits to natal chart
-    
+
     Returns events sorted by date with countdown timers.
     """
-    from datetime import datetime, timedelta, UTC
+    from datetime import UTC, datetime
+
     from ...modules.tracking.upcoming import calculate_upcoming_events
-    
+
     try:
         user_id = current_user["id"]
         events = await calculate_upcoming_events(user_id, days=days)

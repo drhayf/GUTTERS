@@ -24,9 +24,10 @@ Three-Layer Memory Architecture:
 """
 
 from __future__ import annotations
+
+import datetime as dt
 import json
 import logging
-import datetime as dt
 from typing import Any, Type, TypeVar
 
 import redis.asyncio as redis
@@ -246,7 +247,7 @@ class ActiveMemory:
         # Check if stale (>24h old)
         try:
             generated_at = dt.datetime.fromisoformat(data["generated_at"])
-            age = dt.datetime.now(dt.timezone.utc) - generated_at
+            age = dt.datetime.now(dt.UTC) - generated_at
 
             if age > dt.timedelta(hours=24):
                 data["validity"] = "stale"
@@ -290,7 +291,7 @@ class ActiveMemory:
         data = {
             "synthesis": synthesis,
             "themes": themes,
-            "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+            "generated_at": dt.datetime.now(dt.UTC).isoformat(),
             "modules_included": modules_included,
             "count_confirmed_theories": count_confirmed_theories,
             "validity": "valid",
@@ -333,6 +334,7 @@ class ActiveMemory:
         # Fall back to database (cold storage)
         try:
             from sqlalchemy import select
+
             from ...core.db.database import async_get_db
             from ...models.user_profile import UserProfile
 
@@ -399,7 +401,7 @@ class ActiveMemory:
         if not self.redis_client:
             raise RuntimeError("ActiveMemory not initialized. Call initialize() first.")
 
-        entry = {"prompt": prompt, "response": response, "timestamp": dt.datetime.now(dt.timezone.utc).isoformat()}
+        entry = {"prompt": prompt, "response": response, "timestamp": dt.datetime.now(dt.UTC).isoformat()}
 
         # 1. Add to Redis (hot memory, keep last 10)
         key = f"memory:hot:history:{user_id}"
@@ -414,7 +416,7 @@ class ActiveMemory:
         """Persist conversation entry to PostgreSQL (cold storage)."""
         try:
             from sqlalchemy import select
-            from sqlalchemy.orm import make_transient
+
             from ...core.db.database import local_session
             from ...models.user_profile import UserProfile
 
@@ -516,6 +518,7 @@ class ActiveMemory:
         # Try PostgreSQL (cold storage)
         try:
             from sqlalchemy import select
+
             from ...core.db.database import async_get_db
             from ...models.user_profile import UserProfile
 
@@ -565,6 +568,7 @@ class ActiveMemory:
         # 2. Persist to PostgreSQL
         try:
             from sqlalchemy import select
+
             from ...core.db.database import local_session
             from ...models.user_profile import UserProfile
 
@@ -641,7 +645,7 @@ class ActiveMemory:
             "modules": modules,
             "history": history,
             "preferences": preferences,
-            "assembled_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+            "assembled_at": dt.datetime.now(dt.UTC).isoformat(),
         }
 
     # =========================================================================

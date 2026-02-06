@@ -1,11 +1,12 @@
-import pytest
-from httpx import AsyncClient, ASGITransport
-from sqlalchemy.ext.asyncio import AsyncSession
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 
-from src.app.main import app
+import pytest
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.app.api.dependencies import get_current_user
-from src.app.models.insight import ReflectionPrompt, PromptStatus
+from src.app.main import app
+from src.app.models.insight import PromptStatus, ReflectionPrompt
 from src.app.models.user import User
 
 
@@ -79,7 +80,7 @@ async def test_phase17_journal_fidelity(
         assert entry_data["content"] == payload["content"]
         assert entry_data["context_snapshot"]["moon_phase"] == "Full Moon"
 
-        print(f"[PASS] POST /api/v1/insights/journal succeeded with Context Snapshot.")
+        print("[PASS] POST /api/v1/insights/journal succeeded with Context Snapshot.")
 
         # ---------------------------------------------------------
         # 4. VERIFY: Prompt Status Update (Backend Logic)
@@ -103,7 +104,7 @@ async def test_phase17_journal_fidelity(
         assert fetched_entry["context_snapshot"]["geomagnetic_index"] == 7
         assert "moon" in fetched_entry["tags"]
 
-        print(f"[PASS] GET /api/v1/insights/journal returned entry with robust metadata.")
+        print("[PASS] GET /api/v1/insights/journal returned entry with robust metadata.")
 
     # Cleanup dependency override
     app.dependency_overrides = {}

@@ -2,8 +2,8 @@
 Create Oracle Reading table in database.
 """
 import asyncio
-from src.app.core.db.database import async_engine, Base
-from src.app.models import OracleReading  # This will register the model
+
+from src.app.core.db.database import Base, async_engine
 
 
 async def create_tables():
@@ -11,7 +11,7 @@ async def create_tables():
     async with async_engine.begin() as conn:
         # Create only oracle_readings table
         await conn.run_sync(Base.metadata.create_all)
-    
+
     print("✅ Oracle reading table created successfully!")
 
 

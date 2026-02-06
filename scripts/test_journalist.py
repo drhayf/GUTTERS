@@ -1,17 +1,16 @@
 import asyncio
 import logging
-from sqlalchemy import select, text
+
+from sqlalchemy import select
+from sqlalchemy.orm import configure_mappers
+
 from src.app.core.db.database import local_session
-from src.app.modules.features.journal.system_journal import get_system_journalist
-from src.app.protocol.packet import ProgressionPacket
-from src.app.models.insight import JournalEntry
 from src.app.models.chat_session import ChatMessage
+from src.app.models.insight import JournalEntry
 
 # Ensure models are loaded for SQLAlchemy
-from src.app.models.user import User
-from src.app.models.progression import PlayerStats
-
-from sqlalchemy.orm import configure_mappers
+from src.app.modules.features.journal.system_journal import get_system_journalist
+from src.app.protocol.packet import ProgressionPacket
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)

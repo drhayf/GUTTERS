@@ -3,17 +3,18 @@
 Inspect the actual subscription data in the database.
 """
 
+import asyncio
 import os
 import sys
-import asyncio
 
 # Change to src directory
 os.chdir(os.path.join(os.path.dirname(__file__), "..", "src"))
 sys.path.insert(0, os.getcwd())
 
+from sqlalchemy import select
+
 from app.core.db.database import local_session
 from app.models.push import PushSubscription
-from sqlalchemy import select
 
 
 async def main():
@@ -46,13 +47,13 @@ async def main():
 
                 base64.urlsafe_b64decode(sub.p256dh + "==")
                 print("✅ P256dh is valid base64url")
-            except:
+            except Exception:
                 print("❌ P256dh is NOT valid base64url")
 
             try:
                 base64.urlsafe_b64decode(sub.auth + "==")
                 print("✅ Auth is valid base64url")
-            except:
+            except Exception:
                 print(" Auth is NOT valid base64url")
 
         print("\n" + "=" * 60)

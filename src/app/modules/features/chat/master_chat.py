@@ -4,13 +4,15 @@ Master Chat handler.
 Main conversational interface with full context.
 """
 
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .session_manager import SessionManager
+from src.app.core.llm.config import LLMTier, get_premium_llm
 from src.app.models.chat_session import SessionType
 from src.app.modules.intelligence.query.engine import QueryEngine
-from src.app.core.llm.config import get_premium_llm, LLMTier
+
+from .session_manager import SessionManager
 
 
 class MasterChatHandler:
@@ -70,12 +72,6 @@ class MasterChatHandler:
         # Add user message
         await self.session_manager.add_message(session.id, "user", message, {}, db)
 
-        # Get conversation history for context (last 10 messages)
-        # This helps the LLM (and components) understand immediate context
-        history = await self.session_manager.get_session_history(session.id, db=db, limit=10)
-        # Convert to dict format for potentially passing to engine in future if engine supports history
-        history_dicts = [{"role": msg.role, "content": msg.content} for msg in history]
-
         # Configure QueryEngine based on Tier
         # Ideally QueryEngine takes overrides, or we set it here.
         # Check if query_engine has a method to set model, or if we need to pass it to answer_query
@@ -114,8 +110,10 @@ class MasterChatHandler:
         # If the tool 'create_quest' was used, we want to render the Quest Card.
         if not component_data and response.trace and response.trace.tools_used:
             import json
-            from src.app.modules.features.quests.models import Quest
+
             from sqlalchemy import select
+
+            from src.app.modules.features.quests.models import Quest
 
             for tool in response.trace.tools_used:
                 if tool.tool == "create_quest":
@@ -171,7 +169,7 @@ class MasterChatHandler:
                                     },
                                 }
                                 break  # Only show one quest per message for now
-                    except Exception as e:
+                    except Exception:
                         # JSON parse error or DB error, ignore component injection
                         # logger.warning(f"Failed to inject quest component: {e}")
                         pass
@@ -233,8 +231,9 @@ class MasterChatHandler:
 
         # Hydrate components with user responses
         # This ensures the UI knows if a component has been answered
-        from src.app.models.user_profile import UserProfile
         from sqlalchemy import select
+
+        from src.app.models.user_profile import UserProfile
 
         try:
             profile_result = await db.execute(select(UserProfile).where(UserProfile.user_id == user_id))

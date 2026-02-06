@@ -6,6 +6,7 @@ Only accessible to superusers.
 """
 
 from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
@@ -58,6 +59,7 @@ async def update_ai_config(update: ModelUpdateSchema) -> dict[str, Any]:
     Update LLM configuration for a specific tier and persist to database.
     """
     from sqlalchemy import select
+
     from ...core.db.database import local_session
     from ...models.system_configuration import SystemConfiguration
 

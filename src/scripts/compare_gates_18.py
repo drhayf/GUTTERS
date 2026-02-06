@@ -3,8 +3,8 @@
 Compare our planetary gate calculations with Jovian for 18:00
 """
 import sys
-from pathlib import Path
 from datetime import date, time
+from pathlib import Path
 
 src_path = Path(__file__).parent.parent
 sys.path.insert(0, str(src_path))
@@ -37,8 +37,10 @@ print("\n" + "=" * 80)
 print("KEY GATES TO VERIFY:")
 print("=" * 80)
 print("\nChannel 59-6 (Mating):")
-print(f"  Gate 59 (Sacral): Personality Venus = Gate {[g for g in chart.personality_gates if g.planet == 'Venus'][0].gate}")
-print(f"  Gate 6 (Solar Plexus): Design Moon = Gate {[g for g in chart.design_gates if g.planet == 'Moon'][0].gate}")
+personality_gate_59 = [g for g in chart.personality_gates if g.planet == 'Venus'][0].gate
+design_gate_6 = [g for g in chart.design_gates if g.planet == 'Moon'][0].gate
+print(f"  Gate 59 (Sacral): Personality Venus = Gate {personality_gate_59}")
+print(f"  Gate 6 (Solar Plexus): Design Moon = Gate {design_gate_6}")
 
 print("\nIf Jovian shows Projector, then either:")
 print("  1. Venus is NOT in Gate 59, OR")

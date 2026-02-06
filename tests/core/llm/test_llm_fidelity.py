@@ -5,9 +5,11 @@ Iterates through ALL configured models and testing variations to ensure
 robust Chain of Thought parsing and consistent behavior under "maximum scrutiny".
 """
 
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock
 from langchain_core.messages import AIMessage
+
 from src.app.core.llm.config import LLMConfig, LLMTier
 from src.app.modules.intelligence.query.engine import QueryEngine
 from src.app.modules.intelligence.trace.context import TraceContext

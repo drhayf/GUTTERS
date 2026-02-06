@@ -3,9 +3,9 @@ Tests for multi-conversation Master Chat.
 """
 
 import pytest
-import pytest
 import pytest_asyncio
 from sqlalchemy import delete
+
 from src.app.models.chat_session import ChatSession, SessionType
 
 

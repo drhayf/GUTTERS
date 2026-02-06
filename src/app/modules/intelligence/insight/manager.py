@@ -1,19 +1,20 @@
-import logging
 import json
-from datetime import datetime, timedelta, UTC
-from typing import List, Optional, Dict, Any
+import logging
+from datetime import UTC, datetime, timedelta
+from typing import Any, Dict, List, Optional
 
-from sqlalchemy import select, and_
+from langchain_core.messages import HumanMessage, SystemMessage
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from langchain_core.messages import SystemMessage, HumanMessage
 
 from src.app.core.llm.config import get_premium_llm
-from src.app.models.insight import ReflectionPrompt, PromptStatus, PromptPhase
-from src.app.modules.intelligence.observer.storage import ObserverFindingStorage
-from src.app.modules.infrastructure.push.service import NotificationService
-from .schemas import TriggerContext, ReflectionPromptCreate
+from src.app.models.insight import PromptPhase, PromptStatus, ReflectionPrompt
 from src.app.modules.features.quests.manager import QuestManager
 from src.app.modules.features.quests.models import QuestCategory, QuestDifficulty, QuestSource
+from src.app.modules.infrastructure.push.service import NotificationService
+from src.app.modules.intelligence.observer.storage import ObserverFindingStorage
+
+from .schemas import TriggerContext
 
 logger = logging.getLogger(__name__)
 
@@ -209,12 +210,12 @@ class InsightManager:
         Insight Data:
         - Pattern: {finding.get("finding")}
         - Cosmic Event: {trigger.metric} = {trigger.value}
-        
+
         Requirements:
         1. Title: Short, gamified (e.g. "Preparation for the Geomagnetic Storm").
         2. Description: 1-2 sentences of instruction.
         3. Difficulty: easy, medium, hard, or elite.
-        
+
         Return JSON format: {{"title": "...", "description": "...", "difficulty": "..."}}
         """
 
@@ -261,7 +262,7 @@ class InsightManager:
         - Event Phase: {phase.value.upper()}
         - Trigger: {trigger.metric} = {trigger.value}
         - User Pattern Evidence: {finding.get("finding")} (Confidence: {finding.get("confidence", 0):.2f})
-        
+
         Instructions:
         1. Reference the pattern evidence implicitly or explicitly (e.g. "You often report...", "History shows...").
         2. Tailor to the phase:
@@ -280,7 +281,6 @@ class InsightManager:
 
     async def cleanup_expired_prompts(self, db: AsyncSession):
         """Dismiss expired prompts."""
-        now = datetime.now(UTC)
         # Assuming we can execute update logic
         # SQLA bulk update ...
         pass  # Placeholder for now, typically run via cron
@@ -290,12 +290,12 @@ class InsightManager:
     ) -> None:
         """
         Generate a reflection prompt when user transitions to a new 52-day planetary period.
-        
+
         Uses LLM to create personalized transition guidance based on:
         - The planet/card they're leaving
         - The planet/card they're entering
         - Their historical patterns during similar periods
-        
+
         Args:
             user_id: User transitioning periods
             payload: Event data with old_planet, new_planet, old_card, new_card
@@ -305,12 +305,12 @@ class InsightManager:
         new_planet = payload.get("new_planet", "Unknown")
         old_card = payload.get("old_card", "Unknown")
         new_card = payload.get("new_card", "Unknown")
-        
+
         logger.info(
             f"[InsightManager] Generating period transition prompt for user {user_id}: "
             f"{old_planet} → {new_planet}"
         )
-        
+
         # Planetary energy descriptions for LLM context
         planetary_themes = {
             "Mercury": "communication, learning, quick thinking, adaptability",
@@ -324,10 +324,10 @@ class InsightManager:
             "Pluto": "transformation, power, rebirth, shadow work, regeneration",
             "Result": "culmination, outcomes, harvest of efforts, completion"
         }
-        
+
         old_theme = planetary_themes.get(old_planet, "transition energy")
         new_theme = planetary_themes.get(new_planet, "new energy")
-        
+
         system_prompt = (
             "You are a wise cosmic guide helping someone transition between planetary periods. "
             "Generate a warm, insightful reflection prompt (2-3 sentences) that:\n"
@@ -336,23 +336,23 @@ class InsightManager:
             "3. Offers a gentle question or intention for the transition\n"
             "Be poetic but grounded. Do not use astrology jargon excessively."
         )
-        
+
         user_msg = f"""
         The user is transitioning planetary periods in their personal year cycle.
-        
+
         LEAVING:
         - Planet: {old_planet}
         - Card: {old_card}
         - Theme: {old_theme}
-        
+
         ENTERING:
         - Planet: {new_planet}
-        - Card: {new_card}  
+        - Card: {new_card}
         - Theme: {new_theme}
-        
+
         Generate a reflection prompt that honors this transition.
         """
-        
+
         try:
             response = await self.llm.ainvoke([
                 SystemMessage(content=system_prompt),
@@ -366,7 +366,7 @@ class InsightManager:
                 f"As you leave the energy of {old_planet} behind, "
                 f"what wisdom do you carry forward?"
             )
-        
+
         # Create the prompt record
         try:
             prompt = await self._create_prompt(
@@ -383,7 +383,7 @@ class InsightManager:
                 },
                 priority=8,  # High priority for period transitions
             )
-            
+
             if prompt:
                 logger.info(
                     f"[InsightManager] Created period transition prompt {prompt.id} "
@@ -401,12 +401,12 @@ class InsightManager:
     ) -> None:
         """
         Generate a reflection prompt when cyclical patterns are detected.
-        
+
         Creates personalized prompts based on:
         - The type of pattern (symptom, variance, theme, evolution)
         - The planetary period context
         - Historical observations
-        
+
         Args:
             user_id: User who owns the pattern
             pattern_data: Event payload with pattern details
@@ -419,12 +419,12 @@ class InsightManager:
         confidence = pattern_data.get("confidence", 0)
         description = pattern_data.get("description", "")
         observation_count = pattern_data.get("observation_count", 0)
-        
+
         logger.info(
             f"[InsightManager] Generating {prompt_type} cyclical prompt for user {user_id}: "
             f"{pattern_type} in {period_card}"
         )
-        
+
         # Pattern type descriptions for LLM context
         pattern_descriptions = {
             "period_symptom": "recurring physical or emotional experiences during specific planetary periods",
@@ -432,9 +432,9 @@ class InsightManager:
             "theme_alignment": "alignment between journal themes and planetary guidance",
             "evolution": "long-term changes in experience across multiple years",
         }
-        
+
         pattern_context = pattern_descriptions.get(pattern_type, "cyclical life patterns")
-        
+
         # Different prompts for detected vs confirmed
         if prompt_type == "confirmed":
             system_prompt = (
@@ -453,7 +453,7 @@ class InsightManager:
                 "2. Invites awareness without premature conclusions\n"
                 "Be subtle and non-prescriptive."
             )
-        
+
         user_msg = f"""
         Pattern Analysis:
         - Type: {pattern_type} ({pattern_context})
@@ -461,10 +461,10 @@ class InsightManager:
         - Confidence: {confidence:.0%}
         - Based on: {observation_count} observations
         - Description: {description}
-        
+
         Generate an appropriate reflection prompt.
         """
-        
+
         try:
             response = await self.llm.ainvoke([
                 SystemMessage(content=system_prompt),
@@ -477,10 +477,10 @@ class InsightManager:
                 f"We've noticed a pattern in your {planetary_ruler} periods. "
                 f"How does this resonate with your experience?"
             )
-        
+
         # Create prompt with appropriate priority
         priority = 9 if prompt_type == "confirmed" else 6
-        
+
         try:
             await self._create_prompt(
                 user_id=user_id,
@@ -498,31 +498,31 @@ class InsightManager:
     ) -> None:
         """
         Generate a high-fidelity synthesis journal entry for a confirmed pattern.
-        
+
         This creates a system-generated journal entry that synthesizes:
         - The pattern discovery
         - Historical evidence
         - Implications and guidance
-        
+
         Args:
             user_id: User who owns the pattern
             pattern_data: Event payload with pattern details
             db: Database session
         """
         from src.app.modules.features.journal.system_journal import SystemJournalService
-        
+
         pattern_type = pattern_data.get("pattern_type", "unknown")
         period_card = pattern_data.get("period_card", "Unknown")
         planetary_ruler = pattern_data.get("planetary_ruler", "Unknown")
         confidence = pattern_data.get("confidence", 0)
         description = pattern_data.get("description", "")
         evidence_summary = pattern_data.get("evidence_summary", [])
-        
+
         logger.info(
             f"[InsightManager] Generating synthesis entry for confirmed pattern: "
             f"{pattern_type} in {period_card}"
         )
-        
+
         system_prompt = (
             "You are the GUTTERS Intelligence System synthesizing a confirmed life pattern. "
             "Generate a structured journal entry (markdown format) that:\n"
@@ -533,22 +533,26 @@ class InsightManager:
             "Write in second person ('you'), be warm but precise. "
             "This is a significant insight being delivered to the user."
         )
-        
-        evidence_text = "\n".join([f"- {e}" for e in evidence_summary[:5]]) if evidence_summary else "Multiple observations over time"
-        
+
+        evidence_text = (
+            "\n".join([f"- {e}" for e in evidence_summary[:5]])
+            if evidence_summary
+            else "Multiple observations over time"
+        )
+
         user_msg = f"""
         CONFIRMED PATTERN:
         Type: {pattern_type}
         Period: {period_card} ({planetary_ruler} energy)
         Confidence: {confidence:.0%}
         Description: {description}
-        
+
         Evidence Summary:
         {evidence_text}
-        
+
         Generate a synthesis journal entry.
         """
-        
+
         try:
             response = await self.llm.ainvoke([
                 SystemMessage(content=system_prompt),
@@ -563,10 +567,10 @@ class InsightManager:
                 f"we've observed consistent patterns:\n\n{description}\n\n"
                 f"This insight has been confirmed with {confidence:.0%} confidence."
             )
-        
+
         # Create system journal entry
         journal_service = SystemJournalService()
-        
+
         try:
             await journal_service.create_synthesis_entry(
                 user_id=user_id,
@@ -589,9 +593,9 @@ class InsightManager:
                 ],
                 db=db,
             )
-            
+
             logger.info(f"[InsightManager] Created synthesis entry for user {user_id}")
-            
+
         except Exception as e:
             logger.error(f"Failed to create synthesis journal entry: {e}")
 
@@ -600,43 +604,43 @@ class InsightManager:
     ) -> None:
         """
         Generate a profound insight about long-term pattern evolution.
-        
+
         Creates both a notification and a journal entry about how the user's
         experience of a particular period has evolved over multiple years.
-        
+
         Args:
             user_id: User ID
             evolution_data: Event payload with evolution analysis
             db: Database session
         """
         from src.app.modules.features.journal.system_journal import SystemJournalService
-        
+
         period_card = evolution_data.get("period_card", "Unknown")
         planetary_ruler = evolution_data.get("planetary_ruler", "Unknown")
         years_analyzed = evolution_data.get("years_analyzed", [])
         mood_trajectory = evolution_data.get("mood_trajectory", "stable")
         theme_evolution = evolution_data.get("theme_evolution", {})
         confidence = evolution_data.get("confidence", 0)
-        
+
         logger.info(
             f"[InsightManager] Generating evolution insight for user {user_id}: "
             f"{period_card} over {len(years_analyzed)} years"
         )
-        
+
         trajectory_meanings = {
             "improving": "Your experience during this period has been getting progressively better over time.",
             "declining": "This period has become more challenging for you over the years.",
             "stable": "Your experience during this period has remained consistent across years.",
             "volatile": "Your experience varies significantly each time this period comes around.",
         }
-        
+
         trajectory_guidance = {
             "improving": "This suggests growth and integration. What have you learned that's made this easier?",
             "declining": "This may be calling for attention. What's changed, and what support might help?",
             "stable": "This consistency is worth noting. Is this stability serving you?",
             "volatile": "The variability suggests external factors may play a role. What differs each year?",
         }
-        
+
         system_prompt = (
             "You are a wise longitudinal analyst helping someone understand their evolution over years. "
             "Generate a profound journal entry that:\n"
@@ -646,19 +650,19 @@ class InsightManager:
             "4. Suggests reflection questions for deeper understanding\n\n"
             "Be profound but accessible. This is about their life journey."
         )
-        
+
         years_str = ", ".join(str(y) for y in sorted(years_analyzed))
-        
+
         user_msg = f"""
         EVOLUTION ANALYSIS:
         Period: {period_card} ({planetary_ruler})
         Years Analyzed: {years_str}
         Mood Trajectory: {mood_trajectory}
         Meaning: {trajectory_meanings.get(mood_trajectory, '')}
-        
+
         Generate an evolution insight entry.
         """
-        
+
         try:
             response = await self.llm.ainvoke([
                 SystemMessage(content=system_prompt),
@@ -674,10 +678,10 @@ class InsightManager:
                 f"{trajectory_meanings.get(mood_trajectory, '')}\n\n"
                 f"{trajectory_guidance.get(mood_trajectory, '')}"
             )
-        
+
         # Create journal entry
         journal_service = SystemJournalService()
-        
+
         try:
             await journal_service.create_synthesis_entry(
                 user_id=user_id,
@@ -701,16 +705,19 @@ class InsightManager:
                 ],
                 db=db,
             )
-            
+
             # Also send notification for this significant insight
             await self.notification_service.send_notification(
                 user_id=user_id,
                 title=f"Evolution Insight: {planetary_ruler}",
-                body=f"We've analyzed your {planetary_ruler} periods across {len(years_analyzed)} years and found something meaningful.",
+                body=(
+                    f"We've analyzed your {planetary_ruler} periods across "
+                    f"{len(years_analyzed)} years and found something meaningful."
+                ),
                 data={"url": "/journal"},
                 db=db,
             )
-            
+
         except Exception as e:
             logger.error(f"Failed to create evolution insight: {e}")
 
@@ -719,10 +726,10 @@ class InsightManager:
     ) -> None:
         """
         Acknowledge when user's journal themes align with planetary guidance.
-        
+
         This is a positive reinforcement mechanism that celebrates when
         the user is "in flow" with cosmic rhythms.
-        
+
         Args:
             user_id: User ID
             alignment_data: Event payload with alignment details
@@ -733,14 +740,14 @@ class InsightManager:
         period_theme = alignment_data.get("period_theme", "")
         journal_themes = alignment_data.get("journal_themes", [])
         alignment_score = alignment_data.get("alignment_score", 0)
-        
+
         logger.info(
             f"[InsightManager] Generating alignment acknowledgment for user {user_id}: "
             f"{planetary_ruler} alignment {alignment_score:.0%}"
         )
-        
+
         themes_str = ", ".join(journal_themes[:5]) if journal_themes else "your recent reflections"
-        
+
         system_prompt = (
             "You are an appreciative cosmic guide acknowledging someone's alignment with universal rhythms. "
             "Generate a brief, warm acknowledgment (1-2 sentences) that:\n"
@@ -749,17 +756,17 @@ class InsightManager:
             "3. Encourages continued awareness\n\n"
             "Be genuine, not sycophantic. This is meaningful."
         )
-        
+
         user_msg = f"""
         ALIGNMENT DETECTED:
         Period: {period_card} ({planetary_ruler})
         Period Theme: {period_theme}
         Journal Themes: {themes_str}
         Alignment Score: {alignment_score:.0%}
-        
+
         Generate an acknowledgment.
         """
-        
+
         try:
             response = await self.llm.ainvoke([
                 SystemMessage(content=system_prompt),
@@ -772,7 +779,7 @@ class InsightManager:
                 f"You're deeply attuned to your {planetary_ruler} period right now. "
                 f"Your reflections on {themes_str} align beautifully with this energy."
             )
-        
+
         # Send as notification (not a prompt, just acknowledgment)
         try:
             await self.notification_service.send_notification(
@@ -782,8 +789,8 @@ class InsightManager:
                 data={"url": "/dashboard"},
                 db=db,
             )
-            
+
             logger.info(f"[InsightManager] Sent alignment acknowledgment to user {user_id}")
-            
+
         except Exception as e:
             logger.error(f"Failed to send alignment acknowledgment: {e}")

@@ -22,17 +22,17 @@ from . import kernel
 class CardologyModule(BaseModule):
     """
     Cardology Module (NODE) - The Magi OS Time Engine.
-    
+
     Provides deterministic temporal mapping based on the 52-card calendar.
     No external dependencies, pure mathematical calculations.
     """
-    
+
     # Module metadata (no manifest.json needed - pure logic module)
     name: str = "cardology"
     layer: str = "intelligence"
     version: str = "1.0.0"
     description: str = "Deterministic Time-Mapping Engine (Order of the Magi)"
-    
+
     def __init__(self):
         """Initialize without manifest (pure logic module)."""
         # Don't call super().__init__() with manifest loading
@@ -47,37 +47,37 @@ class CardologyModule(BaseModule):
             "subscriptions": [],
         }
         self.config: dict[str, Any] = {}
-        
+
         # Get event bus reference (but we don't subscribe to anything)
         from src.app.core.events.bus import get_event_bus
         self.event_bus = get_event_bus()
-    
+
     def calculate_profile(
-        self, 
+        self,
         birth_date: date,
         target_year: Optional[int] = None
     ) -> Dict[str, Any]:
         """
         Calculate complete Cardology profile for a birth date.
-        
+
         This is the main entry point for profile calculation.
-        
+
         Args:
             birth_date: User's date of birth
             target_year: Year to calculate planetary periods for (default: current year)
-        
+
         Returns:
             Dictionary suitable for storage in UserProfile.data["cardology"]
         """
         if target_year is None:
             target_year = date.today().year
-        
+
         # Generate the complete blueprint using the sealed kernel
         blueprint = kernel.generate_blueprint(birth_date, include_year=target_year)
-        
+
         # Format for UserProfile storage
         return self._format_profile_data(blueprint)
-    
+
     def get_current_period(
         self,
         birth_date: date,
@@ -85,16 +85,16 @@ class CardologyModule(BaseModule):
     ) -> Dict[str, Any]:
         """
         Get the current planetary period for dashboard/quest integration.
-        
+
         Args:
             birth_date: User's date of birth
             current_date: Date to check (default: today)
-        
+
         Returns:
             Period info dict with card, planet, theme, guidance
         """
         return kernel.get_current_period_info(birth_date, current_date)
-    
+
     def get_yearly_timeline(
         self,
         birth_date: date,
@@ -102,16 +102,16 @@ class CardologyModule(BaseModule):
     ) -> list[Dict[str, Any]]:
         """
         Get complete timeline of 52-day periods for a year.
-        
+
         Args:
             birth_date: User's date of birth
             year: Year to generate timeline for
-        
+
         Returns:
             List of period dictionaries
         """
         return kernel.generate_yearly_timeline(birth_date, year)
-    
+
     def analyze_relationship(
         self,
         birth_date_a: date,
@@ -119,19 +119,19 @@ class CardologyModule(BaseModule):
     ) -> Dict[str, Any]:
         """
         Analyze relationship connections between two birth dates.
-        
+
         Args:
             birth_date_a: First person's birth date
             birth_date_b: Second person's birth date
-        
+
         Returns:
             Connection analysis with planetary relationships
         """
         card_a = kernel.calculate_birth_card_from_date(birth_date_a)
         card_b = kernel.calculate_birth_card_from_date(birth_date_b)
-        
+
         connections = kernel.analyze_connections(card_a, card_b)
-        
+
         return {
             "person_a": {
                 "birth_date": birth_date_a.isoformat(),
@@ -156,11 +156,11 @@ class CardologyModule(BaseModule):
             "connection_count": len(connections),
             "mutual_connections": sum(1 for c in connections if c.is_mutual),
         }
-    
+
     def _format_profile_data(self, blueprint: kernel.CardologyBlueprint) -> Dict[str, Any]:
         """
         Format CardologyBlueprint for UserProfile.data storage.
-        
+
         Converts dataclasses/enums to JSON-serializable dict.
         """
         return {
@@ -229,11 +229,11 @@ class CardologyModule(BaseModule):
             ],
             "calculated_at": date.today().isoformat(),
         }
-    
+
     async def contribute_to_synthesis(self, user_id: str) -> dict[str, Any]:
         """
         Provide Cardology data for master synthesis.
-        
+
         NOTE: This requires user's birth_date to be fetched from DB.
         For now, returns placeholder structure.
         """
@@ -241,7 +241,7 @@ class CardologyModule(BaseModule):
         # 1. Fetch user's birth_date from User model
         # 2. Calculate profile
         # 3. Return formatted data
-        
+
         return {
             "module": self.name,
             "layer": self.layer,
@@ -253,7 +253,7 @@ class CardologyModule(BaseModule):
                 "version": self.version
             }
         }
-    
+
     async def handle_event(self, packet: Any) -> None:
         """
         Handle events (not used - Cardology is pull-based, not event-driven).

@@ -39,7 +39,6 @@ print("6. ENDS WITH '-----END'?", private_key_processed.rstrip().endswith("-----
 
 print("\n7. CHECKING PYWEBPUSH HANDLING:")
 try:
-    from pywebpush import webpush
     from py_vapid import Vapid02
 
     # Try to load with py_vapid
@@ -52,8 +51,8 @@ try:
         print(f"   ✗ py_vapid.from_pem() failed: {e}")
 
     # Try to load with cryptography library
-    from cryptography.hazmat.primitives import serialization
     from cryptography.hazmat.backends import default_backend
+    from cryptography.hazmat.primitives import serialization
 
     try:
         key = serialization.load_pem_private_key(

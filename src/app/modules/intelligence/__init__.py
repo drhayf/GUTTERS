@@ -26,19 +26,18 @@
 __version__ = "1.0.0"
 
 # Council of Systems - Core Intelligence
+# I-Ching Kernel
+from .iching import GATE_DATABASE, IChingKernel
 from .synthesis.harmonic import (
     CouncilOfSystems,
     HarmonicSynthesis,
     cross_system_synthesis,
 )
 
-# I-Ching Kernel
-from .iching import IChingKernel, GATE_DATABASE
-
 __all__ = [
     # Council of Systems
     "CouncilOfSystems",
-    "HarmonicSynthesis", 
+    "HarmonicSynthesis",
     "cross_system_synthesis",
     # I-Ching Kernel
     "IChingKernel",

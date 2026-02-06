@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys
-from pathlib import Path
 from datetime import date, time
+from pathlib import Path
 
 src_path = Path(__file__).parent.parent
 sys.path.insert(0, str(src_path))
@@ -20,5 +20,5 @@ chart = calc._calculate_full_chart(
 )
 
 print(f"18:00 Type: {chart.type}")
-print(f"Jovian shows: Projector")
+print("Jovian shows: Projector")
 print(f"\nMatch: {'YES' if chart.type == 'Projector' else 'NO - BUG!'}")

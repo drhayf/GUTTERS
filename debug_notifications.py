@@ -1,11 +1,12 @@
 import asyncio
 import logging
 import sys
-from sqlalchemy import select, func
+
+from sqlalchemy import func, select
+
 from src.app.core.config import settings
 from src.app.core.db.database import local_session
 from src.app.models.push import PushSubscription
-from src.app.models.user import User
 from src.app.models.user_profile import UserProfile
 
 logging.basicConfig(level=logging.INFO)

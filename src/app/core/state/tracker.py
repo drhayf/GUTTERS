@@ -11,14 +11,13 @@ Example:
     >>> print(f"Profile {state['completion_percentage']:.1f}% complete")
 """
 
-from datetime import datetime, UTC, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...core.db.database import async_get_db
 from ...crud.crud_user_profile import crud_user_profiles
-
 
 # Domain configuration for completion tracking
 PROFILE_DOMAINS = {
@@ -210,7 +209,7 @@ class StateTracker:
                 "active": True,
                 "hypothesis_count": hypothesis_count,
                 "fields_uncertain": fields_uncertain,
-                "started_at": datetime.now(timezone.utc).isoformat(),
+                "started_at": datetime.now(UTC).isoformat(),
                 "confirmations": {},
             }
 
@@ -235,7 +234,7 @@ class StateTracker:
 
             profile_data["genesis"]["confirmations"][field] = {
                 "value": confirmed_value,
-                "confirmed_at": datetime.now(timezone.utc).isoformat(),
+                "confirmed_at": datetime.now(UTC).isoformat(),
             }
 
             # Remove from uncertain fields
@@ -245,7 +244,7 @@ class StateTracker:
             # Check if all fields confirmed
             if not profile_data["genesis"].get("fields_uncertain"):
                 profile_data["genesis"]["active"] = False
-                profile_data["genesis"]["completed_at"] = datetime.now(timezone.utc).isoformat()
+                profile_data["genesis"]["completed_at"] = datetime.now(UTC).isoformat()
 
             # Save
             await crud_user_profiles.update(db=db, object={"data": profile_data}, user_id=user_id)

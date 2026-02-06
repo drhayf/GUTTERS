@@ -7,17 +7,14 @@ Synthesis can have varying confidence based on:
 - Incomplete modules
 """
 
-from src.app.modules.intelligence.genesis.core.models import (
-    UncertaintyDeclaration,
-    UncertaintyField,
-    FieldConfidence
-)
+from src.app.modules.intelligence.genesis.core.models import UncertaintyDeclaration, UncertaintyField
+
 
 class SynthesisUncertaintyExtractor:
     """Extract uncertainty from synthesis generation."""
-    
+
     module_name = "synthesis"
-    
+
     async def extract(
         self,
         synthesis_result: dict,
@@ -25,14 +22,14 @@ class SynthesisUncertaintyExtractor:
     ) -> UncertaintyDeclaration | None:
         """
         Determine synthesis confidence.
-        
+
         Factors:
         - Missing birth time reduces astrology confidence
         - < 20 Observer data points reduces pattern confidence
         - Missing modules reduce overall confidence
         """
         fields = []
-        
+
         # Check if astrology is probabilistic
         if synthesis_result.get("astrology_probabilistic"):
             fields.append(UncertaintyField(
@@ -51,7 +48,7 @@ class SynthesisUncertaintyExtractor:
                 ],
                 refinement_strategies=["personality_based_rising_sign", "life_event_timing"]
             ))
-        
+
         # Check Observer data sufficiency
         observer_count = synthesis_result.get("observer_data_points", 0)
         if observer_count < 20:
@@ -71,11 +68,11 @@ class SynthesisUncertaintyExtractor:
                 ],
                 refinement_strategies=["journal_more", "wait_for_data"]
             ))
-        
+
         if fields:
             return UncertaintyDeclaration(
                 module=self.module_name,
                 fields=fields
             )
-        
+
         return None

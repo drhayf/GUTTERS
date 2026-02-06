@@ -1,8 +1,9 @@
 import asyncio
 import logging
+
 from sqlalchemy.ext.asyncio import create_async_engine
-from src.app.core.db.database import Base, DATABASE_URL
-from src.app.models.insight import ReflectionPrompt, JournalEntry
+
+from src.app.core.db.database import DATABASE_URL, Base
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -17,7 +18,7 @@ async def create_tables():
 
     # Use the centralized DATABASE_URL
     database_url = DATABASE_URL
-    logger.info(f"Connecting to database...")
+    logger.info("Connecting to database...")
 
     engine = create_async_engine(database_url, echo=True)
 

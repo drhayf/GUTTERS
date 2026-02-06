@@ -3,8 +3,9 @@ GUTTERS Astrology Schemas
 
 Pydantic models for astrology data structures.
 """
+from typing import Literal, Optional
+
 from pydantic import BaseModel, Field
-from typing import Optional, Literal
 
 
 class PlanetPosition(BaseModel):
@@ -105,13 +106,17 @@ class NatalChartResult(BaseModel):
     modalities: ModalityDistribution = Field(description="Modality distribution")
     ascendant: Optional[AnglePosition] = Field(None, description="Ascendant (Rising sign) - None if birth time unknown")
     midheaven: Optional[AnglePosition] = Field(None, description="Midheaven (MC) - None if birth time unknown")
-    
+
     # Probabilistic data (when birth time unknown)
     accuracy: Literal["full", "solar", "probabilistic"] = Field("full", description="Chart accuracy level")
     rising_confidence: Optional[float] = Field(None, ge=0.0, le=1.0, description="Confidence in rising sign (0-1)")
-    rising_probabilities: Optional[list[RisingSignProbability]] = Field(None, description="All possible rising signs with probabilities")
+    rising_probabilities: Optional[list[RisingSignProbability]] = Field(
+        None, description="All possible rising signs with probabilities"
+    )
     planet_stability: Optional[list[PlanetStability]] = Field(None, description="Sign/house stability for each planet")
-    aspect_stability: Optional[list[AspectStability]] = Field(None, description="Stability of major aspects")
+    aspect_stability: Optional[list[AspectStability]] = Field(
+        None, description="Stability of major aspects"
+    )
     note: Optional[str] = Field(None, description="Additional notes about accuracy")
     available_data: list[str] = Field(default_factory=list, description="List of available data types")
 

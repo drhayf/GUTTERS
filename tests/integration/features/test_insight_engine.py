@@ -1,10 +1,10 @@
 import pytest
 import pytest_asyncio
-from sqlalchemy import select, delete
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.app.models.insight import ReflectionPrompt, JournalEntry, PromptPhase, PromptStatus
+from src.app.models.insight import JournalEntry, PromptPhase, PromptStatus, ReflectionPrompt
 from src.app.models.user_profile import UserProfile
 from src.app.modules.intelligence.insight.manager import InsightManager
 from src.app.modules.intelligence.observer.storage import ObserverFindingStorage

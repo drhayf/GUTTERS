@@ -1,24 +1,22 @@
-from datetime import datetime, timedelta, UTC
 import logging
-from typing import Optional
+from datetime import UTC, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from arq.connections import RedisSettings
 from croniter import croniter
-from sqlalchemy import select, update, func
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.app.core.config import settings
 from src.app.core.db.database import local_session as async_session_factory
 from src.app.core.events.bus import get_event_bus
-from src.app.modules.features.quests.models import Quest, QuestLog, QuestStatus, RecurrenceType
-from src.app.modules.infrastructure.push.service import notification_service
-from src.app.models.push import PushSubscription
-from src.app.modules.tracking.solar.tracker import SolarTracker
-from src.app.modules.tracking.lunar.tracker import LunarTracker
-from src.app.models.user import User
 from src.app.models.progression import PlayerStats
-from src.app.modules.features.quests.models import QuestCategory, QuestLog, QuestStatus
-from zoneinfo import ZoneInfo
+from src.app.models.push import PushSubscription
+from src.app.models.user import User
+from src.app.modules.features.quests.models import Quest, QuestCategory, QuestLog, QuestStatus, RecurrenceType
+from src.app.modules.infrastructure.push.service import notification_service
+from src.app.modules.tracking.lunar.tracker import LunarTracker
+from src.app.modules.tracking.solar.tracker import SolarTracker
 
 logger = logging.getLogger(__name__)
 
@@ -188,7 +186,7 @@ async def daily_reset_job(ctx):
 
     async with async_session_factory() as db:
         # 1. Fetch all active users
-        stmt = select(User).where(User.is_deleted == False)
+        stmt = select(User).where(User.is_deleted.is_(False))
         result = await db.execute(stmt)
         users = result.scalars().all()
 
@@ -278,7 +276,7 @@ async def _perform_user_daily_reset(db: AsyncSession, user: User, stats: PlayerS
 
     # 4. Renew DAILY category quests for TODAY
     daily_quests_stmt = select(Quest).where(
-        Quest.user_id == user.id, Quest.category == QuestCategory.DAILY, Quest.is_active == True
+        Quest.user_id == user.id, Quest.category == QuestCategory.DAILY, Quest.is_active.is_(True)
     )
     q_result = await db.execute(daily_quests_stmt)
     dailies = q_result.scalars().all()

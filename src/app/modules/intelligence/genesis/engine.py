@@ -7,31 +7,28 @@ uncertainty → hypothesis → probe → confirmation → recalculation.
 
 import logging
 from datetime import datetime
-from typing import Any, Optional
-
-from .hypothesis import Hypothesis
-from .probes import ProbeGenerator, ProbePacket, ProbeResponse, ProbeType
-from .uncertainty import UncertaintyDeclaration, UncertaintyField
-from .persistence import get_genesis_persistence
-from .registry import UncertaintyRegistry
-from .strategies import StrategyRegistry
-
-from ..hypothesis.models import Hypothesis as TheoryHypothesis
-from ..hypothesis.storage import HypothesisStorage
+from typing import Optional
 
 from ....core.events.bus import get_event_bus
 from ....protocol.events import (
-    MODULE_PROFILE_CALCULATED,
-    GENESIS_UNCERTAINTY_DECLARED,
-    GENESIS_FIELD_CONFIRMED,
     GENESIS_CONFIDENCE_UPDATED,
+    GENESIS_FIELD_CONFIRMED,
+    GENESIS_UNCERTAINTY_DECLARED,
+    MODULE_PROFILE_CALCULATED,
 )
 from ....protocol.genesis_payloads import (
-    GenesisUncertaintyPayload,
     GenesisFieldConfirmedPayload,
+    GenesisUncertaintyPayload,
 )
 from ....protocol.packet import Packet
-
+from ..hypothesis.models import Hypothesis as TheoryHypothesis
+from ..hypothesis.storage import HypothesisStorage
+from .hypothesis import Hypothesis
+from .persistence import get_genesis_persistence
+from .probes import ProbeGenerator, ProbePacket, ProbeResponse, ProbeType
+from .registry import UncertaintyRegistry
+from .strategies import StrategyRegistry
+from .uncertainty import AlignmentDiscrepancy, UncertaintyDeclaration, UncertaintyField
 
 logger = logging.getLogger(__name__)
 
@@ -130,7 +127,7 @@ class GenesisEngine:
         for decl in declarations:
             user_id = decl.user_id
             session_id = decl.session_id
-            
+
             # Fetch magi context once per declaration
             temporal_context = await self._get_magi_context(user_id)
 
@@ -512,51 +509,50 @@ class GenesisEngine:
     ) -> Optional["AlignmentDiscrepancy"]:
         """
         Audit user text against the current MAGI period for alignment discrepancies.
-        
+
         Compares the emotional/thematic energy in user-provided text against
         what the MAGI system predicts for their current planetary period.
         High discrepancies may indicate:
         - Shadow work opportunities
         - Resistance to period energy
         - External circumstances overriding cosmic weather
-        
+
         Args:
             user_id: User whose alignment to audit
             text: Journal entry, chat message, or reflection response
             source_type: Type of source text ("journal_entry", "chat_message", etc.)
             db: Optional database session
-            
+
         Returns:
             AlignmentDiscrepancy if discrepancy detected, None if aligned or error
         """
-        from .uncertainty import AlignmentDiscrepancy
-        from ...intelligence.cardology.module import CardologyModule
-        from ....core.llm import get_premium_llm
-        from langchain_core.messages import SystemMessage, HumanMessage
         import json
-        
+
+        from langchain_core.messages import HumanMessage, SystemMessage
+
+        from ....core.llm import get_premium_llm
+        from .uncertainty import AlignmentDiscrepancy
+
         logger.info(f"[GenesisEngine] Auditing alignment for user {user_id}")
-        
+
         try:
             # 1. Get current MAGI state for user
-            cardology = CardologyModule()
-            
             # We need the user's birth date to get their cardology state
             # Try to get from ChronosStateManager first (cached)
-            from ....core.state.chronos import get_chronos_state_manager
-            chronos = get_chronos_state_manager()
-            
+            from ....core.state.chronos import get_chronos_manager
+            chronos = get_chronos_manager()
+
             cached_state = await chronos.get_current_state(user_id)
-            
+
             if not cached_state or not cached_state.get("current_state"):
                 logger.warning(f"No MAGI state found for user {user_id}, skipping alignment audit")
                 return None
-            
+
             current_state = cached_state.get("current_state", {})
             period_planet = current_state.get("current_planet", "Unknown")
             current_card = current_state.get("current_card", {})
             period_card = current_card.get("name") or current_card.get("card", "Unknown")
-            
+
             # Get expected energy for the period
             planetary_themes = {
                 "Mercury": "communication, learning, quick thinking, mental activity, adaptability",
@@ -571,12 +567,12 @@ class GenesisEngine:
                 "Result": "culmination, outcomes, harvest, completion, integration"
             }
             script_energy = planetary_themes.get(period_planet, "general life energy")
-            
+
             # 2. Use LLM to analyze the text and score alignment
             llm = get_premium_llm()
-            
-            system_prompt = """You are an analyst comparing a person's reported experience 
-against their expected astrological period energy. 
+
+            system_prompt = """You are an analyst comparing a person's reported experience
+against their expected astrological period energy.
 
 Analyze the provided text and determine:
 1. The dominant emotional/thematic energy expressed (reported_energy)
@@ -588,7 +584,7 @@ Respond in JSON format:
     "discrepancy_score": 0.0-1.0,
     "reasoning": "brief explanation of alignment or discrepancy"
 }"""
-            
+
             user_msg = f"""Expected Period Energy ({period_planet}): {script_energy}
 
 User's Text:
@@ -597,12 +593,12 @@ User's Text:
 \"\"\"
 
 Analyze the alignment between the expected energy and what the user is expressing."""
-            
+
             response = await llm.ainvoke([
                 SystemMessage(content=system_prompt),
                 HumanMessage(content=user_msg)
             ])
-            
+
             # Parse LLM response
             response_text = response.content.strip()
             # Handle potential markdown code blocks
@@ -610,22 +606,22 @@ Analyze the alignment between the expected energy and what the user is expressin
                 response_text = response_text.split("```json")[1].split("```")[0]
             elif "```" in response_text:
                 response_text = response_text.split("```")[1].split("```")[0]
-            
+
             analysis = json.loads(response_text)
-            
+
             reported_energy = analysis.get("reported_energy", "unclear")
             discrepancy_score = float(analysis.get("discrepancy_score", 0.0))
-            
+
             logger.info(
                 f"[GenesisEngine] Alignment audit for user {user_id}: "
                 f"score={discrepancy_score:.2f}, period={period_planet}"
             )
-            
+
             # 3. Only create discrepancy record if significant
             if discrepancy_score < 0.5:
                 logger.debug(f"User {user_id} is reasonably aligned with {period_planet} energy")
                 return None
-            
+
             # 4. Create AlignmentDiscrepancy
             discrepancy = AlignmentDiscrepancy(
                 user_id=user_id,
@@ -637,7 +633,7 @@ Analyze the alignment between the expected energy and what the user is expressin
                 source_type=source_type,
                 discrepancy_score=discrepancy_score,
             )
-            
+
             # 5. If highly significant, trigger hypothesis creation
             if discrepancy.is_significant:
                 logger.info(
@@ -645,30 +641,29 @@ Analyze the alignment between the expected energy and what the user is expressin
                     f"for user {user_id} - creating hypothesis"
                 )
                 await self._create_alignment_hypothesis(discrepancy)
-            
+
             return discrepancy
-            
+
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse LLM alignment analysis: {e}")
             return None
         except Exception as e:
             logger.error(f"Error in alignment audit for user {user_id}: {e}")
             return None
-    
+
     async def _create_alignment_hypothesis(self, discrepancy: "AlignmentDiscrepancy") -> None:
         """
         Create a Genesis hypothesis from a significant alignment discrepancy.
-        
+
         This allows the system to probe the user about why their experience
         doesn't match the expected period energy.
         """
-        from .uncertainty import AlignmentDiscrepancy
-        
+
         context = discrepancy.to_hypothesis_context()
-        
+
         # Fetch magi context for this alignment hypothesis
         temporal_context = await self._get_magi_context(discrepancy.user_id)
-        
+
         # Create a hypothesis to investigate the discrepancy
         hyp = Hypothesis(
             field=f"alignment_{discrepancy.period_planet.lower()}",
@@ -681,7 +676,7 @@ Analyze the alignment between the expected energy and what the user is expressin
             confidence_threshold=0.85,  # Higher threshold for alignment hypotheses
             temporal_context=temporal_context,
         )
-        
+
         # Store additional context in hypothesis
         hyp.metadata = {
             "type": "alignment_discrepancy",
@@ -690,17 +685,17 @@ Analyze the alignment between the expected energy and what the user is expressin
             "source_type": discrepancy.source_type,
             "question": context["question"],
         }
-        
+
         # Add to hypotheses
         if discrepancy.user_id not in self._hypotheses:
             self._hypotheses[discrepancy.user_id] = {}
-        
+
         self._hypotheses[discrepancy.user_id][hyp.id] = hyp
-        
+
         # Mark discrepancy as having generated hypothesis
         discrepancy.hypothesis_generated = True
         discrepancy.hypothesis_id = hyp.id
-        
+
         logger.info(
             f"[GenesisEngine] Created alignment hypothesis {hyp.id} "
             f"for user {discrepancy.user_id}: {context['question'][:100]}..."

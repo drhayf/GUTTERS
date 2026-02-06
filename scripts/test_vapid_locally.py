@@ -12,14 +12,14 @@ actual push requests to Apple/Firebase. It tests:
 Run this to verify the implementation before testing with real push services.
 """
 
-import json
 import base64
+import json
 import time
 from urllib.parse import urlparse
-from cryptography.hazmat.primitives import serialization, hashes
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives.asymmetric import ec
+
 import jwt
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
 
 # Configuration - same as in settings
 VAPID_PRIVATE_KEY = None  # Will be loaded from settings
@@ -227,7 +227,7 @@ def test_push_endpoint(endpoint: str) -> dict:
     print(f"[MATCH] Keys match: {public_key == VAPID_PUBLIC_KEY}")
 
     # Simulate Apple validation
-    print(f"\n[VALIDATION] Simulating Apple APNs validation...")
+    print("\n[VALIDATION] Simulating Apple APNs validation...")
 
     if "apple.com" in endpoint:
         is_valid, message = simulate_apple_validation(claims, public_key)
@@ -237,10 +237,10 @@ def test_push_endpoint(endpoint: str) -> dict:
             print(f"[FAIL] Apple validation FAILED: {message}")
         return {"endpoint": endpoint, "valid": is_valid, "message": message, "claims": claims, "public_key": public_key}
     else:
-        print(f"[INFO] Non-Apple endpoint - using standard FCM/Mozilla validation")
+        print("[INFO] Non-Apple endpoint - using standard FCM/Mozilla validation")
         is_valid, issues = verify_vapid_for_apple(claims["aud"], claims["sub"], public_key)
         if is_valid:
-            print(f"[PASS] Standard validation PASSED")
+            print("[PASS] Standard validation PASSED")
         else:
             print(f"[FAIL] Standard validation FAILED: {issues}")
         return {"endpoint": endpoint, "valid": is_valid, "issues": issues, "claims": claims, "public_key": public_key}
@@ -283,14 +283,14 @@ def main():
     # Check if Apple test passed
     apple_result = [r for r in results if "apple.com" in r["endpoint"] and r.get("valid")]
     if apple_result:
-        print(f"\n[SUCCESS] Apple APNs Web Push should work! The VAPID implementation is correct.")
-        print(f"   The 403 error might be due to:")
-        print(f"   1. Subscription was created with a different VAPID key pair")
-        print(f"   2. PWA not served over HTTPS (required for push)")
-        print(f"   3. Missing or incorrect web manifest")
-        print(f"   4. User revoked notification permission")
+        print("\n[SUCCESS] Apple APNs Web Push should work! The VAPID implementation is correct.")
+        print("   The 403 error might be due to:")
+        print("   1. Subscription was created with a different VAPID key pair")
+        print("   2. PWA not served over HTTPS (required for push)")
+        print("   3. Missing or incorrect web manifest")
+        print("   4. User revoked notification permission")
     else:
-        print(f"\n[WARNING] Apple APNs validation failed. Check the issues above.")
+        print("\n[WARNING] Apple APNs validation failed. Check the issues above.")
 
 
 if __name__ == "__main__":

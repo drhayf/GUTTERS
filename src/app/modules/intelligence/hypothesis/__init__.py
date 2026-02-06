@@ -20,27 +20,26 @@ Services:
 """
 
 # Core models
-from .models import (
-    Hypothesis,
-    HypothesisType,
-    HypothesisStatus,
-)
-
 # Weighted confidence system
 from .confidence import (
+    ConfidenceSnapshot,
+    ConfidenceThresholds,
+    EvidenceRecord,
     EvidenceType,
     EvidenceWeight,
     SourceReliability,
-    EvidenceRecord,
-    ConfidenceSnapshot,
     WeightedConfidenceCalculator,
-    ConfidenceThresholds,
 )
 
 # Services
 from .generator import HypothesisGenerator
-from .updater import HypothesisUpdater, get_hypothesis_updater
+from .models import (
+    Hypothesis,
+    HypothesisStatus,
+    HypothesisType,
+)
 from .storage import HypothesisStorage
+from .updater import HypothesisUpdater, get_hypothesis_updater
 
 __all__ = [
     # Models

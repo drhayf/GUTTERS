@@ -11,8 +11,9 @@ import sys
 # Ensure project root is in path
 sys.path.append(os.getcwd())
 
-from src.app.core.llm.config import LLMConfig, LLMTier, get_premium_llm, get_standard_llm
 from langchain_core.messages import HumanMessage, SystemMessage
+
+from src.app.core.llm.config import LLMConfig, LLMTier, get_premium_llm, get_standard_llm
 
 
 async def test_premium_model():

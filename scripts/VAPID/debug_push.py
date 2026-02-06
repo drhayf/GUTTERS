@@ -1,13 +1,14 @@
 import asyncio
-import logging
-import sys
 import json
-import traceback
-from sqlalchemy import select, func
-from pywebpush import webpush, WebPushException
+import logging
 
 # Add project root to sys.path
 import os
+import sys
+import traceback
+
+from pywebpush import WebPushException, webpush
+from sqlalchemy import func, select
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -107,7 +108,7 @@ async def run_smoke_test():
             logger.error(f"Remote Response Status: {ex.response.status_code}")
             logger.error(f"Remote Response Content: {ex.response.content}")
 
-    except Exception as e:
+    except Exception:
         logger.error("General Exception CAUGHT!")
         logger.error(traceback.format_exc())
 

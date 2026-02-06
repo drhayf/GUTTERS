@@ -6,7 +6,7 @@ Modules use these to communicate what they're uncertain about and how
 those uncertainties can be refined through conversation.
 """
 
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -167,12 +167,12 @@ class AlignmentDiscrepancy(BaseModel):
     """
     Represents a discrepancy between the deterministic MAGI script and
     the user's reported/observed experience.
-    
+
     The MAGI system provides deterministic planetary periods and card energies.
     When a user's journal entries, mood reports, or chat messages suggest
     experiences that don't align with the expected period energy, we capture
     that as a discrepancy for Genesis to investigate.
-    
+
     Example:
         AlignmentDiscrepancy(
             user_id=42,
@@ -184,23 +184,23 @@ class AlignmentDiscrepancy(BaseModel):
             source_text="I feel so stuck and anxious about money...",
             source_type="journal_entry",
         )
-    
+
     High discrepancy scores (>0.7) may indicate:
     - Shadow work opportunity (resisting the period energy)
     - Unprocessed material from previous period
     - Birth chart factors modifying period expression
     - Life circumstances overriding cosmic weather
     """
-    
+
     user_id: int = Field(description="User ID experiencing the discrepancy")
-    
+
     # What the MAGI script says should be happening
     script_energy: str = Field(
         description="Expected energy/theme from current MAGI period (e.g., 'expansion, abundance, luck')"
     )
     period_planet: str = Field(description="Current planetary period (e.g., 'Jupiter')")
     period_card: str = Field(description="Current period card (e.g., '9 of Hearts')")
-    
+
     # What the user is actually reporting
     reported_energy: str = Field(
         description="Detected energy/theme from user's communication (e.g., 'contraction, fear, stagnation')"
@@ -209,7 +209,7 @@ class AlignmentDiscrepancy(BaseModel):
     source_type: Literal["journal_entry", "chat_message", "mood_report", "reflection_response"] = Field(
         description="Type of content that revealed the discrepancy"
     )
-    
+
     # Scoring and metadata
     discrepancy_score: float = Field(
         ge=0.0, le=1.0,
@@ -219,7 +219,7 @@ class AlignmentDiscrepancy(BaseModel):
         default_factory=lambda: datetime.now(UTC),
         description="When this discrepancy was identified"
     )
-    
+
     # Genesis integration
     hypothesis_generated: bool = Field(
         default=False,
@@ -229,12 +229,12 @@ class AlignmentDiscrepancy(BaseModel):
         default=None,
         description="ID of the Genesis hypothesis investigating this discrepancy"
     )
-    
+
     @property
     def is_significant(self) -> bool:
         """True if discrepancy score is high enough to warrant investigation."""
         return self.discrepancy_score >= 0.7
-    
+
     @property
     def severity(self) -> Literal["low", "medium", "high"]:
         """Categorize the discrepancy severity."""
@@ -243,11 +243,11 @@ class AlignmentDiscrepancy(BaseModel):
         elif self.discrepancy_score >= 0.5:
             return "medium"
         return "low"
-    
+
     def to_hypothesis_context(self) -> dict:
         """
         Format discrepancy data for Genesis hypothesis creation.
-        
+
         Returns context dict suitable for initializing a new hypothesis.
         """
         return {
@@ -271,7 +271,7 @@ class AlignmentDiscrepancy(BaseModel):
                 f"not manifesting as expected? User reports: {self.reported_energy}"
             ),
         }
-    
+
     def to_storage_dict(self) -> dict:
         """Convert to dictionary for storage."""
         return {
@@ -287,7 +287,7 @@ class AlignmentDiscrepancy(BaseModel):
             "hypothesis_generated": self.hypothesis_generated,
             "hypothesis_id": self.hypothesis_id,
         }
-    
+
     @classmethod
     def from_storage_dict(cls, data: dict) -> "AlignmentDiscrepancy":
         """Reconstruct from stored dictionary."""

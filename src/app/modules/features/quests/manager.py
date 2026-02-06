@@ -1,24 +1,23 @@
 import logging
-import math
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from typing import List, Optional
-from sqlalchemy.ext.asyncio import AsyncSession
+
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from src.app.core.worker.client import get_arq_pool
+
 from src.app.core.events.bus import get_event_bus
-from src.app.protocol import events
-from src.app.core.db.database import local_session as async_session_factory
-from src.app.models.progression import PlayerStats
+from src.app.core.worker.client import get_arq_pool
 from src.app.modules.features.quests.models import (
     Quest,
-    QuestLog,
-    QuestStatus,
-    RecurrenceType,
-    QuestSource,
     QuestCategory,
     QuestDifficulty,
+    QuestLog,
+    QuestSource,
+    QuestStatus,
+    RecurrenceType,
 )
+from src.app.protocol import events
 
 logger = logging.getLogger(__name__)
 

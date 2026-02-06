@@ -7,7 +7,7 @@ Solar activity, lunar phases, planetary transits, etc.
 
 from datetime import UTC, datetime
 
-from sqlalchemy import CheckConstraint, DateTime, Index, String, func
+from sqlalchemy import CheckConstraint, DateTime, Index, String
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 

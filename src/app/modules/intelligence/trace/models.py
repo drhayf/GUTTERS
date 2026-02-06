@@ -4,9 +4,9 @@ Activity trace models for Observable AI.
 Tracks thinking steps, tool usage, and model metadata.
 """
 
-from datetime import datetime, UTC
-from typing import Optional, Any
+from datetime import UTC, datetime
 from enum import Enum
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 

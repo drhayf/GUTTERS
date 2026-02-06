@@ -1,17 +1,17 @@
 """
 Tests for SeedDataGenerator.
 """
-import pytest
 from tests.fixtures.seed_data import SeedDataGenerator
+
 
 def test_generate_journal_entries():
     entries = SeedDataGenerator.generate_journal_entries(user_id=1, days=60)
     assert len(entries) > 20  # Roughly 3.5 per week for 8.5 weeks
-    
+
     # Check for Sunday anxiety pattern
     sundays = [e for e in entries if "Sunday blues" in e['text']]
     assert len(sundays) > 0
-    
+
     # Check for headache pattern
     headaches = [e for e in entries if "headache" in e['text'].lower()]
     assert len(headaches) > 0

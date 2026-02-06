@@ -7,17 +7,15 @@ Subscribes to USER_BIRTH_DATA_UPDATED events and calculates numerology charts.
 NOTE: Numerology doesn't require birth time - only birth date and name.
 """
 
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from typing import Any
 
 from ....core.events.bus import get_event_bus
 from ....protocol import MODULE_PROFILE_CALCULATED, USER_BIRTH_DATA_UPDATED
 from ....protocol.packet import Packet
 from ...base import BaseModule
-
 from .brain.calculator import NumerologyCalculator
 from .brain.interpreter import NumerologyInterpreter
-from .schemas import NumerologyChart
 
 
 class NumerologyModule(BaseModule):

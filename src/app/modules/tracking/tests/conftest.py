@@ -1,21 +1,22 @@
 
-import pytest_asyncio
-import pytest
 from datetime import datetime
+
+import pytest_asyncio
 from sqlalchemy import select
 from sqlalchemy.pool import NullPool
 
+from src.app.core.db.database import DATABASE_URL, Base, local_session
 from src.app.core.memory import get_active_memory
-from src.app.core.db.database import local_session, Base, DATABASE_URL
 from src.app.models.user import User
 from src.app.models.user_profile import UserProfile
+
 
 @pytest_asyncio.fixture(scope="session", autouse=True)
 async def setup_database():
     """Ensure database tables exist."""
+
     from sqlalchemy.ext.asyncio import create_async_engine
-    import asyncio
-    
+
     # Use a temporary engine for schema setup
     temp_engine = create_async_engine(
         DATABASE_URL,
@@ -25,11 +26,11 @@ async def setup_database():
             "server_settings": {"jit": "off"}
         }
     )
-    
+
     async with temp_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
-    
+
     await temp_engine.dispose()
     yield
 
@@ -37,15 +38,15 @@ async def setup_database():
 async def cleanup_test_state():
     """Clear singletons and dispose of the global engine after each test."""
     yield
-    
+
     # Dispose engine
     from src.app.core.db.database import async_engine
     await async_engine.dispose()
-    
+
     # Clear memory singletons
     import src.app.core.memory.active_memory as active_memory
     import src.app.core.memory.synthesis_orchestrator as synthesis_orchestrator
-    
+
     active_memory._active_memory = None
     synthesis_orchestrator._orchestrator = None
 
@@ -100,8 +101,8 @@ async def test_user_id():
         profile = UserProfile(user_id=user_id, data={})
         db.add(profile)
         await db.commit()
-            
+
         db.expunge_all()
-    
+
     yield user_id
 

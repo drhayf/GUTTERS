@@ -5,82 +5,83 @@ Verifies that the registry correctly manages extractors
 and extracts uncertainties from multiple modules.
 """
 
-import pytest
 from unittest.mock import AsyncMock, patch
 
-from ..registry import UncertaintyRegistry
+import pytest
+
 from ..declarations.astrology import AstrologyUncertaintyExtractor
 from ..declarations.human_design import HumanDesignUncertaintyExtractor
+from ..registry import UncertaintyRegistry
 
 
 class TestUncertaintyRegistry:
     """Test suite for UncertaintyRegistry."""
-    
+
     @pytest.fixture(autouse=True)
     def reset_registry(self):
         """Reset registry before each test."""
         UncertaintyRegistry.reset()
         yield
         UncertaintyRegistry.reset()
-    
+
     def test_register_extractor(self):
         """Should register an extractor."""
         extractor = AstrologyUncertaintyExtractor()
         UncertaintyRegistry.register(extractor)
-        
+
         assert "astrology" in UncertaintyRegistry.list_registered()
-    
+
     def test_register_multiple_extractors(self):
         """Should register multiple extractors."""
         UncertaintyRegistry.register(AstrologyUncertaintyExtractor())
         UncertaintyRegistry.register(HumanDesignUncertaintyExtractor())
-        
+
         registered = UncertaintyRegistry.list_registered()
         assert "astrology" in registered
         assert "human_design" in registered
-    
+
     def test_get_extractor(self):
         """Should retrieve registered extractor."""
         extractor = AstrologyUncertaintyExtractor()
         UncertaintyRegistry.register(extractor)
-        
+
         retrieved = UncertaintyRegistry.get_extractor("astrology")
         assert retrieved is extractor
-    
+
     def test_get_nonexistent_extractor(self):
         """Should return None for unregistered module."""
         result = UncertaintyRegistry.get_extractor("nonexistent")
         assert result is None
-    
+
     def test_unregister_extractor(self):
         """Should remove extractor from registry."""
         UncertaintyRegistry.register(AstrologyUncertaintyExtractor())
         assert "astrology" in UncertaintyRegistry.list_registered()
-        
+
         result = UncertaintyRegistry.unregister("astrology")
         assert result is True
         assert "astrology" not in UncertaintyRegistry.list_registered()
-    
+
     def test_initialize_default_extractors(self):
         """Should register all default extractors."""
         UncertaintyRegistry.initialize_default_extractors()
-        
+
         registered = UncertaintyRegistry.list_registered()
         assert "astrology" in registered
         assert "human_design" in registered
-    
+
     def test_initialize_is_idempotent(self):
         """Should only initialize once."""
         UncertaintyRegistry.initialize_default_extractors()
         UncertaintyRegistry.initialize_default_extractors()  # Should be no-op
-        
+
         # Still should have same extractors
         assert len(UncertaintyRegistry.list_registered()) == 2
 
 
 class TestExtractAll:
     """Test extract_all functionality."""
-    
+
     @pytest.fixture(autouse=True)
     def setup_registry(self):
         """Setup registry with extractors."""
@@ -89,7 +90,7 @@ class TestExtractAll:
         UncertaintyRegistry.register(HumanDesignUncertaintyExtractor())
         yield
         UncertaintyRegistry.reset()
-    
+
     @pytest.fixture
     def mock_results(self):
         """Mock calculation results from multiple modules."""
@@ -114,7 +115,7 @@ class TestExtractAll:
                 # Numerology has no uncertainties
             }
         }
-    
+
     @pytest.mark.asyncio
     async def test_extract_all_modules(self, mock_results):
         """Should extract uncertainties from all registered modules."""
@@ -124,14 +125,14 @@ class TestExtractAll:
                 user_id=42,
                 session_id="test-session"
             )
-        
+
         # Should have 2 declarations (astrology + human_design)
         assert len(declarations) == 2
-        
+
         modules = [d.module for d in declarations]
         assert "astrology" in modules
         assert "human_design" in modules
-    
+
     @pytest.mark.asyncio
     async def test_extract_skips_unregistered_modules(self, mock_results):
         """Should skip modules without registered extractors."""
@@ -142,11 +143,11 @@ class TestExtractAll:
                 user_id=42,
                 session_id="test-session"
             )
-        
+
         # Should not have numerology
         modules = [d.module for d in declarations]
         assert "numerology" not in modules
-    
+
     @pytest.mark.asyncio
     async def test_extract_handles_errors_gracefully(self):
         """Should continue extraction if one module fails."""
@@ -160,7 +161,7 @@ class TestExtractAll:
                 ],
             }
         }
-        
+
         with patch.object(UncertaintyRegistry, '_update_state_tracker', new_callable=AsyncMock):
             # Should not raise, should continue with human_design
             declarations = await UncertaintyRegistry.extract_all(
@@ -168,6 +169,6 @@ class TestExtractAll:
                 user_id=42,
                 session_id="test-session"
             )
-        
+
         # Should have at least human_design
         assert len(declarations) >= 1

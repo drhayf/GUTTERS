@@ -7,9 +7,9 @@ Tests trace generation, tool tracking, and model metadata.
 import pytest
 from sqlalchemy import select
 
-from src.app.modules.intelligence.query.engine import QueryEngine
 from src.app.core.memory import get_active_memory
 from src.app.modules.features.chat.master_chat import MasterChatHandler
+from src.app.modules.intelligence.query.engine import QueryEngine
 
 
 @pytest.mark.asyncio
@@ -59,10 +59,10 @@ async def test_vector_search_tracked_in_trace(seeded_user, db):
     """
     Test that vector search operations appear in trace.
     """
-    from src.app.modules.intelligence.vector.embedding_service import EmbeddingService
+    from src.app.core.config import settings
     from src.app.models.embedding import Embedding
     from src.app.models.user_profile import UserProfile
-    from src.app.core.config import settings
+    from src.app.modules.intelligence.vector.embedding_service import EmbeddingService
 
     # Ensure user profile exists
     result = await db.execute(select(UserProfile).where(UserProfile.user_id == seeded_user))

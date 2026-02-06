@@ -1,5 +1,6 @@
 from datetime import date
 from typing import Any
+
 from langchain_core.tools import StructuredTool
 from pydantic import BaseModel, Field
 
@@ -30,6 +31,10 @@ def get_tool() -> StructuredTool:
         func=None,
         coroutine=_calculate_numerology_async,
         name="calculate_numerology",
-        description="Calculate a Numerology chart. Returns Life Path, Expression, Soul Urge, and Personality numbers. Use this when the user asks for numerology readings or numbers.",
+        description=(
+            "Calculate a Numerology chart. Returns Life Path, Expression, Soul Urge, "
+            "and Personality numbers. Use this when the user asks for numerology "
+            "readings or numbers."
+        ),
         args_schema=NumerologyInput,
     )

@@ -10,22 +10,20 @@ from arq.worker import check_health, run_worker
 from ...core.config import settings
 from ...core.logger import logging  # noqa: F401
 from .functions import (
+    daily_chronos_update_job,
+    generate_hypotheses_job,
+    observer_analysis_job,
     on_job_end,
     on_job_start,
+    populate_embeddings_job,
     sample_background_task,
     shutdown,
     startup,
     synthesize_profile_job,
     update_lunar_tracking_job,
     update_solar_tracking_job,
-    update_solar_tracking_job,
     update_transit_tracking_job,
-    observer_analysis_job,
-    generate_hypotheses_job,
-    populate_embeddings_job,
-    daily_chronos_update_job,
 )
-
 
 REDIS_QUEUE_HOST = settings.REDIS_QUEUE_HOST
 REDIS_QUEUE_PORT = settings.REDIS_QUEUE_PORT

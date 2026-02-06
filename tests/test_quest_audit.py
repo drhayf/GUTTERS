@@ -7,18 +7,16 @@ Confirms all metadata is correct for frontend consumption.
 import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
+from src.app.api.v1.quests import QuestRead
 from src.app.modules.features.quests.manager import QuestManager
 from src.app.modules.features.quests.models import (
     Quest,
-    QuestLog,
-    QuestStatus,
-    RecurrenceType,
-    QuestSource,
     QuestDifficulty,
+    QuestLog,
+    QuestSource,
+    RecurrenceType,
 )
-from src.app.api.v1.quests import QuestRead
 
 
 @pytest.mark.asyncio
@@ -49,7 +47,7 @@ async def test_audit_all_quests_in_system(db: AsyncSession, test_user):
                 description=f"Test quest for audit {i + 1}",
                 recurrence=["daily", "weekly", "once"][i],
                 difficulty=(i % 4) + 1,
-                tags=[f"audit", f"sample{i}"],
+                tags=["audit", f"sample{i}"],
                 source=QuestSource.USER,
             )
 
@@ -59,7 +57,7 @@ async def test_audit_all_quests_in_system(db: AsyncSession, test_user):
         print(f"[SUCCESS] Created {len(all_quests)} sample quests")
 
     # 2. Audit each quest
-    print(f"\n[REPORT] QUEST AUDIT REPORT")
+    print("\n[REPORT] QUEST AUDIT REPORT")
     print("-" * 100)
 
     for idx, quest in enumerate(all_quests, 1):
@@ -69,37 +67,37 @@ async def test_audit_all_quests_in_system(db: AsyncSession, test_user):
         print(f"  Active: {quest.is_active}")
 
         # Validate recurrence
-        print(f"  Recurrence:")
+        print("  Recurrence:")
         print(f"    • Value: {quest.recurrence}")
         print(f"    • Type: {type(quest.recurrence).__name__}")
-        assert isinstance(quest.recurrence, (RecurrenceType, str)), (
+        assert isinstance(quest.recurrence, RecurrenceType | str), (
             f"Recurrence should be Enum or str, got {type(quest.recurrence)}"
         )
         if isinstance(quest.recurrence, RecurrenceType):
             assert hasattr(quest.recurrence, "value"), "Recurrence Enum should have .value"
             print(f"    • Enum Value: {quest.recurrence.value}")
-            print(f"    [VALID] RecurrenceType")
+            print("    [VALID] RecurrenceType")
 
         # Validate difficulty
-        print(f"  Difficulty:")
+        print("  Difficulty:")
         print(f"    • Value: {quest.difficulty}")
         print(f"    • Type: {type(quest.difficulty).__name__}")
-        assert isinstance(quest.difficulty, (QuestDifficulty, str)), f"Difficulty should be Enum or str"
+        assert isinstance(quest.difficulty, QuestDifficulty | str), "Difficulty should be Enum or str"
         if isinstance(quest.difficulty, QuestDifficulty):
             print(f"    • Enum Value: {quest.difficulty.value}")
-            print(f"    ✓ Valid QuestDifficulty")
+            print("    ✓ Valid QuestDifficulty")
 
         # Validate source
-        print(f"  Source:")
+        print("  Source:")
         print(f"    • Value: {quest.source}")
         print(f"    • Type: {type(quest.source).__name__}")
-        assert isinstance(quest.source, (QuestSource, str)), f"Source should be Enum or str"
+        assert isinstance(quest.source, QuestSource | str), "Source should be Enum or str"
         if isinstance(quest.source, QuestSource):
             print(f"    • Enum Value: {quest.source.value}")
-            print(f"    ✓ Valid QuestSource")
+            print("    ✓ Valid QuestSource")
 
         # Test serialization through QuestRead (API layer)
-        print(f"  \n  API Serialization Test:")
+        print("  \n  API Serialization Test:")
         try:
             quest_read = QuestRead(
                 id=quest.id,
@@ -136,7 +134,7 @@ async def test_audit_all_quests_in_system(db: AsyncSession, test_user):
                 f"    ✓ difficulty: {api_response['difficulty']} ({difficulty_names.get(api_response['difficulty'], 'Unknown')})"
             )
 
-            print(f"    [OK] API Response Format: VALID FOR FRONTEND")
+            print("    [OK] API Response Format: VALID FOR FRONTEND")
 
         except Exception as e:
             print(f"    [ERROR] {e}")
@@ -152,7 +150,7 @@ async def test_audit_all_quests_in_system(db: AsyncSession, test_user):
             print(f"    ... and {len(logs) - 3} more")
 
     # 3. Group by user and summarize
-    print(f"\n" + "-" * 100)
+    print("\n" + "-" * 100)
     print("[SUMMARY] BY USER")
     print("-" * 100)
 
@@ -170,7 +168,7 @@ async def test_audit_all_quests_in_system(db: AsyncSession, test_user):
         print(f"   Inactive: {len(quests) - active_count}")
 
     # 4. Test API View Filtering (Dashboard vs Control Room)
-    print(f"\n" + "-" * 100)
+    print("\n" + "-" * 100)
     print("[API] VIEW FILTERING TEST")
     print("-" * 100)
 
@@ -194,7 +192,7 @@ async def test_audit_all_quests_in_system(db: AsyncSession, test_user):
         print(f"   - Quest #{quest.id}: {quest.title} (recurrence={quest.recurrence}, source={quest.source})")
 
     # 5. Final validation
-    print(f"\n" + "=" * 100)
+    print("\n" + "=" * 100)
     print("[OK] AUDIT COMPLETE: All quests validated")
     print("[OK] All serialization formats correct for frontend")
     print("[OK] All metadata present and valid")

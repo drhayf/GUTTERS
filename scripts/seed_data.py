@@ -1,7 +1,8 @@
 import asyncio
 import logging
-from datetime import datetime, timedelta, UTC
-from sqlalchemy import select, delete
+from datetime import UTC, datetime, timedelta
+
+from sqlalchemy import delete, select
 from sqlalchemy.orm import configure_mappers
 
 from src.app.core.db.database import local_session
@@ -40,31 +41,17 @@ async def seed_rich_profile():
 
     # CRITICAL: Import ALL models involved in relationships with User
     # to ensure SQLAlchemy Registry is complete before mapping.
-    from src.app.models.user import User
-    from src.app.models.user_profile import UserProfile
+    from src.app.models.insight import JournalEntry, PromptPhase, PromptStatus, ReflectionPrompt
     from src.app.models.progression import PlayerStats
-    from src.app.models.chat_session import ChatSession
-    from src.app.models.embedding import Embedding
+    from src.app.models.user import User
     from src.app.modules.features.quests.models import (
         Quest,
-        QuestLog,
-        QuestStatus,
         QuestCategory,
         QuestDifficulty,
+        QuestLog,
         QuestSource,
+        QuestStatus,
     )
-    from src.app.models.insight import ReflectionPrompt, JournalEntry, PromptStatus, PromptPhase
-
-    # Also PushSubscription if User uses it
-    try:
-        from src.app.models.push import PushSubscription
-    except ImportError:
-        pass  # Might not exist yet or different path.
-        # Check User model: PushSubscription relationship exists.
-        # I need to find where PushSubscription is defined.
-        # grep? No, I'll risk it if it's not critical or just import generically.
-        # Actually User.py line 88 calls "PushSubscription".
-        # I MUST find it or it will crash.
 
     # Configure mappers NOW
     configure_mappers()

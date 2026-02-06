@@ -1,6 +1,8 @@
+from unittest.mock import AsyncMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock, AsyncMock
 from sqlalchemy import select
+
 from src.app.models.user_profile import UserProfile
 from src.app.modules.infrastructure.push.router import notification_router
 

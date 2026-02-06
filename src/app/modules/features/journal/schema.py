@@ -5,14 +5,15 @@ This defines what Journal Module (Phase 7) WILL produce.
 For now, we use this schema for deterministic seed data in tests.
 """
 
-from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import Optional
+
+from pydantic import BaseModel, Field
+
 
 class JournalEntry(BaseModel):
     """
     Schema for journal entries stored in UserProfile.data['journal_entries'].
-    
+
     When Journal Module is built (Phase 7), it will produce this exact structure.
     """
     id: str = Field(description="UUID for this entry")
@@ -22,7 +23,7 @@ class JournalEntry(BaseModel):
     energy_score: int = Field(ge=1, le=10, description="Energy rating 1-10")
     tags: list[str] = Field(default_factory=list, description="Tags like 'anxiety', 'headache'")
     themes: list[str] = Field(default_factory=list, description="Themes like 'work', 'health'")
-    
+
     class Config:
         json_schema_extra = {
             "example": {

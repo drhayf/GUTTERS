@@ -80,11 +80,13 @@ async def on_job_end(ctx: dict[str, Any]) -> None:
 # -------- tracking jobs --------
 async def update_solar_tracking_job(ctx: Worker) -> None:
     """Background job: Update solar tracking (runs hourly)."""
-    from src.app.modules.tracking.solar.tracker import SolarTracker
-    from src.app.core.db.database import async_session
-    from sqlalchemy import select
-    from src.app.models.user import User
     import traceback
+
+    from sqlalchemy import select
+
+    from src.app.core.db.database import async_session
+    from src.app.models.user import User
+    from src.app.modules.tracking.solar.tracker import SolarTracker
 
     tracker = SolarTracker()
 
@@ -105,11 +107,13 @@ async def update_solar_tracking_job(ctx: Worker) -> None:
 
 async def update_lunar_tracking_job(ctx: Worker) -> None:
     """Background job: Update lunar tracking (runs daily)."""
-    from src.app.modules.tracking.lunar.tracker import LunarTracker
-    from src.app.core.db.database import async_session
-    from sqlalchemy import select
-    from src.app.models.user import User
     import traceback
+
+    from sqlalchemy import select
+
+    from src.app.core.db.database import async_session
+    from src.app.models.user import User
+    from src.app.modules.tracking.lunar.tracker import LunarTracker
 
     tracker = LunarTracker()
 
@@ -130,11 +134,13 @@ async def update_lunar_tracking_job(ctx: Worker) -> None:
 
 async def update_transit_tracking_job(ctx: Worker) -> None:
     """Background job: Update transit tracking (runs daily)."""
-    from src.app.modules.tracking.transits.tracker import TransitTracker
-    from src.app.core.db.database import async_session
-    from sqlalchemy import select
-    from src.app.models.user import User
     import traceback
+
+    from sqlalchemy import select
+
+    from src.app.core.db.database import async_session
+    from src.app.models.user import User
+    from src.app.modules.tracking.transits.tracker import TransitTracker
 
     tracker = TransitTracker()
 
@@ -159,12 +165,14 @@ async def observer_analysis_job(ctx: Worker) -> None:
 
     Runs daily to detect new patterns.
     """
+    import traceback
+
+    from sqlalchemy import select
+
+    from src.app.core.db.database import async_session
+    from src.app.models.user import User
     from src.app.modules.intelligence.observer.observer import Observer
     from src.app.modules.intelligence.observer.storage import ObserverFindingStorage
-    from src.app.core.db.database import async_session
-    from sqlalchemy import select
-    from src.app.models.user import User
-    import traceback
 
     observer = Observer()
     storage = ObserverFindingStorage()
@@ -204,15 +212,17 @@ async def generate_hypotheses_job(ctx: Worker) -> None:
 
     Runs daily after Observer analysis (at 2am).
     """
+    import traceback
+
+    from sqlalchemy import select
+
+    from src.app.core.ai.llm_factory import get_llm
+    from src.app.core.db.database import async_session
+    from src.app.models.user import User
     from src.app.modules.intelligence.hypothesis.generator import HypothesisGenerator
     from src.app.modules.intelligence.hypothesis.storage import HypothesisStorage
     from src.app.modules.intelligence.observer.storage import ObserverFindingStorage
     from src.app.modules.intelligence.synthesis.synthesizer import DEFAULT_MODEL
-    from src.app.core.ai.llm_factory import get_llm
-    from src.app.core.db.database import async_session
-    from sqlalchemy import select
-    from src.app.models.user import User
-    import traceback
 
     llm = get_llm(DEFAULT_MODEL)
     generator = HypothesisGenerator(llm)
@@ -258,14 +268,16 @@ async def populate_embeddings_job(ctx: Worker) -> None:
     - New Observer findings
     - New hypotheses
     """
-    from src.app.modules.intelligence.vector.embedding_service import EmbeddingService
-    from src.app.models.embedding import Embedding
-    from src.app.models.user_profile import UserProfile
-    from src.app.models.user import User
-    from src.app.core.db.database import local_session
-    from src.app.core.config import settings
-    from sqlalchemy import select
     import traceback
+
+    from sqlalchemy import select
+
+    from src.app.core.config import settings
+    from src.app.core.db.database import local_session
+    from src.app.models.embedding import Embedding
+    from src.app.models.user import User
+    from src.app.models.user_profile import UserProfile
+    from src.app.modules.intelligence.vector.embedding_service import EmbeddingService
 
     service = EmbeddingService(settings.OPENROUTER_API_KEY.get_secret_value())
 
@@ -381,49 +393,51 @@ async def populate_embeddings_job(ctx: Worker) -> None:
 async def daily_chronos_update_job(ctx: Worker) -> None:
     """
     Background job: Update Chronos state for all users.
-    
+
     Runs daily to:
     - Refresh planetary period calculations
     - Detect period boundary crossings (52-day cycles)
     - Detect year boundary crossings (birthdays)
     - Emit MAGI_PERIOD_SHIFT and MAGI_YEAR_SHIFT events
     - Update Redis cache and UserProfile persistence
-    
+
     Schedule: Daily at 4:00 AM UTC (after embeddings job)
     """
-    from src.app.core.state.chronos import get_chronos_manager
-    from src.app.core.db.database import async_session
-    from sqlalchemy import select
-    from src.app.models.user import User
     import traceback
-    
+
+    from sqlalchemy import select
+
+    from src.app.core.db.database import async_session
+    from src.app.core.state.chronos import get_chronos_manager
+    from src.app.models.user import User
+
     manager = get_chronos_manager()
-    
+
     try:
         async with async_session() as db:
             result = await db.execute(select(User))
             users = result.scalars().all()
-            
+
             updated_count = 0
             shift_count = 0
-            
+
             for user in users:
                 try:
                     # User must have birth_date for Cardology calculations
                     if not hasattr(user, 'birth_date') or not user.birth_date:
                         continue
-                    
+
                     # Get current cached state for comparison
                     old_state = await manager.get_user_chronos(user.id)
-                    
+
                     # Refresh state (this handles shift detection and events)
                     new_state = await manager.refresh_user_chronos(
                         user_id=user.id,
                         birth_date=user.birth_date
                     )
-                    
+
                     updated_count += 1
-                    
+
                     # Check if a shift occurred
                     if old_state:
                         old_period = old_state.get("period_number")
@@ -434,16 +448,16 @@ async def daily_chronos_update_job(ctx: Worker) -> None:
                                 f"[Chronos] Period shift for user {user.id}: "
                                 f"Period {old_period} → {new_period}"
                             )
-                    
+
                 except Exception as e:
                     logging.error(f"[Chronos] Update failed for user {user.id}: {e}")
                     traceback.print_exc()
-            
+
             logging.info(
                 f"[Chronos] Daily update complete: "
                 f"{updated_count} users updated, {shift_count} period shifts detected"
             )
-            
+
     except Exception as e:
         logging.error(f"[Chronos] Daily update job failed: {e}")
         traceback.print_exc()

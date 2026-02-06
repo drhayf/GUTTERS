@@ -1,5 +1,6 @@
 from datetime import date, time
-from typing import Optional, Any
+from typing import Any, Optional
+
 from langchain_core.tools import StructuredTool
 from pydantic import BaseModel, Field
 
@@ -53,6 +54,10 @@ def get_tool() -> StructuredTool:
         func=None,  # We don't provide a sync implementation
         coroutine=_calculate_astrology_async,
         name="calculate_astrology_chart",
-        description="Calculate a natal astrology chart. Returns planets, houses, and aspects. Use this when the user asks for their chart, positions, or specific astrological details.",
+        description=(
+            "Calculate a natal astrology chart. Returns planets, houses, and aspects. "
+            "Use this when the user asks for their chart, positions, or specific "
+            "astrological details."
+        ),
         args_schema=AstrologyInput,
     )

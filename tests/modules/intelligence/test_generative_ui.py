@@ -4,28 +4,22 @@ Tests for Generative UI system.
 Verifies component generation and response handling using high-fidelity standards.
 """
 
-import pytest
-import pytest_asyncio
-from datetime import datetime, timezone as dt_timezone
-import json
 import uuid
-from typing import Optional
 
+import pytest
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.app.modules.intelligence.generative_ui.generator import ComponentGenerator
-from src.app.modules.intelligence.generative_ui.models import (
-    ComponentSpec,
-    ComponentType,
-    ComponentResponse,
-    MoodSliderSpec,
-    MultiSliderSpec,
-)
-from src.app.modules.intelligence.query.engine import QueryEngine
-from src.app.models.user_profile import UserProfile
 from src.app.core.llm.config import get_premium_llm
 from src.app.core.memory import get_active_memory
+from src.app.models.user_profile import UserProfile
+from src.app.modules.intelligence.generative_ui.generator import ComponentGenerator
+from src.app.modules.intelligence.generative_ui.models import (
+    ComponentResponse,
+    ComponentSpec,
+    ComponentType,
+    MoodSliderSpec,
+)
+from src.app.modules.intelligence.query.engine import QueryEngine
 
 
 @pytest.mark.asyncio

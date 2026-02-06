@@ -30,8 +30,9 @@ async def lifespan_with_admin(app: FastAPI) -> AsyncGenerator[None, None]:
 
         # Initialize tracking data in background (non-blocking)
         # This ensures fresh data is available for users on first load
-        from .core.startup import initialize_tracking_data
         import asyncio
+
+        from .core.startup import initialize_tracking_data
         asyncio.create_task(initialize_tracking_data())
 
         yield
@@ -44,9 +45,10 @@ if admin:
     app.mount(settings.CRUD_ADMIN_MOUNT_PATH, admin.app)
 
 # --- Frontend Serving ---
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
 from pathlib import Path
+
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 # Mount static files if directory exists
 static_dir = Path(__file__).parent / "static"

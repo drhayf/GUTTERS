@@ -4,12 +4,12 @@ Trace context manager for Observable AI.
 Provides context manager for building activity traces.
 """
 
-from contextvars import ContextVar
-from typing import Optional
 import uuid
-from datetime import datetime, UTC
+from contextvars import ContextVar
+from datetime import UTC, datetime
+from typing import Optional
 
-from .models import ActivityTrace, ThinkingStep, ToolCall, ToolType, ModelInfo
+from .models import ActivityTrace, ModelInfo, ThinkingStep, ToolCall, ToolType
 
 # Context variable to store current trace
 _current_trace: ContextVar[Optional[ActivityTrace]] = ContextVar("current_trace", default=None)

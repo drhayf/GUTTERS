@@ -1,17 +1,16 @@
 import logging
-import json
-from datetime import datetime, UTC
-from typing import Any, Dict, Optional
+from datetime import UTC, datetime
+from typing import Any, Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.app.core.db.database import local_session
 from src.app.core.events.bus import get_event_bus
-from src.app.protocol import events
 from src.app.models.user_profile import UserProfile
+from src.app.modules.intelligence.evolution.refiner import get_evolution_refiner
 from src.app.modules.intelligence.genesis.persistence import get_genesis_persistence
-from src.app.modules.intelligence.evolution.refiner import get_evolution_refiner, RefinementResult
+from src.app.protocol import events
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +48,7 @@ class GenesisSemanticListener:
         quest_id = payload.get("quest_id")
 
         async with local_session() as db:
-            from src.app.modules.features.quests.models import Quest, QuestDifficulty, QuestCategory
+            from src.app.modules.features.quests.models import Quest, QuestCategory, QuestDifficulty
 
             result = await db.execute(select(Quest).where(Quest.id == quest_id))
             quest = result.scalar_one_or_none()

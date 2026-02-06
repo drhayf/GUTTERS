@@ -1,15 +1,15 @@
 import asyncio
-import sys
 import os
-import json
-from datetime import datetime, timedelta, timezone, UTC
+import sys
+from datetime import UTC, datetime, timedelta
 
 # Add project root to path
 sys.path.append(os.path.join(os.getcwd(), "src"))
 
+from sqlalchemy import insert
+
 from src.app.core.db.database import async_get_db
 from src.app.models.cosmic_conditions import CosmicConditions
-from sqlalchemy import insert
 
 
 async def seed():

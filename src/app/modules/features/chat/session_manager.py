@@ -4,14 +4,14 @@ Chat session management.
 Handles creation, retrieval, and management of Master + Branch sessions.
 """
 
-from typing import Optional, List
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, or_, delete, cast, String
-from sqlalchemy.orm import selectinload
-from datetime import datetime, timezone as dt_timezone
-from typing import Dict, Any
+from datetime import UTC, datetime
+from typing import Any, Dict, List, Optional
 
-from src.app.models.chat_session import ChatSession, ChatMessage, SessionType
+from sqlalchemy import delete, func, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
+from src.app.models.chat_session import ChatMessage, ChatSession, SessionType
 
 
 class SessionManager:
@@ -102,7 +102,7 @@ class SessionManager:
         # Update session updated_at
         result = await db.execute(select(ChatSession).where(ChatSession.id == session_id))
         session = result.scalar_one()
-        session.updated_at = datetime.now(dt_timezone.utc)
+        session.updated_at = datetime.now(UTC)
 
         await db.commit()
         await db.refresh(message)
@@ -266,7 +266,7 @@ class SessionManager:
         # Create a copy to trigger update (SQLAlchemy JSONB tracking)
         new_meta = session.meta.copy()
         new_meta["is_archived"] = True
-        new_meta["archived_at"] = datetime.now(dt_timezone.utc).isoformat()
+        new_meta["archived_at"] = datetime.now(UTC).isoformat()
         session.meta = new_meta
 
         from sqlalchemy.orm.attributes import flag_modified

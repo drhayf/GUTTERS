@@ -7,9 +7,10 @@ centers, and full chart structures.
 Updated to support full gate activations (color, tone, base) and
 probabilistic calculations.
 """
-from pydantic import BaseModel, Field
-from typing import Optional, Literal
 from datetime import date, time
+from typing import Literal, Optional
+
+from pydantic import BaseModel, Field
 
 
 class ChartSubject(BaseModel):
@@ -70,34 +71,34 @@ class HumanDesignChart(BaseModel):
     """Complete Human Design chart data."""
     # Required subject info
     subject: Optional[ChartSubject] = None
-    
+
     # Core type info
     type: str
     strategy: str
     authority: str
     profile: str = Field(..., description="Profile in X/Y format")
-    
+
     # Optional signature/not-self (from TYPE_DETAILS)
     signature: Optional[str] = None
     not_self: Optional[str] = None
-    
+
     # Incarnation cross and definition
     incarnation_cross: Optional[str] = None
     definition: Optional[str] = None
-    
+
     # Gates and channels
     personality_gates: list[HDGate] = Field(default_factory=list)
     design_gates: list[HDGate] = Field(default_factory=list)
     channels: list[HDChannel] = Field(default_factory=list)
-    
+
     # Centers
     defined_centers: list[str] = Field(default_factory=list)
     undefined_centers: list[str] = Field(default_factory=list)
-    
+
     # Accuracy and notes
     accuracy: Literal["full", "partial", "probabilistic"]
     note: Optional[str] = None
-    
+
     # Probabilistic type data (when birth time unknown)
     type_confidence: Optional[float] = Field(None, ge=0.0, le=1.0)
     type_probabilities: Optional[list[TypeProbability]] = None

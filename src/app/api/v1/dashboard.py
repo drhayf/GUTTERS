@@ -1,5 +1,5 @@
 import logging
-from datetime import UTC, datetime, timezone
+from datetime import UTC, datetime
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends
@@ -10,12 +10,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.app.api.dependencies import get_current_user
 from src.app.core.db.database import async_get_db
 from src.app.core.memory.active_memory import get_active_memory
+from src.app.models.user_profile import UserProfile
 from src.app.modules.intelligence.hypothesis.storage import HypothesisStorage
 from src.app.modules.intelligence.observer.observer import Observer
-from src.app.modules.tracking.solar.tracker import SolarTracker
 from src.app.modules.tracking.lunar.tracker import LunarTracker
+from src.app.modules.tracking.solar.tracker import SolarTracker
 from src.app.modules.tracking.transits.tracker import TransitTracker
-from src.app.models.user_profile import UserProfile
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +105,7 @@ async def get_dashboard_summary(
             user_name=current_user["name"] or current_user["username"],
             synthesis_preview="Profile not yet synthesized. Please complete onboarding.",
             modules_active=[],
-            last_updated=datetime.now(timezone.utc).isoformat(),
+            last_updated=datetime.now(UTC).isoformat(),
             confidence_score=0.0,
         )
 

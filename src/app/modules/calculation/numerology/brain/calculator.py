@@ -11,8 +11,9 @@ NO event system knowledge - pure inputs and outputs.
 from datetime import date
 from typing import Any
 
-from ..schemas import NumerologyChart
 from src.app.modules.calculation.registry import CalculationModuleRegistry
+
+from ..schemas import NumerologyChart
 
 
 @CalculationModuleRegistry.register(
@@ -272,7 +273,7 @@ class NumerologyCalculator:
         name_intermediates = self._get_reduction_intermediates(name_total)
         karmic.extend([n for n in name_intermediates if n in self.KARMIC_DEBT_NUMBERS])
 
-        return sorted(list(set(karmic)))  # Dedupe and sort
+        return sorted(set(karmic))  # Dedupe and sort
 
     def _get_reduction_intermediates(self, num: int) -> list[int]:
         """

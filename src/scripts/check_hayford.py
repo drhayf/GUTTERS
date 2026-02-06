@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 import sys
-from pathlib import Path
-from datetime import date, time
 from collections import Counter
+from datetime import date, time
+from pathlib import Path
 
 src_path = Path(__file__).parent.parent
 sys.path.insert(0, str(src_path))

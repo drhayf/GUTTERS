@@ -10,6 +10,7 @@
 """
 
 from .models import OracleReading
+from .quantum import QuantumEntropy
 from .service import OracleService
 
-__all__ = ["OracleReading", "OracleService"]
+__all__ = ["OracleReading", "OracleService", "QuantumEntropy"]

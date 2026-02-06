@@ -1,15 +1,16 @@
-import pytest
 import json
-from unittest.mock import AsyncMock, patch, MagicMock
+from dataclasses import dataclass
+from typing import Any, List, Optional
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 from sqlalchemy import select
+
+from src.app.models.chat_session import ChatMessage, ChatSession
 from src.app.modules.features.chat.master_chat import MasterChatHandler
 from src.app.modules.features.journal.system_journal import SystemJournalist
-from src.app.modules.features.quests.manager import QuestManager
-from src.app.models.chat_session import ChatSession, ChatMessage
-from src.app.protocol.packet import ProgressionPacket
 from src.app.modules.features.quests.models import Quest
-from dataclasses import dataclass
-from typing import List, Optional, Any
+from src.app.protocol.packet import ProgressionPacket
 
 
 @dataclass

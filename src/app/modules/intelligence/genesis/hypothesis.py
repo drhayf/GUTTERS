@@ -5,12 +5,11 @@ A hypothesis represents a candidate value for an uncertain field,
 being refined through conversational probing.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Literal
 from uuid import uuid4
 
 from pydantic import BaseModel, Field, computed_field
-
 
 # Core fields that get priority boost during probing
 CORE_FIELDS = {"rising_sign", "type", "profile", "authority"}
@@ -19,11 +18,11 @@ CORE_FIELDS = {"rising_sign", "type", "profile", "authority"}
 class Hypothesis(BaseModel):
     """
     A candidate value being refined through conversation.
-    
+
     Each uncertain field (e.g., rising_sign) spawns multiple hypotheses,
     one per candidate value. Genesis probes hypotheses to update
     confidence until one reaches the confirmation threshold.
-    
+
     Example:
         Hypothesis(
             field="rising_sign",
@@ -35,7 +34,7 @@ class Hypothesis(BaseModel):
             initial_confidence=0.125
         )
     """
-    
+
     # Identity
     id: str = Field(default_factory=lambda: str(uuid4())[:8])
     field: str = Field(description="Which field this hypothesizes (e.g., 'rising_sign')")
@@ -43,7 +42,7 @@ class Hypothesis(BaseModel):
     suspected_value: str = Field(description="The candidate value (e.g., 'Virgo')")
     user_id: int = Field(description="User this hypothesis belongs to")
     session_id: str = Field(description="Conversation/session ID")
-    
+
     # Confidence tracking
     confidence: float = Field(
         default=0.0,
@@ -63,7 +62,7 @@ class Hypothesis(BaseModel):
         le=1.0,
         description="Confidence at which to confirm"
     )
-    
+
     # Evidence tracking
     evidence: list[str] = Field(
         default_factory=list,
@@ -73,7 +72,7 @@ class Hypothesis(BaseModel):
         default_factory=list,
         description="Contradicting evidence from responses"
     )
-    
+
     # Probing state
     probes_attempted: int = Field(
         default=0,
@@ -93,7 +92,7 @@ class Hypothesis(BaseModel):
         default_factory=list,
         description="Which refinement strategies have been used"
     )
-    
+
     # Resolution state
     resolved: bool = Field(
         default=False,
@@ -103,25 +102,25 @@ class Hypothesis(BaseModel):
         default=None,
         description="How this hypothesis was resolved"
     )
-    
+
     # Timestamps
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc)
+        default_factory=lambda: datetime.now(UTC)
     )
     updated_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc)
+        default_factory=lambda: datetime.now(UTC)
     )
-    
+
     # Temporal Context - captures magi chronos state at generation time
     temporal_context: dict | None = Field(
         default=None,
         description="Magi chronos state when hypothesis was generated (period card, planetary ruler, theme, guidance)"
     )
-    
+
     # =========================================================================
     # Computed Properties
     # =========================================================================
-    
+
     @computed_field
     @property
     def needs_probing(self) -> bool:
@@ -133,19 +132,19 @@ class Hypothesis(BaseModel):
         if self.probes_attempted >= self.max_probes:
             return False
         return True
-    
+
     @computed_field
     @property
     def confidence_gap(self) -> float:
         """How far from confirmation threshold."""
         return self.confidence_threshold - self.confidence
-    
+
     @computed_field
     @property
     def priority(self) -> float:
         """
         Calculate priority for probing (0.0-1.0, higher = probe first).
-        
+
         Priority factors:
         1. Close to threshold (0.6-0.8) = high priority (almost there!)
         2. Core field = boost priority
@@ -154,9 +153,9 @@ class Hypothesis(BaseModel):
         """
         if self.resolved or not self.needs_probing:
             return 0.0
-        
+
         priority = 0.0
-        
+
         # Factor 1: Closeness to threshold (max 0.4)
         # Higher confidence = closer to confirmation = higher priority
         if self.confidence >= 0.6:
@@ -167,72 +166,72 @@ class Hypothesis(BaseModel):
             priority += 0.2
         else:
             priority += 0.1
-        
+
         # Factor 2: Core field boost (max 0.2)
         if self.field in CORE_FIELDS:
             priority += 0.2
-        
+
         # Factor 3: Fresh hypothesis boost (max 0.2)
         probe_ratio = 1 - (self.probes_attempted / self.max_probes)
         priority += 0.2 * probe_ratio
-        
+
         # Factor 4: Evidence ratio boost (max 0.2)
         total_evidence = len(self.evidence) + len(self.contradictions)
         if total_evidence > 0:
             evidence_ratio = len(self.evidence) / total_evidence
             priority += 0.2 * evidence_ratio
-        
+
         return min(priority, 1.0)
-    
+
     # =========================================================================
     # Methods
     # =========================================================================
-    
+
     def add_evidence(self, evidence: str) -> None:
         """Add supporting evidence."""
         self.evidence.append(evidence)
-        self.updated_at = datetime.now(timezone.utc)
-    
+        self.updated_at = datetime.now(UTC)
+
     def add_contradiction(self, contradiction: str) -> None:
         """Add contradicting evidence."""
         self.contradictions.append(contradiction)
-        self.updated_at = datetime.now(timezone.utc)
-    
+        self.updated_at = datetime.now(UTC)
+
     def update_confidence(self, delta: float) -> float:
         """
         Adjust confidence by delta.
-        
+
         Args:
             delta: Amount to add (positive) or subtract (negative)
-            
+
         Returns:
             New confidence value
         """
         self.confidence = max(0.0, min(1.0, self.confidence + delta))
-        self.updated_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(UTC)
         return self.confidence
-    
+
     def mark_probed(self, strategy_name: str) -> None:
         """Record that a probe was attempted."""
         self.probes_attempted += 1
-        self.last_probed = datetime.now(timezone.utc)
+        self.last_probed = datetime.now(UTC)
         if strategy_name not in self.strategies_used:
             self.strategies_used.append(strategy_name)
-        self.updated_at = datetime.now(timezone.utc)
-    
+        self.updated_at = datetime.now(UTC)
+
     def resolve(
-        self, 
+        self,
         method: Literal["confirmed", "refuted", "timeout", "superseded"]
     ) -> None:
         """Mark hypothesis as resolved."""
         self.resolved = True
         self.resolution_method = method
-        self.updated_at = datetime.now(timezone.utc)
-    
+        self.updated_at = datetime.now(UTC)
+
     def get_unused_strategies(self, available: list[str]) -> list[str]:
         """Get strategies that haven't been used yet."""
         return [s for s in available if s not in self.strategies_used]
-    
+
     def to_storage_dict(self) -> dict:
         """Convert for JSONB storage."""
         return {
@@ -241,7 +240,7 @@ class Hypothesis(BaseModel):
             "updated_at": self.updated_at.isoformat(),
             "last_probed": self.last_probed.isoformat() if self.last_probed else None,
         }
-    
+
     @classmethod
     def from_storage_dict(cls, data: dict) -> "Hypothesis":
         """Reconstruct from storage."""

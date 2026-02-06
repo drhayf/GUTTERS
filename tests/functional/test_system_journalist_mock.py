@@ -1,9 +1,10 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from datetime import datetime
+
+import pytest
+
+from src.app.modules.features.journal.system_journal import SystemJournalist
 from src.app.protocol import events
 from src.app.protocol.packet import ProgressionPacket
-from src.app.modules.features.journal.system_journal import SystemJournalist
 
 
 @pytest.mark.asyncio

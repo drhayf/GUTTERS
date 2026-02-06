@@ -32,8 +32,8 @@
 ╚══════════════════════════════════════════════════════════════════════════════╝
 """
 
+from .integration import CouncilIntegration, UnifiedCosmicState, get_council_integration
 from .service import CouncilService, get_council_service
-from .integration import CouncilIntegration, get_council_integration, UnifiedCosmicState
 
 __all__ = [
     "CouncilService",

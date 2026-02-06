@@ -48,19 +48,19 @@ async def handle_type_confirmed(
 ) -> dict:
     """
     Recalculate Human Design chart when type is confirmed.
-    
+
     Steps:
     1. Get user's birth data from profile
     2. Apply confirmed type to chart
     3. Update strategy/signature/not-self based on type
     4. Update profile with refined chart
-    
+
     Args:
         user_id: User ID
         confirmed_type: Confirmed HD type
         confidence: Confidence level of confirmation
         db_session: Database session (optional)
-        
+
     Returns:
         Updated chart data
     """
@@ -68,18 +68,18 @@ async def handle_type_confirmed(
         f"Refining HD chart for user {user_id} "
         f"with confirmed type: {confirmed_type} ({confidence:.2f})"
     )
-    
+
     try:
         # Get type details
         details = TYPE_DETAILS.get(confirmed_type, {})
-        
+
         # TODO: In production, this would:
         # 1. Fetch existing HD chart from user profile
         # 2. Override type with confirmed value
         # 3. Update strategy, signature, not_self
         # 4. Recalculate any type-dependent features
         # 5. Return refined chart
-        
+
         refined_chart = {
             "accuracy": "refined",
             "type_confirmed": True,
@@ -90,9 +90,9 @@ async def handle_type_confirmed(
             "confidence": confidence,
             "note": f"Type confirmed through conversation as {confirmed_type}.",
         }
-        
+
         return refined_chart
-        
+
     except Exception as e:
         logger.error(f"Error refining HD with confirmed type: {e}")
         raise
@@ -106,14 +106,14 @@ async def handle_profile_confirmed(
 ) -> dict:
     """
     Handle profile confirmation (future enhancement).
-    
+
     Profile format: "X/Y" (e.g., "1/3", "5/1")
     """
     logger.info(
         f"Profile confirmation for user {user_id}: "
         f"{confirmed_profile} ({confidence:.2f})"
     )
-    
+
     return {
         "profile_confirmed": True,
         "profile": confirmed_profile,

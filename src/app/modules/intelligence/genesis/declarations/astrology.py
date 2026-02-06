@@ -5,28 +5,27 @@ Extracts uncertainties from astrology calculation results,
 specifically rising_sign when birth time is unknown.
 """
 
-from typing import Any
 
-from .base import UncertaintyExtractor
 from ..uncertainty import UncertaintyDeclaration, UncertaintyField
+from .base import UncertaintyExtractor
 
 
 class AstrologyUncertaintyExtractor(UncertaintyExtractor[dict]):
     """
     Extracts uncertainties from astrology NatalChartResult.
-    
+
     When birth time is unknown, astrology calculates probabilistically
     and produces rising_probabilities. This extractor reads those
     probabilities and creates uncertainty declarations.
-    
+
     Extracted fields:
     - rising_sign: From rising_probabilities list
     - house_placements: From planet_stability (if variable)
     """
-    
+
     module_name = "astrology"
     result_type = dict
-    
+
     # Refinement strategies for each uncertain field
     REFINEMENT_STRATEGIES = {
         "rising_sign": [
@@ -41,36 +40,36 @@ class AstrologyUncertaintyExtractor(UncertaintyExtractor[dict]):
             "career_public_image",  # "How do you present professionally?"
         ]
     }
-    
+
     def can_extract(self, result: dict) -> bool:
         """
         Check if this astrology result has extractable uncertainties.
-        
+
         Looks for:
         - accuracy == "probabilistic" or "solar"
         - rising_probabilities list present
         """
         accuracy = result.get("accuracy", "full")
         has_probabilities = result.get("rising_probabilities") is not None
-        
+
         return accuracy in ("probabilistic", "solar") and has_probabilities
-    
+
     def extract(
-        self, 
-        result: dict, 
-        user_id: int, 
+        self,
+        result: dict,
+        user_id: int,
         session_id: str
     ) -> UncertaintyDeclaration | None:
         """
         Extract uncertainties from astrology result.
-        
+
         Reads rising_probabilities and converts to UncertaintyField.
         """
         if not self.can_extract(result):
             return None
-        
+
         fields: list[UncertaintyField] = []
-        
+
         # Extract rising sign uncertainty
         rising_probs = result.get("rising_probabilities", [])
         if rising_probs:
@@ -85,17 +84,17 @@ class AstrologyUncertaintyExtractor(UncertaintyExtractor[dict]):
                     # Pydantic model - access attributes
                     sign = prob.sign
                     probability = prob.probability
-                
+
                 if sign:
                     candidates[sign] = probability
-            
+
             if candidates:
                 fields.append(self._create_field(
                     field_name="rising_sign",
                     candidates=candidates,
                     confidence_threshold=0.80
                 ))
-        
+
         # Extract planet house uncertainty (from planet_stability)
         planet_stability = result.get("planet_stability", [])
         if planet_stability:
@@ -108,10 +107,10 @@ class AstrologyUncertaintyExtractor(UncertaintyExtractor[dict]):
                 else:
                     is_stable = planet.house_stable
                     planet_name = planet.planet
-                
+
                 if not is_stable:
                     unstable_planets.append(planet_name)
-            
+
             # If multiple planets have variable houses, add uncertainty
             if len(unstable_planets) >= 3:
                 # Create a summary uncertainty for house system
@@ -120,10 +119,10 @@ class AstrologyUncertaintyExtractor(UncertaintyExtractor[dict]):
                     candidates={"variable": 1.0},  # Placeholder
                     confidence_threshold=0.80
                 ))
-        
+
         if not fields:
             return None
-        
+
         return self._create_declaration(
             user_id=user_id,
             session_id=session_id,

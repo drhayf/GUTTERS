@@ -1,9 +1,11 @@
+from datetime import UTC, datetime
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock
-from src.app.modules.features.chat.master_chat import MasterChatHandler
-from src.app.models.user_profile import UserProfile
+
 from src.app.models.chat_session import ChatMessage, ChatSession, SessionType
-from datetime import datetime, UTC
+from src.app.models.user_profile import UserProfile
+from src.app.modules.features.chat.master_chat import MasterChatHandler
 
 
 @pytest.mark.asyncio

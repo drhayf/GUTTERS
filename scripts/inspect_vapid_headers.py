@@ -3,17 +3,17 @@
 Inspect exactly what VAPID headers are being generated and decode the JWT.
 """
 
+import base64
+import json
 import os
 import sys
-import json
-import base64
 
 # Change to src directory for proper imports
 os.chdir(os.path.join(os.path.dirname(__file__), "..", "src"))
 sys.path.insert(0, os.getcwd())
 
-from app.modules.infrastructure.push.service import generate_vapid_headers
 from app.core.config import settings
+from app.modules.infrastructure.push.service import generate_vapid_headers
 
 
 def decode_jwt(token):

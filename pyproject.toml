@@ -103,6 +103,21 @@ packages = ["src"]
 target-version = "py311"
 line-length = 120
 fix = true
+exclude = [
+    "work/",                      # Legacy/work copies and work-in-progress
+    "tests/",                     # Test suite files
+    "test_*.py",                  # Root-level test files
+    "*_demo.py",                  # Demo/example scripts
+    "*_test.py",                  # Root-level test files
+    "scripts/",                   # Utility and migration scripts
+    ".venv/",                     # Virtual environment
+    "node_modules/",              # Frontend dependencies
+    "build/",                     # Build artifacts
+    "dist/",                      # Distribution artifacts
+    ".git/",                       # Git metadata
+    "__pycache__/",               # Python cache
+    "*.egg-info/",                # Egg info
+]
 
 [tool.ruff.lint]
 select = [

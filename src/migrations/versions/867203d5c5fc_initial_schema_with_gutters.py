@@ -1,14 +1,15 @@
 """initial schema with gutters
 
 Revision ID: 867203d5c5fc
-Revises: 
+Revises:
 Create Date: 2026-01-22 07:50:17.781633
 
 """
-from typing import Sequence, Union
+from collections.abc import Sequence
+from typing import Union
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
@@ -31,7 +32,12 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index('ix_cosmic_conditions_timestamp', 'cosmic_conditions', ['timestamp'], unique=False)
-    op.create_index('ix_cosmic_conditions_type_timestamp', 'cosmic_conditions', ['condition_type', 'timestamp'], unique=False)
+    op.create_index(
+        'ix_cosmic_conditions_type_timestamp',
+        'cosmic_conditions',
+        ['condition_type', 'timestamp'],
+        unique=False,
+    )
     op.create_table('system_configuration',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('module_name', sa.String(length=100), nullable=False),

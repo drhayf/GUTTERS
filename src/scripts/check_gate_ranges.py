@@ -25,7 +25,7 @@ print(f"\n172.94° is in Gate 6 range? {start6 <= 172.94 < end6}")
 print(f"172.94° is in Gate 9 range? {start9 <= 172.94 < end9}")
 
 # Show gates around 172.94
-print(f"\nGates around 172.94°:")
+print("\nGates around 172.94°:")
 for i in range(max(0, idx6-2), min(len(c.GATE_ORDER_FROM_41), idx6+3)):
     gate = c.GATE_ORDER_FROM_41[i]
     start = i * 5.625

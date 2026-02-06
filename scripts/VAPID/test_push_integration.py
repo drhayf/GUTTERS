@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 VAPID Push Integration Test
 
@@ -26,10 +25,10 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root / "src"))
 
 try:
-    from dotenv import load_dotenv
-    from pywebpush import webpush, WebPushException
     import base64
-    import json
+
+    from dotenv import load_dotenv
+    from pywebpush import WebPushException, webpush
 except ImportError as e:
     print(f"❌ Missing dependencies: {e}")
     print("Install with: pip install pywebpush python-dotenv")
@@ -69,7 +68,7 @@ def test_vapid_signing():
     print("-" * 70)
     private_key, public_key, claims_sub = load_vapid_keys()
 
-    print(f"✅ Loaded keys")
+    print("✅ Loaded keys")
     print(f"   Private key format: {'PEM (multi-line)' if '---BEGIN' in private_key else 'base64url (single-line)'}")
     print(f"   Public key length: {len(public_key)} chars")
     print(f"   Claims sub: {claims_sub}\n")
@@ -93,7 +92,7 @@ def test_vapid_signing():
         },
     }
 
-    print(f"✅ Test subscription created")
+    print("✅ Test subscription created")
     print(f"   Endpoint: {test_subscription['endpoint']}\n")
 
     # Step 3: Test signing - THIS IS THE CRITICAL TEST
@@ -112,7 +111,7 @@ def test_vapid_signing():
 
         print("✅ VAPID JWT signing SUCCESSFUL!")
         print(f"   Status code: {result.status_code if hasattr(result, 'status_code') else 'N/A'}")
-        print(f"   This means the BadJwtToken error is FIXED!\n")
+        print("   This means the BadJwtToken error is FIXED!\n")
 
         success = True
 
@@ -121,22 +120,22 @@ def test_vapid_signing():
 
         # Check if it's the BadJwtToken error
         if "BadJwtToken" in error_msg:
-            print(f"❌ BadJwtToken ERROR STILL PRESENT!")
+            print("❌ BadJwtToken ERROR STILL PRESENT!")
             print(f"   Error: {e}")
-            print(f"\n   The keys are still invalid or mismatched.")
+            print("\n   The keys are still invalid or mismatched.")
             success = False
         elif "410" in error_msg or "404" in error_msg or "401" in error_msg:
             # These are expected - the test endpoint doesn't exist
-            print(f"✅ VAPID JWT signing SUCCESSFUL!")
+            print("✅ VAPID JWT signing SUCCESSFUL!")
             print(f"   Error: {e}")
             print(f"\n   NOTE: The {error_msg} error is EXPECTED.")
-            print(f"   The test endpoint doesn't exist (it's just for testing).")
-            print(f"   The important thing is: NO BadJwtToken error!")
-            print(f"   This means your VAPID keys are WORKING CORRECTLY!\n")
+            print("   The test endpoint doesn't exist (it's just for testing).")
+            print("   The important thing is: NO BadJwtToken error!")
+            print("   This means your VAPID keys are WORKING CORRECTLY!\n")
             success = True
         else:
             print(f"⚠️  Unexpected error: {e}")
-            print(f"   This might not be a key issue.\n")
+            print("   This might not be a key issue.\n")
             success = False
 
     except Exception as e:

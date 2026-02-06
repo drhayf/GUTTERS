@@ -1,11 +1,12 @@
 import asyncio
-import math
-from datetime import datetime, UTC
+from datetime import UTC, datetime
+
 from sqlalchemy import select
+
 from src.app.core.db.database import local_session
-from src.app.models import User, PlayerStats, Quest, QuestLog
+from src.app.models import PlayerStats, QuestLog, User
 from src.app.modules.features.quests.manager import QuestManager
-from src.app.modules.features.quests.models import QuestDifficulty, QuestCategory, QuestStatus
+from src.app.modules.features.quests.models import QuestCategory, QuestDifficulty, QuestStatus
 
 
 async def verify_progression():

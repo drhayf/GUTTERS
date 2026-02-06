@@ -7,11 +7,10 @@ how to read its result schema and declare uncertainties.
 """
 
 from abc import ABC, abstractmethod
-from datetime import datetime, UTC
-from typing import Any, Generic, TypeVar
+from datetime import UTC, datetime
+from typing import Generic, TypeVar
 
 from ..uncertainty import UncertaintyDeclaration, UncertaintyField
-
 
 # Type variable for result types (dict, Pydantic model, etc.)
 T = TypeVar("T")

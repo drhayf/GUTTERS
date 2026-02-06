@@ -1,17 +1,13 @@
 import asyncio
 import logging
-from datetime import datetime, UTC
-from sqlalchemy import select, func
-from unittest.mock import MagicMock, AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock
+
+from sqlalchemy import func, select
 
 from src.app.core.db.database import local_session
-from src.app.core.events.bus import get_event_bus
-from src.app.modules.intelligence.insight.manager import InsightManager
-from src.app.modules.infrastructure.push.service import NotificationService
 from src.app.models.user_profile import UserProfile
-from src.app.models.progression import PlayerStats
-from src.app.modules.features.quests.models import QuestLog
-from src.app.protocol import events
+from src.app.modules.infrastructure.push.service import NotificationService
+from src.app.modules.intelligence.insight.manager import InsightManager
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")

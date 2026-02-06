@@ -1,23 +1,21 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Debug script: Show EXACTLY what JWT pywebpush is generating
 """
 
-import sys
 import io
+import sys
 
 if sys.platform == "win32":
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
-from pathlib import Path
-import os
-from dotenv import load_dotenv
-from pywebpush import webpush
-from py_vapid import Vapid02
-import base64
 import json
+import os
+from pathlib import Path
+
 import jwt
+from dotenv import load_dotenv
+from py_vapid import Vapid02
 
 project_root = Path(__file__).parent.parent
 env_path = project_root / "src" / ".env"
@@ -76,7 +74,7 @@ try:
         # Decode UNVERIFIED (for debugging)
         try:
             decoded = jwt.decode(jwt_token, options={"verify_signature": False})
-            print(f"\nJWT Decoded (unverified):")
+            print("\nJWT Decoded (unverified):")
             print(json.dumps(decoded, indent=2))
         except Exception as e:
             print(f"Error decoding: {e}")

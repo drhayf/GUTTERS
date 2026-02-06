@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys
-from pathlib import Path
 from datetime import date, time
+from pathlib import Path
 
 src_path = Path(__file__).parent.parent
 sys.path.insert(0, str(src_path))
@@ -17,10 +17,10 @@ h4 = calc._calculate_full_chart('H', date(1999,7,23), time(4,0), 5.6037, -0.1870
 print("TRANSITION: 03:00 (Generator) → 04:00 (Projector)")
 print("="*60)
 
-print(f"\n03:00:")
+print("\n03:00:")
 print(f"  Type: {h3.type}")
 print(f"  Sacral defined: {'Sacral' in h3.defined_centers}")
-print(f"  Defined channels:")
+print("  Defined channels:")
 for ch in h3.channels:
     if ch.defined:
         g1, g2 = ch.gates
@@ -29,10 +29,10 @@ for ch in h3.channels:
         marker = " ← SACRAL" if (c1 == "Sacral" or c2 == "Sacral") else ""
         print(f"    {ch.name} ({g1}-{g2}): {c1}↔{c2}{marker}")
 
-print(f"\n04:00:")
+print("\n04:00:")
 print(f"  Type: {h4.type}")
 print(f"  Sacral defined: {'Sacral' in h4.defined_centers}")
-print(f"  Defined channels:")
+print("  Defined channels:")
 for ch in h4.channels:
     if ch.defined:
         g1, g2 = ch.gates
@@ -46,8 +46,8 @@ print("ANALYSIS:")
 print("="*60)
 
 # Find which channels changed
-h3_channels = set((ch.gates[0], ch.gates[1]) for ch in h3.channels if ch.defined)
-h4_channels = set((ch.gates[0], ch.gates[1]) for ch in h4.channels if ch.defined)
+h3_channels = {(ch.gates[0], ch.gates[1]) for ch in h3.channels if ch.defined}
+h4_channels = {(ch.gates[0], ch.gates[1]) for ch in h4.channels if ch.defined}
 
 lost = h3_channels - h4_channels
 gained = h4_channels - h3_channels

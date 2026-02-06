@@ -5,17 +5,15 @@ Event-driven module for Human Design chart calculation and interpretation.
 Subscribes to USER_BIRTH_DATA_UPDATED events and calculates HD charts.
 """
 
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from typing import Any
 
 from ....core.events.bus import get_event_bus
 from ....protocol import MODULE_PROFILE_CALCULATED, USER_BIRTH_DATA_UPDATED
 from ....protocol.packet import Packet
 from ...base import BaseModule
-
 from .brain.calculator import HumanDesignCalculator
 from .brain.interpreter import HumanDesignInterpreter
-from .schemas import HumanDesignChart
 
 
 class HumanDesignModule(BaseModule):

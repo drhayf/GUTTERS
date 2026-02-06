@@ -15,25 +15,25 @@ Features:
 - Full gate/channel/center activation
 """
 
-from datetime import date, time, datetime, timedelta
-from typing import Any, Optional
 from collections import Counter
+from datetime import date, datetime, time
+from typing import Any, Optional
+
 import pytz
 
-from ..schemas import HumanDesignChart, HDGate, HDChannel, TypeProbability, ChartSubject
-from .ephemeris import get_ephemeris, EphemerisCalculator
+from src.app.modules.calculation.registry import CalculationModuleRegistry
+
+from ..schemas import ChartSubject, HDChannel, HDGate, HumanDesignChart, TypeProbability
+from . import constants
+from .ephemeris import get_ephemeris
 from .mechanics import (
-    get_channel_builder,
-    get_type_determinator,
     get_authority_determinator,
+    get_channel_builder,
+    get_cross_calculator,
     get_definition_calculator,
     get_profile_calculator,
-    get_cross_calculator,
-    ChannelBuilder,
-    TypeDeterminator,
+    get_type_determinator,
 )
-from . import constants
-from src.app.modules.calculation.registry import CalculationModuleRegistry
 
 
 @CalculationModuleRegistry.register(

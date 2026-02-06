@@ -5,14 +5,14 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 
 from src.app.core.db.database import async_get_db
+from src.app.core.events.bus import get_event_bus
 from src.app.models.user import User
-from src.app.modules.tracking.transits.tracker import TransitTracker
-from src.app.modules.tracking.solar.tracker import SolarTracker
-from src.app.modules.tracking.lunar.tracker import LunarTracker
-from src.app.modules.intelligence.observer.observer import Observer
 from src.app.modules.intelligence.hypothesis.generator import HypothesisGenerator
 from src.app.modules.intelligence.hypothesis.storage import HypothesisStorage
-from src.app.core.events.bus import get_event_bus
+from src.app.modules.intelligence.observer.observer import Observer
+from src.app.modules.tracking.lunar.tracker import LunarTracker
+from src.app.modules.tracking.solar.tracker import SolarTracker
+from src.app.modules.tracking.transits.tracker import TransitTracker
 
 logger = logging.getLogger(__name__)
 

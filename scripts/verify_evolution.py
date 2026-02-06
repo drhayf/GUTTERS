@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from datetime import datetime, UTC
+
 from sqlalchemy import select
 from sqlalchemy.orm import configure_mappers
 
@@ -14,35 +14,16 @@ async def verify_evolution_logic():
     print("🧪 Starting Tabula Rasa Evolution Verification...")
 
     # --- 1. IMPORTS (Complete Registry Fix) ---
-    from src.app.models.user import User
-    from src.app.models.user_profile import UserProfile
-    from src.app.models.progression import PlayerStats
-    from src.app.models.chat_session import ChatSession
-    from src.app.models.embedding import Embedding
-
-    # Quest Models
-    from src.app.modules.features.quests.models import (
-        Quest,
-        QuestLog,
-        QuestStatus,
-        QuestCategory,
-        QuestDifficulty,
-        QuestSource,
-    )
 
     # Insight Models
-    from src.app.models.insight import ReflectionPrompt, JournalEntry, PromptStatus, PromptPhase
+    from src.app.models.progression import PlayerStats
+    from src.app.models.user import User
 
-    # Push (Fixes KeyError)
-    try:
-        from src.app.models.push import PushSubscription
-    except ImportError:
-        pass
-
+    # Quest Models
     # Protocol & Engine
+    from src.app.modules.intelligence.evolution.engine import get_evolution_engine
     from src.app.protocol import events
     from src.app.protocol.packet import ProgressionPacket
-    from src.app.modules.intelligence.evolution.engine import get_evolution_engine
 
     configure_mappers()
 

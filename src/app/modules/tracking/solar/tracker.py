@@ -1,18 +1,17 @@
 # src/app/modules/tracking/solar/tracker.py
 
+from datetime import UTC, datetime, timedelta
+from typing import Any, Dict, List, Optional
+
 import aiohttp
-import asyncio
-from datetime import datetime, timedelta, timezone, UTC
-from typing import Optional, List, Dict, Any
 
 from ..base import BaseTrackingModule, TrackingData
 from .location import (
     assess_local_solar_impact,
-    calculate_geomagnetic_latitude,
-    get_aurora_visibility_kp,
     calculate_aurora_probability,
-    get_optimal_aurora_viewing_direction,
+    calculate_geomagnetic_latitude,
     get_hemisphere,
+    get_optimal_aurora_viewing_direction,
 )
 
 
@@ -68,11 +67,11 @@ class SolarTracker(BaseTrackingModule):
                     response.raise_for_status()
                     plasma_data_raw = await response.json()
 
-        except (aiohttp.ClientError, asyncio.TimeoutError) as e:
+        except (TimeoutError, aiohttp.ClientError) as e:
             print(f"[SolarTracker] API error: {e}")
             # Return safe default
             return TrackingData(
-                timestamp=datetime.now(timezone.utc),
+                timestamp=datetime.now(UTC),
                 source="NOAA SWPC (Error Fallback)",
                 data={
                     "kp_index": 0,
@@ -105,7 +104,7 @@ class SolarTracker(BaseTrackingModule):
         bz_orientation = "South" if bz < 0 else "North"
 
         return TrackingData(
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             source="NOAA SWPC",
             data={
                 "kp_index": kp_index,
@@ -122,34 +121,34 @@ class SolarTracker(BaseTrackingModule):
         )
 
     async def fetch_location_aware(
-        self, 
-        latitude: float, 
+        self,
+        latitude: float,
         longitude: float
     ) -> Dict[str, Any]:
         """
         Fetch solar data with location-specific impact analysis.
-        
+
         Combines real-time NOAA data with geomagnetic calculations
         to provide personalized impact assessment including:
         - Aurora visibility at user's location
         - Local impact severity
         - Specific effects and recommendations
-        
+
         Args:
             latitude: User's geographic latitude
             longitude: User's geographic longitude
-        
+
         Returns:
             Dictionary with both global space weather and local impact
         """
         # Get current space weather
         current_data = await self.fetch_current_data()
-        
+
         # Extract key values for location analysis
         kp_index = current_data.data.get("kp_index", 0)
         bz = current_data.data.get("bz", 0)
         solar_wind_speed = current_data.data.get("solar_wind_speed", 400)
-        
+
         # Calculate location-specific impact
         local_impact = assess_local_solar_impact(
             kp_index=kp_index,
@@ -158,11 +157,11 @@ class SolarTracker(BaseTrackingModule):
             latitude=latitude,
             longitude=longitude,
         )
-        
+
         # Get aurora viewing direction for user's hemisphere
         hemisphere = get_hemisphere(latitude)
         viewing_direction = get_optimal_aurora_viewing_direction(latitude)
-        
+
         return {
             "global_conditions": current_data.data,
             "local_impact": local_impact,
@@ -175,11 +174,11 @@ class SolarTracker(BaseTrackingModule):
             "timestamp": current_data.timestamp.isoformat(),
             "source": current_data.source,
         }
-    
+
     def _get_aurora_viewing_tips(self, probability: float) -> List[str]:
         """Get aurora viewing tips based on probability."""
         tips = []
-        
+
         if probability >= 0.5:
             tips.extend([
                 "Find a location away from city lights",
@@ -196,7 +195,7 @@ class SolarTracker(BaseTrackingModule):
             ])
         else:
             tips.append("Aurora not expected at your latitude with current conditions")
-        
+
         return tips
 
     async def compare_to_natal(self, user_id: int, current_data: TrackingData) -> dict:
@@ -269,29 +268,27 @@ class SolarTracker(BaseTrackingModule):
     ) -> List[Dict[str, Any]]:
         """
         Detect events that affect the user's specific location.
-        
+
         Includes aurora alerts when visibility becomes possible at user's latitude.
-        
+
         Args:
             current_data: Current tracking data
             previous_data: Previous tracking data (for change detection)
             latitude: User's geographic latitude
             longitude: User's geographic longitude
             previous_aurora_prob: Previous aurora probability at location
-        
+
         Returns:
             List of location-specific events with metadata
         """
         events = []
         kp_index = current_data.data.get("kp_index", 0)
         bz = current_data.data.get("bz", 0)
-        wind_speed = current_data.data.get("solar_wind_speed", 400)
-        
+
         # Calculate geomagnetic position
         geomag_lat = calculate_geomagnetic_latitude(latitude, longitude)
         aurora_prob = calculate_aurora_probability(kp_index, geomag_lat)
-        min_kp = get_aurora_visibility_kp(geomag_lat)
-        
+
         # Aurora visibility alert - when it becomes visible at user's location
         if aurora_prob >= 0.5 and previous_aurora_prob < 0.5:
             hemisphere = get_hemisphere(latitude)
@@ -310,19 +307,22 @@ class SolarTracker(BaseTrackingModule):
             events.append({
                 "type": "aurora_possible",
                 "title": "Aurora Conditions Improving",
-                "description": f"Aurora may become visible if activity increases. Monitor alerts.",
+                "description": "Aurora may become visible if activity increases. Monitor alerts.",
                 "severity": "medium",
                 "aurora_probability": aurora_prob,
                 "actionable": False,
             })
-        
+
         # Location-specific impact alerts
         if abs(geomag_lat) > 55:  # High geomagnetic latitudes
             if kp_index >= 5:
                 events.append({
                     "type": "high_latitude_storm",
                     "title": "Geomagnetic Storm at Your Latitude",
-                    "description": f"Your high-latitude location (geomag: {geomag_lat:.1f}°) experiences stronger effects during Kp {kp_index:.1f} storms.",
+                    "description": (
+                        f"Your high-latitude location (geomag: {geomag_lat:.1f}°) "
+                        f"experiences stronger effects during Kp {kp_index:.1f} storms."
+                    ),
                     "severity": "high" if kp_index >= 7 else "medium",
                     "effects": [
                         "GPS accuracy may be reduced",
@@ -332,18 +332,21 @@ class SolarTracker(BaseTrackingModule):
                     "actionable": True,
                     "action_hint": "Allow extra time for navigation, practice grounding",
                 })
-        
+
         # Shield integrity alert for location
         if bz <= -10:  # Severe Bz southward
             events.append({
                 "type": "shield_breach",
                 "title": "Earth's Magnetic Shield Severely Strained",
-                "description": f"Bz at {bz:.1f} nT indicates significant magnetic coupling. Geomagnetic effects heightened.",
+                "description": (
+                    f"Bz at {bz:.1f} nT indicates significant magnetic coupling. "
+                    f"Geomagnetic effects heightened."
+                ),
                 "severity": "high",
                 "actionable": True,
                 "action_hint": "Sensitive individuals should practice self-care",
             })
-        
+
         return events
 
     def _get_kp_status(self, kp: float) -> str:
@@ -363,14 +366,18 @@ class SolarTracker(BaseTrackingModule):
     def _get_recommendation(self, kp: float) -> str:
         """Get recommendation based on Kp index."""
         if kp >= 7:
-            return "High geomagnetic activity. Sensitive individuals may experience fatigue, anxiety, or headaches. Ground yourself, avoid stress, get extra rest."
+            return (
+                "High geomagnetic activity. Sensitive individuals may experience "
+                "fatigue, anxiety, or headaches. Ground yourself, avoid stress, "
+                "get extra rest."
+            )
         if kp >= 5:
             return "Moderate geomagnetic activity. You may feel more sensitive than usual. Practice self-care."
         return "Geomagnetic activity is quiet. Normal sensitivity expected."
 
     def _parse_recent_flares(self, flare_data: list) -> List[dict]:
         """Parse flares from last hour using 0.1-0.8nm flux."""
-        one_hour_ago = datetime.now(timezone.utc) - timedelta(hours=1)
+        one_hour_ago = datetime.now(UTC) - timedelta(hours=1)
         recent = []
 
         # NOAA GOES X-ray flux data provides two energy bands:

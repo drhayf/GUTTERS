@@ -1,11 +1,10 @@
 import asyncio
+
+from sqlalchemy import select
+from sqlalchemy.orm import configure_mappers
+
 from src.app.core.db.database import local_session
 from src.app.models.user import User
-from sqlalchemy import select
-
-
-from sqlalchemy.orm import configure_mappers
-import src.app.models as models
 
 
 async def check_users():

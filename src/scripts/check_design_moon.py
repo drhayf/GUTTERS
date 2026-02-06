@@ -3,8 +3,8 @@
 Check Design calculation - 88 days before birth
 """
 import sys
-from pathlib import Path
 from datetime import date, time, timedelta
+from pathlib import Path
 
 src_path = Path(__file__).parent.parent
 sys.path.insert(0, str(src_path))
@@ -37,21 +37,22 @@ design_subject = AstrologicalSubject(
     tz_str="Africa/Accra"
 )
 
-print(f"\nDesign Moon:")
+print("\nDesign Moon:")
 print(f"  Sign: {design_subject.moon.sign}")
 print(f"  Position: {design_subject.moon.position:.2f}°")
 print(f"  Absolute longitude: {design_subject.moon.abs_pos:.2f}°")
 
 # Convert to HD gate
 from app.modules.calculation.human_design.brain.calculator import HumanDesignCalculator
+
 calc = HumanDesignCalculator()
 
 gate, line = calc._longitude_to_gate(design_subject.moon.abs_pos)
-print(f"\nOur calculation:")
+print("\nOur calculation:")
 print(f"  Gate {gate}.{line}")
 
-print(f"\nJovian shows:")
-print(f"  Gate 9.5")
+print("\nJovian shows:")
+print("  Gate 9.5")
 
 print(f"\nMatch: {'YES' if gate == 9 else 'NO - BUG IN GATE MAPPING!'}")
 

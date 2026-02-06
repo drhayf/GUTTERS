@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 VAPID Key Pair Validation Script
 
@@ -9,11 +8,10 @@ Diagnoses "BadJwtToken" errors by cryptographically verifying that:
 3. VAPID headers can be generated successfully
 """
 
-import os
+import base64
 import sys
 from pathlib import Path
-from typing import Tuple, Optional
-import base64
+from typing import Optional, Tuple
 
 # Force UTF-8 output on Windows
 if sys.platform == "win32":
@@ -27,16 +25,15 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root / "src"))
 
 try:
-    from cryptography.hazmat.primitives.serialization import (
-        load_pem_private_key,
-        Encoding,
-        PublicFormat,
-        PrivateFormat,
-        NoEncryption,
-    )
     from cryptography.hazmat.backends import default_backend
     from cryptography.hazmat.primitives.asymmetric import ec
-    from pywebpush import webpush
+    from cryptography.hazmat.primitives.serialization import (
+        Encoding,
+        NoEncryption,
+        PrivateFormat,
+        PublicFormat,
+        load_pem_private_key,
+    )
     from py_vapid import Vapid02
 except ImportError as e:
     print(f"❌ Missing dependencies: {e}")
@@ -58,7 +55,7 @@ def load_env() -> Tuple[str, str, Optional[str]]:
             break
 
     if not env_path:
-        print(f"❌ .env file not found. Checked:")
+        print("❌ .env file not found. Checked:")
         for path in env_paths:
             print(f"   - {path}")
         sys.exit(1)
@@ -68,7 +65,7 @@ def load_env() -> Tuple[str, str, Optional[str]]:
     mailto = None
 
     # Read entire file
-    with open(env_path, "r", encoding="utf-8") as f:
+    with open(env_path, encoding="utf-8") as f:
         lines = f.readlines()
 
     # Parse line by line, handling multi-line PEM keys
@@ -139,7 +136,7 @@ def derive_public_from_private(private_key: str) -> Optional[str]:
         # Convert to base64url (VAPID format)
         public_key_b64 = base64.urlsafe_b64encode(public_key_raw).decode().rstrip("=")
 
-        print(f"✅ Private key is valid (PEM format)")
+        print("✅ Private key is valid (PEM format)")
         return public_key_b64
 
     except Exception as e:
@@ -192,7 +189,7 @@ def test_vapid_headers(private_key: str, mailto: Optional[str]) -> bool:
 
         headers = vapid.sign(vapid_claims)
 
-        print(f"✅ VAPID headers generated successfully")
+        print("✅ VAPID headers generated successfully")
         print(f"   Authorization: {headers.get('Authorization', 'N/A')[:60]}...")
         print(f"   Crypto-Key: {headers.get('Crypto-Key', 'N/A')[:60]}...")
         return True
@@ -234,7 +231,7 @@ def main():
         print(f'VAPID_PUBLIC_KEY="{new_public}"')
 
         if not mailto or mailto == "NOT SET":
-            print(f'VAPID_CLAIM_EMAIL="mailto:your-email@example.com"')
+            print('VAPID_CLAIM_EMAIL="mailto:your-email@example.com"')
 
         print("\n" + "=" * 70)
         return
@@ -255,7 +252,7 @@ def main():
         keys_valid = True
     else:
         print("\n❌ PUBLIC KEYS DO NOT MATCH - Key pair is broken!")
-        print(f"\nFull comparison:")
+        print("\nFull comparison:")
         print(f"  Derived length: {len(derived_normalized)}")
         print(f"  Loaded length:  {len(loaded_normalized)}")
         keys_valid = False
@@ -298,7 +295,7 @@ def main():
         print(f'VAPID_PUBLIC_KEY="{new_public}"')
 
         if not mailto or mailto == "NOT SET":
-            print(f'VAPID_CLAIM_EMAIL="mailto:your-email@example.com"')
+            print('VAPID_CLAIM_EMAIL="mailto:your-email@example.com"')
 
         print("\n⚠️  After updating .env:")
         print("  1. Restart the backend server")

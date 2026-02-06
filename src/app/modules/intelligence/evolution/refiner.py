@@ -1,14 +1,10 @@
-import logging
 import json
-from datetime import datetime, UTC
-from typing import Any, Dict, Optional, Tuple
+import logging
 
-from langchain_core.messages import SystemMessage, HumanMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel
 
-from src.app.core.llm.config import get_standard_llm, get_premium_llm, LLMTier
-from src.app.core.events.bus import get_event_bus
-from src.app.protocol import events
+from src.app.core.llm.config import get_premium_llm, get_standard_llm
 
 logger = logging.getLogger(__name__)
 
@@ -32,24 +28,25 @@ class EvolutionRefiner:
     """
 
     SYSTEM_AUDITOR_PROMPT = """
-    You are the GUTTERS System Auditor. You evaluate the semantic alignment between a User's actions and their Cosmic/Behavioral Hypotheses.
-    
+    You are the GUTTERS System Auditor. You evaluate the semantic alignment 
+    between a User's actions and their Cosmic/Behavioral Hypotheses.
+
     Your task is to analyze if the provided data confirms or refutes the hypothesis.
     Maintain a "Cosmic Brutalist" and "Solo Leveling" tone.
-    
+
     INPUT DATA:
     - Quest/Event: {context_title}
     - Description: {context_desc}
     - Journal Context: {journal_text}
     - Hypothesis Field: {field_name}
     - Candidate Being Tested: {candidate_value}
-    
+
     OUTPUT REQUIREMENTS:
     1. confidence_delta: Float (-0.1 to +0.1). How much does this action change certainty?
     2. evolution_insight: One-sentence high-fidelity summary (Solo Leveling style).
     3. alignment_score: 0.0 to 1.0 (How relevant was this action to this specific hypothesis?).
     4. reasoning: Brief thinking steps of your analysis.
-    
+
     Respond ONLY in JSON format:
     {{
         "confidence_delta": 0.05,
@@ -73,7 +70,6 @@ class EvolutionRefiner:
         Invoke semantic refinement with multi-tier LLM logic.
         """
         # 1. Tier Selection
-        tier = LLMTier.PREMIUM if is_ascension else LLMTier.STANDARD
         llm = get_premium_llm() if is_ascension else get_standard_llm()
 
         model_name = "sonnet-4.5" if is_ascension else "haiku-4.5"

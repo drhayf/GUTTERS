@@ -1,4 +1,5 @@
-from typing import Dict, Any, Optional
+from typing import Any, Dict
+
 from langchain_core.tools import tool
 
 from src.app.modules.intelligence.evolution.refiner import get_evolution_refiner

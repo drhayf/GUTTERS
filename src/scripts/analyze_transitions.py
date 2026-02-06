@@ -4,8 +4,8 @@ Deep dive: WHY does type change from Generator to Projector?
 Check what channels are forming/breaking at the transition points
 """
 import sys
-from pathlib import Path
 from datetime import date, time
+from pathlib import Path
 
 src_path = Path(__file__).parent.parent
 sys.path.insert(0, str(src_path))
@@ -30,15 +30,15 @@ for hour in check_hours:
         longitude=-0.1870,
         timezone="Africa/Accra"
     )
-    
+
     print(f"\n{'='*80}")
     print(f"HOUR {hour:02}:00 → {chart.type}")
     print(f"{'='*80}")
     print(f"Defined Centers: {chart.defined_centers}")
     print(f"\nSacral defined? {'Sacral' in chart.defined_centers}")
     print(f"Throat defined? {'Throat' in chart.defined_centers}")
-    
-    print(f"\nDefined Channels:")
+
+    print("\nDefined Channels:")
     for ch in chart.channels:
         if ch.defined:
             g1, g2 = ch.gates
@@ -46,13 +46,13 @@ for hour in check_hours:
             c2 = calc.GATE_TO_CENTER.get(g2)
             sacral_marker = " ← SACRAL!" if (c1 == "Sacral" or c2 == "Sacral") else ""
             print(f"  {ch.name:20} ({g1}-{g2}): {c1} ↔ {c2}{sacral_marker}")
-    
+
     # Show which gates are present
-    print(f"\nPersonality Gates:")
+    print("\nPersonality Gates:")
     for g in chart.personality_gates[:5]:
         print(f"  {g.planet:12} Gate {g.gate}.{g.line}")
-    
-    print(f"\nDesign Gates:")
+
+    print("\nDesign Gates:")
     for g in chart.design_gates[:5]:
         print(f"  {g.planet:12} Gate {g.gate}.{g.line}")
 

@@ -1,8 +1,9 @@
 # src/app/modules/tracking/base.py
 
 from abc import ABC, abstractmethod
-from datetime import datetime, timedelta, UTC
-from typing import Optional, Any, List, Dict
+from datetime import UTC, datetime, timedelta
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel
 
 
@@ -62,9 +63,10 @@ class BaseTrackingModule(ABC):
 
     async def _store_in_history(self, user_id: int, data: TrackingData) -> None:
         """Store tracking data point in UserProfile for Observer analysis."""
+        from sqlalchemy import select
+
         from src.app.core.db.database import async_get_db
         from src.app.models.user_profile import UserProfile
-        from sqlalchemy import select
 
         async for db in async_get_db():
             result = await db.execute(select(UserProfile).where(UserProfile.user_id == user_id))
@@ -197,10 +199,10 @@ class BaseTrackingModule(ABC):
 
         # Trigger synthesis if significant events detected
         if events:
-            from src.app.core.memory import get_orchestrator, SynthesisTrigger
-            from src.app.protocol.packet import ProgressionPacket, Packet
-            from src.app.protocol import events as event_types
             from src.app.core.events.bus import get_event_bus
+            from src.app.core.memory import SynthesisTrigger, get_orchestrator
+            from src.app.protocol import events as event_types
+            from src.app.protocol.packet import Packet, ProgressionPacket
 
             orchestrator = await get_orchestrator()
             event_bus = get_event_bus()

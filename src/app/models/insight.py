@@ -1,8 +1,10 @@
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Optional, Any
-from sqlalchemy import String, Integer, DateTime, Boolean, ForeignKey, Text, JSON
+from typing import Any, Optional
+
+from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from src.app.core.db.database import Base
 
 

@@ -1,11 +1,12 @@
 # src/app/modules/tracking/lunar/tracker.py
 
-from skyfield.api import load
-from skyfield import almanac
-from datetime import datetime, timedelta, UTC
-from typing import Optional, List, Tuple
 import math
 import os
+from datetime import UTC, datetime, timedelta
+from typing import List, Optional, Tuple
+
+from skyfield import almanac
+from skyfield.api import load
 
 from ..base import BaseTrackingModule, TrackingData
 
@@ -135,7 +136,6 @@ class LunarTracker(BaseTrackingModule):
             natal_degree = getattr(natal_moon, "degree", 0.0)
 
         current_sign = current_data.data["sign"]
-        current_degree = current_data.data["longitude"] % 30  # Degree within sign
 
         # Check if moon is in same sign as natal
         same_sign = current_sign == natal_sign
@@ -271,7 +271,7 @@ class LunarTracker(BaseTrackingModule):
         sign = data.data["sign"]
 
         if is_return:
-            return f"Lunar Return - Moon returns to your natal position. Monthly reset."
+            return "Lunar Return - Moon returns to your natal position. Monthly reset."
         if same_sign:
             return f"Moon in {sign} (your natal moon sign). Emotional familiarity."
         return f"{phase} in {sign}. {self._get_phase_meaning(phase)}"
@@ -319,7 +319,8 @@ class LunarTracker(BaseTrackingModule):
         # Or just trust Skyfield's find_discrete.
 
         # Wrapper for skyfield find_discrete
-        f_sign = lambda t: self._get_moon_sign_index_for_almanac(t)
+        def f_sign(t):
+            return self._get_moon_sign_index_for_almanac(t)
         f_sign.step_days = 0.1  # Check every few hours
 
         t_ingress, _ = almanac.find_discrete(t_now, t_search_end, f_sign)

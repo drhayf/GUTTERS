@@ -3,8 +3,8 @@
 Quick HD feature verification - confirms all new features work.
 """
 import sys
-from pathlib import Path
 from datetime import date, time
+from pathlib import Path
 
 src_path = Path(__file__).parent.parent
 sys.path.insert(0, str(src_path))

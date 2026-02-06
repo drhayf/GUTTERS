@@ -1,7 +1,8 @@
 from __future__ import annotations
+
 import uuid as uuid_pkg
 from datetime import UTC, date, datetime, time
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Date, DateTime, Float, ForeignKey, String, Time
 from sqlalchemy.dialects.postgresql import UUID
@@ -11,11 +12,7 @@ from uuid6 import uuid7
 from src.app.core.db.database import Base
 
 if TYPE_CHECKING:
-    from .user_profile import UserProfile
-    from .embedding import Embedding
-    from .chat_session import ChatSession
-    from .progression import PlayerStats
-    from src.app.modules.features.quests.models import Quest
+    pass
 
 
 class User(Base):

@@ -16,17 +16,17 @@ async def interpret_natal_chart(
 ) -> str:
     """
     Generate natural language interpretation of a natal chart.
-    
+
     Uses LLM to synthesize chart data into meaningful insights.
-    
+
     Args:
         chart: Natal chart data from calculate_natal_chart()
         model_id: OpenRouter model ID for interpretation
         temperature: LLM temperature (0.0-1.0)
-        
+
     Returns:
         Natural language interpretation of the chart
-        
+
     Example:
         >>> chart = calculate_natal_chart(...)
         >>> interpretation = await interpret_natal_chart(chart)
@@ -34,24 +34,24 @@ async def interpret_natal_chart(
         "Your Sun in Taurus..."
     """
     from ....core.ai.llm_factory import get_llm
-    
+
     # Build prompt with chart data
     prompt = _build_interpretation_prompt(chart)
-    
+
     # Get LLM and generate interpretation
     llm = get_llm(model_id, temperature)
     response = await llm.ainvoke(prompt)
-    
+
     return response.content
 
 
 def _build_interpretation_prompt(chart: dict[str, Any]) -> str:
     """
     Build interpretation prompt from chart data.
-    
+
     Args:
         chart: Natal chart data
-        
+
     Returns:
         Formatted prompt for LLM
     """
@@ -60,7 +60,7 @@ def _build_interpretation_prompt(chart: dict[str, Any]) -> str:
     ascendant = chart.get("ascendant", {})
     elements = chart.get("elements", {})
     modalities = chart.get("modalities", {})
-    
+
     # Format planet positions
     planet_lines = []
     for p in planets:
@@ -68,7 +68,7 @@ def _build_interpretation_prompt(chart: dict[str, Any]) -> str:
         planet_lines.append(
             f"- {p['name']}: {p['degree']}° {p['sign']} in House {p['house']}{retrograde}"
         )
-    
+
     prompt = f"""You are an expert astrologer providing personalized insights.
 
 Analyze this natal chart and provide a comprehensive interpretation focusing on:
@@ -99,29 +99,29 @@ Provide a personalized, insightful interpretation in a warm, supportive tone.
 Focus on growth potential and self-understanding rather than predictions.
 Keep the interpretation concise but meaningful (300-500 words).
 """
-    
+
     return prompt
 
 
 def format_chart_summary(chart: dict[str, Any]) -> str:
     """
     Create a brief text summary of the chart (no LLM).
-    
+
     Args:
         chart: Natal chart data
-        
+
     Returns:
         Brief text summary
     """
     planets = chart.get("planets", [])
     ascendant = chart.get("ascendant", {})
-    
+
     # Find Sun, Moon, Ascendant
     sun = next((p for p in planets if p["name"] == "Sun"), None)
     moon = next((p for p in planets if p["name"] == "Moon"), None)
-    
+
     sun_sign = sun["sign"] if sun else "Unknown"
     moon_sign = moon["sign"] if moon else "Unknown"
     asc_sign = ascendant.get("sign", "Unknown")
-    
+
     return f"Sun in {sun_sign}, Moon in {moon_sign}, {asc_sign} Rising"

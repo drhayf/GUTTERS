@@ -21,12 +21,9 @@
 """
 
 from dataclasses import dataclass, field
-from datetime import datetime, date, timezone, timedelta
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Dict, List, Optional, Tuple, Any, Protocol
-from abc import ABC, abstractmethod
-import math
-
+from typing import Any, Dict, List, Optional, Protocol, Tuple
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # SECTION 1: SYSTEM PROTOCOL (Interface for Council Members)
@@ -36,33 +33,33 @@ class MetaphysicalSystem(Protocol):
     """
     Protocol defining what any metaphysical system must provide
     to participate in the Council of Systems.
-    
+
     This enables extensibility - any new system (Vedic, Mayan, etc.)
     can be added by implementing this interface.
     """
-    
+
     @property
     def system_name(self) -> str:
         """Unique identifier for this system."""
         ...
-    
+
     @property
     def cycle_duration_days(self) -> float:
         """Average duration of one cycle in days."""
         ...
-    
+
     def get_current_position(self, dt: datetime) -> Dict[str, Any]:
         """Get the current position/state for a given datetime."""
         ...
-    
+
     def get_element(self, dt: datetime) -> str:
         """Get the elemental correspondence for the current position."""
         ...
-    
+
     def get_archetype(self, dt: datetime) -> str:
         """Get the archetype/theme for the current position."""
         ...
-    
+
     def get_frequency_spectrum(self, dt: datetime) -> Dict[str, str]:
         """Get the frequency range (low/balanced/high states)."""
         ...
@@ -75,7 +72,7 @@ class MetaphysicalSystem(Protocol):
 class Element(Enum):
     """
     Universal elemental system used for cross-system resonance.
-    
+
     This is the "common language" that allows different systems
     to be compared and synthesized.
     """
@@ -137,7 +134,7 @@ class ResonanceType(Enum):
 class ElementalResonance:
     """
     Resonance calculation between two elements.
-    
+
     Based on traditional elemental relationships:
     - Same element = Harmonic (1.0)
     - Complementary = Supportive (0.7)
@@ -161,22 +158,22 @@ ELEMENTAL_MATRIX = {
     (Element.FIRE, Element.WATER): (0.2, ResonanceType.CHALLENGING, "Fire and water create steam - transformation through tension"),
     (Element.FIRE, Element.EARTH): (0.4, ResonanceType.NEUTRAL, "Fire shapes earth - willpower meets form"),
     (Element.FIRE, Element.ETHER): (0.7, ResonanceType.SUPPORTIVE, "Fire rises to spirit"),
-    
+
     # Water relationships
     (Element.WATER, Element.WATER): (1.0, ResonanceType.HARMONIC, "Deep emotional resonance"),
     (Element.WATER, Element.EARTH): (0.8, ResonanceType.SUPPORTIVE, "Earth contains water - emotion finds form"),
     (Element.WATER, Element.AIR): (0.4, ResonanceType.NEUTRAL, "Surface ripples - mental awareness of feeling"),
     (Element.WATER, Element.ETHER): (0.7, ResonanceType.SUPPORTIVE, "Water reflects spirit"),
-    
+
     # Earth relationships
     (Element.EARTH, Element.EARTH): (1.0, ResonanceType.HARMONIC, "Stable foundation"),
     (Element.EARTH, Element.AIR): (0.3, ResonanceType.CHALLENGING, "Earth grounds air - ideas need anchoring"),
     (Element.EARTH, Element.ETHER): (0.5, ResonanceType.NEUTRAL, "Spirit incarnates in form"),
-    
+
     # Air relationships
     (Element.AIR, Element.AIR): (1.0, ResonanceType.HARMONIC, "Mental clarity and exchange"),
     (Element.AIR, Element.ETHER): (0.8, ResonanceType.SUPPORTIVE, "Thought approaches transcendence"),
-    
+
     # Ether relationships
     (Element.ETHER, Element.ETHER): (1.0, ResonanceType.HARMONIC, "Pure spiritual alignment"),
 }
@@ -187,7 +184,7 @@ def get_elemental_resonance(elem1: Element, elem2: Element) -> ElementalResonanc
     # Normalize order for lookup (matrix is symmetric)
     key = (elem1, elem2)
     reverse_key = (elem2, elem1)
-    
+
     if key in ELEMENTAL_MATRIX:
         score, res_type, desc = ELEMENTAL_MATRIX[key]
     elif reverse_key in ELEMENTAL_MATRIX:
@@ -195,7 +192,7 @@ def get_elemental_resonance(elem1: Element, elem2: Element) -> ElementalResonanc
     else:
         # Default for undefined pairs
         score, res_type, desc = 0.5, ResonanceType.NEUTRAL, "Undefined relationship"
-    
+
     return ElementalResonance(elem1, elem2, score, res_type, desc)
 
 
@@ -206,10 +203,10 @@ def get_elemental_resonance(elem1: Element, elem2: Element) -> ElementalResonanc
 class FrequencyBand(Enum):
     """
     The three frequency bands for the XP/Leveling system.
-    
+
     Maps directly to Gene Keys Shadow/Gift/Siddhi:
     - SHADOW: Low XP state (unconscious, reactive)
-    - GIFT: Balanced state (conscious, responsive)  
+    - GIFT: Balanced state (conscious, responsive)
     - SIDDHI: High XP state (transcendent, unified)
     """
     SHADOW = "shadow"     # 0-33% XP range
@@ -221,7 +218,7 @@ class FrequencyBand(Enum):
 class FrequencyState:
     """
     Current frequency state with XP context.
-    
+
     This enables the "Solo Leveling" gamification:
     - Low awareness/XP = Shadow expression
     - Growing awareness/XP = Gift expression
@@ -232,13 +229,13 @@ class FrequencyState:
     gift_expression: str
     siddhi_expression: str
     current_expression: str  # Based on band
-    
+
     # For gamification
     xp_threshold_low: int = 0
     xp_threshold_mid: int = 333
     xp_threshold_high: int = 666
     xp_max: int = 1000
-    
+
     def get_expression_for_xp(self, xp: int) -> Tuple[FrequencyBand, str]:
         """Determine expression based on XP level."""
         if xp < self.xp_threshold_mid:
@@ -257,34 +254,34 @@ class FrequencyState:
 class SystemReading:
     """
     A reading from a single metaphysical system.
-    
+
     This is the standardized output format that all systems
     must provide for the synthesis layer.
     """
     system_name: str
     timestamp: datetime
-    
+
     # Primary identification
     primary_symbol: str           # e.g., "K♥" or "Gate 13"
     primary_name: str             # e.g., "King of Hearts" or "Fellowship with Men"
-    
+
     # Elemental correspondence
     element: Element
-    
+
     # Archetype/Theme
     archetype: str
     keynote: str
-    
+
     # Frequency spectrum (for XP mapping)
     shadow: str
     gift: str
     siddhi: str
-    
+
     # Cycle context
     cycle_day: int               # Day within current cycle
     cycle_total: int             # Total days in cycle
     cycle_percentage: float      # Progress through cycle (0-1)
-    
+
     # Additional metadata
     metadata: Dict[str, Any] = field(default_factory=dict)
 
@@ -293,38 +290,38 @@ class SystemReading:
 class HarmonicSynthesis:
     """
     The synthesized reading from multiple systems.
-    
+
     This is the final output of the Council of Systems -
     a unified field that honors each system's sovereignty
     while revealing their combined wisdom.
     """
     timestamp: datetime
-    
+
     # Individual system readings
     systems: List[SystemReading]
-    
+
     # Cross-system resonance
     resonance_score: float           # 0-1 overall harmony
     resonance_type: ResonanceType
     resonance_description: str
-    
+
     # Unified frequency guidance
     unified_shadow: str              # Combined shadow themes
     unified_gift: str                # Combined gift potential
     unified_siddhi: str              # Combined transcendent state
-    
+
     # Elemental balance
     dominant_element: Element
     elemental_balance: Dict[Element, float]
-    
+
     # Practical guidance
     macro_theme: str                 # From Cardology (52-day)
     micro_theme: str                 # From I-Ching (6-day)
     synthesis_guidance: str          # Combined wisdom
-    
+
     # XP/Quest suggestions
     quest_suggestions: List[str]
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Serialize to dictionary."""
         return {
@@ -368,26 +365,26 @@ class HarmonicSynthesis:
 class CouncilOfSystems:
     """
     The Harmonic Synthesis Engine.
-    
+
     This class orchestrates multiple metaphysical systems,
     calculates their resonance, and produces unified guidance.
-    
+
     Architecture:
     - Systems are registered as equal members
     - Each system provides its reading via standardized interface
     - The Council calculates cross-system resonance
     - Output is a HarmonicSynthesis with unified guidance
     """
-    
+
     def __init__(self):
         """Initialize the Council with no members."""
         self._systems: Dict[str, Any] = {}  # name -> system adapter
         self._weights: Dict[str, float] = {}  # name -> weight (default 1.0)
-    
+
     def register_system(self, name: str, adapter: Any, weight: float = 1.0):
         """
         Register a metaphysical system with the Council.
-        
+
         Args:
             name: Unique name for this system
             adapter: System adapter implementing the reading interface
@@ -395,78 +392,78 @@ class CouncilOfSystems:
         """
         self._systems[name] = adapter
         self._weights[name] = weight
-    
+
     def get_reading(self, system_name: str, dt: datetime = None) -> Optional[SystemReading]:
         """
         Get a reading from a specific system.
-        
+
         Args:
             system_name: Name of registered system
             dt: Datetime for reading (default: now UTC)
-            
+
         Returns:
             SystemReading or None if system not found
         """
         if system_name not in self._systems:
             return None
-        
+
         if dt is None:
-            dt = datetime.now(timezone.utc)
-        
+            dt = datetime.now(UTC)
+
         adapter = self._systems[system_name]
         return adapter.get_reading(dt)
-    
+
     def synthesize(self, dt: datetime = None) -> HarmonicSynthesis:
         """
         Generate the full harmonic synthesis from all registered systems.
-        
+
         Args:
             dt: Datetime for synthesis (default: now UTC)
-            
+
         Returns:
             HarmonicSynthesis with unified guidance
         """
         if dt is None:
-            dt = datetime.now(timezone.utc)
-        
+            dt = datetime.now(UTC)
+
         # Collect readings from all systems
         readings = []
         for name, adapter in self._systems.items():
             reading = adapter.get_reading(dt)
             if reading:
                 readings.append(reading)
-        
+
         if not readings:
             # Return empty synthesis
             return self._empty_synthesis(dt)
-        
+
         # Calculate elemental balance
         elemental_balance = self._calculate_elemental_balance(readings)
         dominant_element = max(elemental_balance, key=elemental_balance.get)
-        
+
         # Calculate cross-system resonance
         resonance_score, resonance_type = self._calculate_resonance(readings)
         resonance_description = self._describe_resonance(readings, resonance_type)
-        
+
         # Unify frequency spectrums
         unified_shadow = self._unify_shadows(readings)
         unified_gift = self._unify_gifts(readings)
         unified_siddhi = self._unify_siddhis(readings)
-        
+
         # Extract macro/micro themes
         macro_theme = self._extract_macro_theme(readings)
         micro_theme = self._extract_micro_theme(readings)
-        
+
         # Generate synthesis guidance
         synthesis_guidance = self._generate_synthesis_guidance(
             readings, resonance_type, dominant_element
         )
-        
+
         # Generate quest suggestions
         quests = self._generate_quest_suggestions(
             readings, resonance_type, elemental_balance
         )
-        
+
         return HarmonicSynthesis(
             timestamp=dt,
             systems=readings,
@@ -483,48 +480,48 @@ class CouncilOfSystems:
             synthesis_guidance=synthesis_guidance,
             quest_suggestions=quests,
         )
-    
+
     def _calculate_elemental_balance(
         self, readings: List[SystemReading]
     ) -> Dict[Element, float]:
         """Calculate the elemental balance across all systems."""
-        balance = {e: 0.0 for e in Element}
+        balance = dict.fromkeys(Element, 0.0)
         total_weight = 0.0
-        
+
         for reading in readings:
             weight = self._weights.get(reading.system_name, 1.0)
             balance[reading.element] += weight
             total_weight += weight
-        
+
         # Normalize
         if total_weight > 0:
             for elem in balance:
                 balance[elem] /= total_weight
-        
+
         return balance
-    
+
     def _calculate_resonance(
         self, readings: List[SystemReading]
     ) -> Tuple[float, ResonanceType]:
         """Calculate overall resonance score between all system pairs."""
         if len(readings) < 2:
             return 1.0, ResonanceType.HARMONIC
-        
+
         total_score = 0.0
         pair_count = 0
-        
+
         # Calculate resonance between all pairs
         for i, r1 in enumerate(readings):
             for r2 in readings[i+1:]:
                 resonance = get_elemental_resonance(r1.element, r2.element)
                 weight1 = self._weights.get(r1.system_name, 1.0)
                 weight2 = self._weights.get(r2.system_name, 1.0)
-                
+
                 total_score += resonance.score * (weight1 + weight2) / 2
                 pair_count += 1
-        
+
         avg_score = total_score / pair_count if pair_count > 0 else 1.0
-        
+
         # Determine resonance type from score
         if avg_score >= 0.8:
             res_type = ResonanceType.HARMONIC
@@ -536,15 +533,15 @@ class CouncilOfSystems:
             res_type = ResonanceType.CHALLENGING
         else:
             res_type = ResonanceType.DISSONANT
-        
+
         return avg_score, res_type
-    
+
     def _describe_resonance(
         self, readings: List[SystemReading], res_type: ResonanceType
     ) -> str:
         """Generate human-readable resonance description."""
         elements = [r.element.value for r in readings]
-        
+
         descriptions = {
             ResonanceType.HARMONIC: f"Strong alignment between {' and '.join(elements)} - unified flow",
             ResonanceType.SUPPORTIVE: f"Supportive interplay between {' and '.join(elements)} - collaborative energy",
@@ -552,58 +549,58 @@ class CouncilOfSystems:
             ResonanceType.CHALLENGING: f"Creative tension between {' and '.join(elements)} - growth opportunity",
             ResonanceType.DISSONANT: f"Dynamic opposition between {' and '.join(elements)} - transformation required",
         }
-        
+
         return descriptions.get(res_type, "Unknown resonance pattern")
-    
+
     def _unify_shadows(self, readings: List[SystemReading]) -> str:
         """Combine shadow expressions from all systems."""
         shadows = [r.shadow for r in readings if r.shadow]
         if not shadows:
             return "Unconscious patterns"
         return " / ".join(shadows)
-    
+
     def _unify_gifts(self, readings: List[SystemReading]) -> str:
         """Combine gift expressions from all systems."""
         gifts = [r.gift for r in readings if r.gift]
         if not gifts:
             return "Conscious potential"
         return " / ".join(gifts)
-    
+
     def _unify_siddhis(self, readings: List[SystemReading]) -> str:
         """Combine siddhi expressions from all systems."""
         siddhis = [r.siddhi for r in readings if r.siddhi]
         if not siddhis:
             return "Transcendent state"
         return " / ".join(siddhis)
-    
+
     def _extract_macro_theme(self, readings: List[SystemReading]) -> str:
         """Extract the macro (longer cycle) theme."""
         # Prioritize Cardology as macro system
         for reading in readings:
             if reading.system_name == "Cardology":
                 return f"{reading.keynote} ({reading.primary_symbol})"
-        
+
         # Fallback to longest cycle
         if readings:
             longest = max(readings, key=lambda r: r.cycle_total)
             return f"{longest.keynote} ({longest.primary_symbol})"
-        
+
         return "No macro theme available"
-    
+
     def _extract_micro_theme(self, readings: List[SystemReading]) -> str:
         """Extract the micro (shorter cycle) theme."""
         # Prioritize I-Ching as micro system
         for reading in readings:
             if reading.system_name == "I-Ching":
                 return f"{reading.keynote} ({reading.primary_symbol})"
-        
+
         # Fallback to shortest cycle
         if readings:
             shortest = min(readings, key=lambda r: r.cycle_total)
             return f"{shortest.keynote} ({shortest.primary_symbol})"
-        
+
         return "No micro theme available"
-    
+
     def _generate_synthesis_guidance(
         self,
         readings: List[SystemReading],
@@ -618,7 +615,7 @@ class CouncilOfSystems:
             Element.AIR: "Clarify your thoughts and communicate with precision",
             Element.ETHER: "Connect to your higher purpose and spiritual alignment",
         }
-        
+
         resonance_guidance = {
             ResonanceType.HARMONIC: "Systems aligned - ride the wave of synchronicity",
             ResonanceType.SUPPORTIVE: "Favorable conditions - lean into opportunities",
@@ -626,12 +623,12 @@ class CouncilOfSystems:
             ResonanceType.CHALLENGING: "Growth edge active - embrace the friction as fuel",
             ResonanceType.DISSONANT: "Transformation portal - release what no longer serves",
         }
-        
+
         base_guidance = element_guidance.get(dominant_element, "Stay present and aware")
         resonance_note = resonance_guidance.get(res_type, "Navigate with awareness")
-        
+
         return f"{base_guidance}. {resonance_note}."
-    
+
     def _generate_quest_suggestions(
         self,
         readings: List[SystemReading],
@@ -640,7 +637,7 @@ class CouncilOfSystems:
     ) -> List[str]:
         """Generate quest suggestions based on current synthesis."""
         quests = []
-        
+
         # Element-based quests
         dominant = max(elemental_balance, key=elemental_balance.get)
         element_quests = {
@@ -671,7 +668,7 @@ class CouncilOfSystems:
             ],
         }
         quests.extend(element_quests.get(dominant, [])[:2])
-        
+
         # Resonance-based quest modifiers
         if res_type == ResonanceType.CHALLENGING:
             quests.append("Face one small discomfort consciously today")
@@ -679,15 +676,15 @@ class CouncilOfSystems:
             quests.append("Identify one thing to release and let go of it symbolically")
         elif res_type == ResonanceType.HARMONIC:
             quests.append("Amplify a positive pattern you notice today")
-        
+
         # Add frequency-based quest
         if readings:
             shadow = readings[0].shadow
             gift = readings[0].gift
             quests.append(f"Notice when '{shadow}' arises, pivot to '{gift}'")
-        
+
         return quests[:5]  # Max 5 quests
-    
+
     def _empty_synthesis(self, dt: datetime) -> HarmonicSynthesis:
         """Return empty synthesis when no systems are registered."""
         return HarmonicSynthesis(
@@ -700,7 +697,7 @@ class CouncilOfSystems:
             unified_gift="Unknown",
             unified_siddhi="Unknown",
             dominant_element=Element.ETHER,
-            elemental_balance={e: 0.2 for e in Element},
+            elemental_balance=dict.fromkeys(Element, 0.2),
             macro_theme="No macro theme",
             micro_theme="No micro theme",
             synthesis_guidance="Register systems to receive guidance",
@@ -716,36 +713,32 @@ class IChingAdapter:
     """
     Adapter to connect the I-Ching kernel to the Council of Systems.
     """
-    
+
     def __init__(self, kernel):
         """
         Initialize with an IChingKernel instance.
-        
+
         Args:
             kernel: IChingKernel instance
         """
         self._kernel = kernel
-    
+
     def get_reading(self, dt: datetime) -> SystemReading:
         """Generate a SystemReading from the I-Ching kernel."""
         daily = self._kernel.get_daily_code(dt)
         sun = daily.sun_activation
         gate_data = sun.gate_data
-        
+
         # Determine element from center
         center = gate_data.hd_center if gate_data else "G"
         element = HD_CENTER_ELEMENTS.get(center, Element.ETHER)
-        
+
         # Alternatively, use trigram for element
         if gate_data:
             upper_elem = TRIGRAM_ELEMENTS.get(gate_data.upper_trigram, Element.ETHER)
             # Use upper trigram as primary element influence
             element = upper_elem
-        
-        # Calculate cycle position
-        # I-Ching gates: ~5.7 days per gate (360° / 64 gates, ~1°/day)
-        gate_duration = 5.625  # days
-        
+
         return SystemReading(
             system_name="I-Ching",
             timestamp=dt,
@@ -774,61 +767,61 @@ class IChingAdapter:
 class CardologyAdapter:
     """
     Adapter to connect the Cardology kernel to the Council of Systems.
-    
+
     Note: This is a placeholder that should be connected to your
     actual Cardology kernel from the previous implementation.
     """
-    
+
     def __init__(self, kernel=None):
         """
         Initialize with a CardologyKernel instance.
-        
+
         Args:
             kernel: Optional CardologyKernel instance
         """
         self._kernel = kernel
-    
+
     def get_reading(self, dt: datetime) -> SystemReading:
         """Generate a SystemReading from the Cardology kernel."""
         if self._kernel is None:
             # Demo mode without actual kernel
             return self._demo_reading(dt)
-        
+
         # Integration with actual kernel would go here
         # For now, use demo
         return self._demo_reading(dt)
-    
+
     def _demo_reading(self, dt: datetime) -> SystemReading:
         """Generate demo reading when no kernel is connected."""
         # Calculate a pseudo-card based on date
         # This is a placeholder - actual implementation would use your CardologyKernel
-        
+
         day_of_year = dt.timetuple().tm_yday
         card_index = day_of_year % 52
-        
+
         suits = ["Hearts", "Clubs", "Diamonds", "Spades"]
         ranks = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
-        
+
         suit = suits[card_index // 13]
         rank = ranks[card_index % 13]
-        
+
         symbol = f"{rank}{'♥♣♦♠'[suits.index(suit)]}"
-        
+
         # Get element from suit
         element = CARDOLOGY_SUIT_ELEMENTS.get(suit, Element.ETHER)
-        
+
         # Calculate planetary period (52-day cycle divided into 7 periods)
         period_day = day_of_year % 52
         period_index = period_day // 7
         planets = ["Mercury", "Venus", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"]
         current_planet = planets[min(period_index, 6)]
-        
+
         # Generate frequency spectrum based on rank
         rank_value = ranks.index(rank) + 1
         shadow = f"Pattern of {rank_value}" if rank_value < 5 else "Ego attachment"
         gift = f"Power of {rank_value}" if rank_value < 5 else "Mastery"
         siddhi = f"Transcendence of {rank_value}" if rank_value < 5 else "Service"
-        
+
         return SystemReading(
             system_name="Cardology",
             timestamp=dt,
@@ -862,14 +855,14 @@ def cross_system_synthesis(
 ) -> Dict[str, Any]:
     """
     Calculate the resonance score between a Cardology card and I-Ching hexagram.
-    
+
     This is the core function for the "Harmonic" synthesis model,
     treating both systems as equal inputs.
-    
+
     Args:
         card_reading: SystemReading from Cardology
         hexagram_reading: SystemReading from I-Ching
-        
+
     Returns:
         Dict with resonance_score and synthesis guidance
     """
@@ -878,14 +871,14 @@ def cross_system_synthesis(
         card_reading.element,
         hexagram_reading.element
     )
-    
+
     # Calculate thematic resonance (simplified keyword matching)
     # In production, this would use NLP/embeddings for semantic similarity
     thematic_score = 0.5  # Default neutral
-    
+
     # Combine scores (equal weight)
     combined_score = (elem_resonance.score + thematic_score) / 2
-    
+
     # Determine overall resonance type
     if combined_score >= 0.7:
         overall_type = ResonanceType.HARMONIC
@@ -895,7 +888,7 @@ def cross_system_synthesis(
         overall_type = ResonanceType.CHALLENGING
     else:
         overall_type = ResonanceType.DISSONANT
-    
+
     # Generate synthesis
     return {
         "resonance_score": combined_score,
@@ -965,7 +958,7 @@ def run_synthesis_demo():
     print("\n" + "=" * 80)
     print("HARMONIC SYNTHESIS - COUNCIL OF SYSTEMS DEMO")
     print("=" * 80)
-    
+
     # Try to import the I-Ching kernel
     try:
         from iching_kernel import IChingKernel
@@ -974,25 +967,25 @@ def run_synthesis_demo():
     except ImportError:
         print("\n⚠️ I-Ching Kernel not found, using mock data")
         kernel = None
-    
+
     # Create the Council
     council = CouncilOfSystems()
-    
+
     # Register adapters
     if kernel:
         council.register_system("I-Ching", IChingAdapter(kernel), weight=1.0)
-    
+
     council.register_system("Cardology", CardologyAdapter(), weight=1.0)
-    
+
     # Get current synthesis
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     synthesis = council.synthesize(now)
-    
+
     # Display results
     print("\n" + "-" * 60)
     print(f"SYNTHESIS FOR: {now.strftime('%Y-%m-%d %H:%M:%S UTC')}")
     print("-" * 60)
-    
+
     print("\n📊 SYSTEM READINGS:")
     for reading in synthesis.systems:
         print(f"\n  {reading.system_name}:")
@@ -1001,47 +994,47 @@ def run_synthesis_demo():
         print(f"    Element: {reading.element.value}")
         print(f"    Archetype: {reading.archetype}")
         print(f"    Cycle: Day {reading.cycle_day}/{reading.cycle_total}")
-    
+
     print("\n🔮 RESONANCE:")
     print(f"  Score: {synthesis.resonance_score:.2f}")
     print(f"  Type: {synthesis.resonance_type.value}")
     print(f"  Description: {synthesis.resonance_description}")
-    
+
     print("\n⚡ FREQUENCY SPECTRUM:")
     print(f"  Shadow: {synthesis.unified_shadow}")
     print(f"  Gift: {synthesis.unified_gift}")
     print(f"  Siddhi: {synthesis.unified_siddhi}")
-    
+
     print("\n🌍 ELEMENTAL BALANCE:")
     print(f"  Dominant: {synthesis.dominant_element.value}")
     for elem, value in synthesis.elemental_balance.items():
         bar = "█" * int(value * 20)
         print(f"    {elem.value:8s}: {bar} ({value:.1%})")
-    
+
     print("\n📜 THEMES:")
     print(f"  Macro (52-day): {synthesis.macro_theme}")
     print(f"  Micro (6-day): {synthesis.micro_theme}")
     print(f"\n  Synthesis: {synthesis.synthesis_guidance}")
-    
+
     print("\n🎯 QUEST SUGGESTIONS:")
     for i, quest in enumerate(synthesis.quest_suggestions, 1):
         print(f"  {i}. {quest}")
-    
+
     # Cross-system synthesis demo
     if len(synthesis.systems) >= 2:
         print("\n" + "-" * 60)
         print("CROSS-SYSTEM SYNTHESIS")
         print("-" * 60)
-        
+
         card = synthesis.systems[1] if synthesis.systems[1].system_name == "Cardology" else synthesis.systems[0]
         hexagram = synthesis.systems[0] if synthesis.systems[0].system_name == "I-Ching" else synthesis.systems[1]
-        
+
         cross = cross_system_synthesis(card, hexagram)
         print(f"\n  {card.primary_symbol} ↔ {hexagram.primary_symbol}")
         print(f"  Resonance Score: {cross['resonance_score']:.2f}")
         print(f"  Type: {cross['resonance_type']}")
         print(f"\n  Guidance: {cross['synthesis_guidance']}")
-    
+
     print("\n" + "=" * 80)
     print("DEMO COMPLETE")
     print("=" * 80 + "\n")

@@ -2,7 +2,7 @@ from collections.abc import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.ext.asyncio.session import AsyncSession
-from sqlalchemy.orm import DeclarativeBase, MappedAsDataclass
+from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.pool import NullPool
 
 from ..config import settings

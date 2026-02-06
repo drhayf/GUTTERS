@@ -8,17 +8,19 @@
 ╚══════════════════════════════════════════════════════════════════════════════╝
 """
 
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from typing import Optional
-from sqlalchemy import String, Integer, DateTime, Boolean, ForeignKey, Text, JSON
+
+from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from src.app.core.db.database import Base
 
 
 class OracleReading(Base):
     """
     Represents a single Oracle draw (Card + Hexagram + LLM synthesis).
-    
+
     Links to the Intelligence Ecosystem:
     - Can spawn a Quest (when user accepts the mission)
     - Can spawn a ReflectionPrompt (the diagnostic question)
@@ -40,6 +42,11 @@ class OracleReading(Base):
 
     # Context snapshot at time of draw
     transit_context: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+
+    # Entropy metadata
+    entropy_source: Mapped[Optional[str]] = mapped_column(
+        String(20), nullable=True, default="LOCAL_CHAOS"
+    )  # "QUANTUM" or "LOCAL_CHAOS"
 
     # User interaction
     accepted: Mapped[bool] = mapped_column(Boolean, default=False)

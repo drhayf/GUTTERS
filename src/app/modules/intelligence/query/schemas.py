@@ -1,9 +1,10 @@
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from typing import Optional
-from pydantic import BaseModel, Field, ConfigDict
 
-from ..trace.models import ActivityTrace
+from pydantic import BaseModel, ConfigDict, Field
+
 from ..generative_ui.models import ComponentSpec
+from ..trace.models import ActivityTrace
 
 
 class QueryRequest(BaseModel):

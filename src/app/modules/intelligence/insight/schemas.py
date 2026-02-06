@@ -1,6 +1,8 @@
 from datetime import datetime
-from typing import Optional, Any, Dict, List
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel
+
 from src.app.models.insight import PromptPhase, PromptStatus
 
 

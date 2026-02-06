@@ -1,10 +1,7 @@
 import logging
-import json
-from datetime import datetime, UTC
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
 from src.app.core.llm.config import get_standard_llm
-from src.app.models.insight import JournalSource
 
 logger = logging.getLogger(__name__)
 
@@ -89,5 +86,5 @@ Example Output:
         if event_type == "QUEST_COMPLETE":
             return f"Activity '{title}' completed successfully."
         elif event_type == "LEVEL_UP":
-            return f"System Evolution triggered. Level Up processed."
+            return "System Evolution triggered. Level Up processed."
         return f"Event '{title}' logged."

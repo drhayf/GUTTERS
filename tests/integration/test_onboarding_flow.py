@@ -9,14 +9,16 @@ Tests the complete user journey:
 5. Check onboarding status (should be complete)
 """
 
+from datetime import date, time, timedelta
+
 import pytest
 import pytest_asyncio
-from datetime import date, time, timedelta
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.app.core.security import create_access_token
 from src.app.models.user import User
 from src.app.models.user_profile import UserProfile
-from src.app.core.security import create_access_token
 
 
 @pytest_asyncio.fixture

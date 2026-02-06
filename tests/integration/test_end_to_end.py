@@ -4,10 +4,10 @@ End-to-end integration test suite.
 Verifies entire GUTTERS backend works as cohesive system.
 """
 
-import pytest
-import pytest_asyncio
-from datetime import datetime, date, time, timezone as dt_timezone
 import uuid
+from datetime import UTC, date, datetime, time
+
+import pytest
 
 
 @pytest.mark.asyncio
@@ -79,7 +79,7 @@ async def test_complete_user_journey(db, clean_redis):
 
     assert profile is not None
 
-    print(f"[OK] Profile initialized")
+    print("[OK] Profile initialized")
 
     # ========================================
     # STEP 2: Calculate Profiles (All Modules)
@@ -128,7 +128,7 @@ async def test_complete_user_journey(db, clean_redis):
     flag_modified(profile, "data")
     await real_db.commit()
 
-    print(f"[OK] Calculation modules complete (Astrology, HD, Numerology)")
+    print("[OK] Calculation modules complete (Astrology, HD, Numerology)")
 
     # ========================================
     # STEP 3: Tracking Modules
@@ -146,7 +146,7 @@ async def test_complete_user_journey(db, clean_redis):
         # Keys might vary depending on API response structure
         # assert 'kp_index' in solar_data or 'solar_wind_speed' in solar_data
 
-        print(f"[OK] Tracking modules functional (Solar data retrieved)")
+        print("[OK] Tracking modules functional (Solar data retrieved)")
     except Exception as e:
         print(f"[WARN] Tracking module check skipped/failed (possibly no API key): {e}")
 
@@ -185,14 +185,14 @@ async def test_complete_user_journey(db, clean_redis):
     # Depending on implementation, profiles might be pulled from DB or cache
     # assert context['profiles']['natal_chart'] is not None
 
-    print(f"[OK] Active Memory operational (Context retrieved)")
+    print("[OK] Active Memory operational (Context retrieved)")
 
     # ========================================
     # STEP 6: Master Chat Conversation
     # ========================================
+    from src.app.core.llm.config import LLMTier, get_premium_llm
     from src.app.modules.features.chat.master_chat import MasterChatHandler
     from src.app.modules.intelligence.query.engine import QueryEngine
-    from src.app.core.llm.config import get_premium_llm, LLMTier
 
     query_engine = QueryEngine(llm=get_premium_llm(), memory=memory, tier=LLMTier.PREMIUM, enable_generative_ui=True)
 
@@ -205,7 +205,7 @@ async def test_complete_user_journey(db, clean_redis):
     assert len(response["message"]) > 10  # Reduced length check for robustness
     assert response["session_id"] is not None
 
-    print(f"[OK] Master Chat conversation successful")
+    print("[OK] Master Chat conversation successful")
     print(f"  Response: {response['message'][:100]}...")
 
     # ========================================
@@ -228,7 +228,7 @@ async def test_complete_user_journey(db, clean_redis):
             component_id=response2["component"]["component_id"],
             component_type=ComponentType(response2["component"]["component_type"]),
             slider_values={"mood": 4, "energy": 3, "anxiety": 8},
-            submitted_at=datetime.now(dt_timezone.utc),
+            submitted_at=datetime.now(UTC),
         )
 
         # Submit via API logic (simulated)
@@ -243,7 +243,7 @@ async def test_complete_user_journey(db, clean_redis):
 
         entry = {
             "id": str(uuid.uuid4()),
-            "timestamp": datetime.now(dt_timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "text": "Felt anxious during solar storm",
             "mood_score": 4,
             "energy_score": 3,
@@ -255,7 +255,7 @@ async def test_complete_user_journey(db, clean_redis):
         flag_modified(profile, "data")
         await real_db.commit()
 
-        print(f"[OK] Journal entry created via component")
+        print("[OK] Journal entry created via component")
     else:
         # Manual journal entry if no component
         if "journal_entries" not in profile.data:
@@ -263,7 +263,7 @@ async def test_complete_user_journey(db, clean_redis):
 
         entry = {
             "id": str(uuid.uuid4()),
-            "timestamp": datetime.now(dt_timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "text": "Felt anxious during solar storm",
             "mood_score": 4,
             "source": "manual",
@@ -273,15 +273,15 @@ async def test_complete_user_journey(db, clean_redis):
         flag_modified(profile, "data")
         await real_db.commit()
 
-        print(f"[OK] Journal entry created manually")
+        print("[OK] Journal entry created manually")
 
     # ========================================
     # STEP 8: Vector Search
     # ========================================
+    from src.app.core.config import settings
+    from src.app.models.embedding import Embedding
     from src.app.modules.intelligence.vector.embedding_service import EmbeddingService
     from src.app.modules.intelligence.vector.search_engine import VectorSearchEngine
-    from src.app.models.embedding import Embedding
-    from src.app.core.config import settings
 
     # Create embedding for journal entry
     embed_service = EmbeddingService(settings.OPENROUTER_API_KEY.get_secret_value())
@@ -298,7 +298,7 @@ async def test_complete_user_journey(db, clean_redis):
     real_db.add(embedding_record)
     await real_db.commit()
 
-    print(f"[OK] Vector embedding created")
+    print("[OK] Vector embedding created")
 
     # Search
     search_engine = VectorSearchEngine()
@@ -325,7 +325,7 @@ async def test_complete_user_journey(db, clean_redis):
         "description": "Anxiety correlates with solar storms",
         "confidence": 0.82,
         "evidence": ["3 occurrences over 30 days", "Kp index > 6 in all cases"],
-        "created_at": datetime.now(dt_timezone.utc).isoformat(),
+        "created_at": datetime.now(UTC).isoformat(),
     }
 
     profile.data["observer_patterns"].append(pattern)
@@ -348,7 +348,7 @@ async def test_complete_user_journey(db, clean_redis):
         "confidence": 0.75,
         "evidence": ["Anxiety pattern", "Headache correlation"],
         "status": "testing",
-        "created_at": datetime.now(dt_timezone.utc).isoformat(),
+        "created_at": datetime.now(UTC).isoformat(),
     }
 
     profile.data["hypotheses"].append(hypothesis)
@@ -375,7 +375,7 @@ async def test_complete_user_journey(db, clean_redis):
     # Should mention patterns or synthesis - soft check
     # assert any(keyword in final_response['message'].lower() for keyword in ['pattern', 'storm', 'solar', 'anxiety'])
 
-    print(f"[OK] Complex query successful (used full context)")
+    print("[OK] Complex query successful (used full context)")
     print(f"  Response: {final_response['message'][:150]}...")
 
     # ========================================
@@ -395,7 +395,7 @@ async def test_complete_user_journey(db, clean_redis):
         assert "trace" in latest_message.meta or "thinking_steps" in latest_message.meta.get("trace", {})
 
         trace = latest_message.meta.get("trace", {})
-        print(f"[OK] Observable AI trace verified")
+        print("[OK] Observable AI trace verified")
         print(f"  Thinking steps: {len(trace.get('thinking_steps', []))}")
         print(f"  Tools used: {len(trace.get('tools_used', []))}")
     else:
@@ -408,15 +408,15 @@ async def test_complete_user_journey(db, clean_redis):
     print("\n" + "=" * 60)
     print("[SUCCESS] END-TO-END INTEGRATION TEST PASSED")
     print("=" * 60)
-    print(f"User Journey Complete:")
-    print(f"  [OK] User created & profiles calculated")
-    print(f"  [OK] Synthesis generated & cached")
-    print(f"  [OK] Chat conversation functional")
-    print(f"  [OK] Journal entry created")
-    print(f"  [OK] Vector search operational")
-    print(f"  [OK] Observer & Hypothesis systems working")
-    print(f"  [OK] Query Engine using full context")
-    print(f"  [OK] Traces captured for transparency")
+    print("User Journey Complete:")
+    print("  [OK] User created & profiles calculated")
+    print("  [OK] Synthesis generated & cached")
+    print("  [OK] Chat conversation functional")
+    print("  [OK] Journal entry created")
+    print("  [OK] Vector search operational")
+    print("  [OK] Observer & Hypothesis systems working")
+    print("  [OK] Query Engine using full context")
+    print("  [OK] Traces captured for transparency")
     print("=" * 60)
 
 
@@ -434,11 +434,11 @@ async def test_multi_conversation_workflow(db, clean_redis):
 
     real_db = db
 
-    from src.app.models.user import User
-    from src.app.modules.features.chat.session_manager import SessionManager
-    from src.app.modules.features.chat.master_chat import MasterChatHandler
+    from src.app.core.llm.config import LLMTier, get_premium_llm
     from src.app.core.memory import get_active_memory
-    from src.app.core.llm.config import get_premium_llm, LLMTier
+    from src.app.models.user import User
+    from src.app.modules.features.chat.master_chat import MasterChatHandler
+    from src.app.modules.features.chat.session_manager import SessionManager
     from src.app.modules.intelligence.query.engine import QueryEngine
 
     # Create user
@@ -476,18 +476,18 @@ async def test_multi_conversation_workflow(db, clean_redis):
     health_conv = await manager.create_master_conversation(user.id, "Health", real_db)
     # general_conv = await manager.get_default_master_conversation(user.id, real_db)
 
-    print(f"[OK] Created 2 explicit conversations")
+    print("[OK] Created 2 explicit conversations")
 
     # Send messages to different conversations
-    work_msg = await handler.send_message(
+    await handler.send_message(
         user.id, "How should I approach the project deadline?", real_db, session_id=work_conv.id
     )
 
-    health_msg = await handler.send_message(
+    await handler.send_message(
         user.id, "I've been feeling tired lately", real_db, session_id=health_conv.id
     )
 
-    print(f"[OK] Messages sent to separate conversations")
+    print("[OK] Messages sent to separate conversations")
 
     # Verify message isolation
     work_history = await manager.get_session_history(work_conv.id, real_db, limit=10)
@@ -503,7 +503,7 @@ async def test_multi_conversation_workflow(db, clean_redis):
     # Note: LLM mightHALLUCINATE across sessions if memory isn't isolated, but DB should be isolated
     assert "tired" not in work_contents[0].lower()
 
-    print(f"[OK] Message isolation verified")
+    print("[OK] Message isolation verified")
 
     # Test search across conversations
     # Search functionality might need implementation in SessionManager
@@ -513,7 +513,7 @@ async def test_multi_conversation_workflow(db, clean_redis):
         assert len(results) > 0
         assert any(r["conversation_name"] == "Work" for r in results)
 
-        print(f"[OK] Cross-conversation search functional")
+        print("[OK] Cross-conversation search functional")
     except AttributeError:
         print("[WARN] search_conversations not implemented yet in SessionManager")
     except Exception as e:
@@ -536,10 +536,10 @@ async def test_generative_ui_workflow(db, clean_redis):
 
     real_db = db
 
+    from src.app.core.llm.config import LLMTier, get_premium_llm
+    from src.app.core.memory import get_active_memory
     from src.app.models.user import User
     from src.app.modules.features.chat.master_chat import MasterChatHandler
-    from src.app.core.memory import get_active_memory
-    from src.app.core.llm.config import get_premium_llm, LLMTier
     from src.app.modules.intelligence.query.engine import QueryEngine
 
     # Create user
@@ -580,7 +580,7 @@ async def test_generative_ui_workflow(db, clean_redis):
         user.id, "I felt really anxious and tired today, I need to track this.", real_db
     )
 
-    print(f"[OK] Message sent")
+    print("[OK] Message sent")
 
     # Check if component was generated
     # Note: LLM might not always generate component, so this is soft check
@@ -591,8 +591,8 @@ async def test_generative_ui_workflow(db, clean_redis):
         assert "component_id" in response["component"]
         assert "component_type" in response["component"]
 
-        print(f"[OK] Component spec valid")
+        print("[OK] Component spec valid")
     else:
-        print(f"[WARN] No component generated (LLM decided text was better)")
+        print("[WARN] No component generated (LLM decided text was better)")
 
     print("\n[SUCCESS] Generative UI workflow test PASSED")

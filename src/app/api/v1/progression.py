@@ -1,10 +1,10 @@
-from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.app.api.dependencies import async_get_db, get_current_user as get_current_active_user
+from src.app.api.dependencies import async_get_db
+from src.app.api.dependencies import get_current_user as get_current_active_user
 from src.app.models.progression import PlayerStats
 
 router = APIRouter(prefix="/progression", tags=["progression"])

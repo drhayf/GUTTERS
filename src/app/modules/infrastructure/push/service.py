@@ -6,11 +6,11 @@ This approach guarantees compatibility with Apple APNs Web Push.
 """
 
 import logging
-import json
 from typing import Optional
+
 import httpx
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.app.core.config import settings
 from src.app.models.push import PushSubscription
@@ -58,7 +58,7 @@ class NotificationService:
             subscription.endpoint[:60] + "..." if len(subscription.endpoint) > 60 else subscription.endpoint
         )
 
-        logger.info(f"⚡ Sending push notification via Node.js service")
+        logger.info("⚡ Sending push notification via Node.js service")
         logger.info(f"   Endpoint: {endpoint_display}")
 
         async with httpx.AsyncClient() as client:
@@ -71,7 +71,7 @@ class NotificationService:
                 )
 
                 if response.status_code == 200:
-                    logger.info(f"✅ Push sent successfully")
+                    logger.info("✅ Push sent successfully")
                     return True
                 elif response.status_code in [404, 410]:
                     logger.warning(f"⚠️  Subscription expired ({response.status_code})")
@@ -136,7 +136,8 @@ class NotificationService:
                         # In a real impl, we would delete them here
 
                     logger.info(
-                        f"📊 Results: ✅ {results.get('success', 0)}, ❌ {results.get('failed', 0)}, ⚠️  {results.get('expired', 0)}"
+                        f"📊 Results: ✅ {results.get('success', 0)}, "
+                        f"❌ {results.get('failed', 0)}, ⚠️  {results.get('expired', 0)}"
                     )
 
                     return {

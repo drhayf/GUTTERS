@@ -1,22 +1,23 @@
-import pytest
 import asyncio
-from datetime import datetime, UTC
+from datetime import UTC, datetime
+
+import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.app.models.user import User
-from src.app.models.user_profile import UserProfile
-from src.app.models.progression import PlayerStats
-from src.app.modules.features.quests.manager import QuestManager
-from src.app.modules.features.quests.models import QuestStatus, QuestCategory, QuestDifficulty
 from src.app.core.events.bus import get_event_bus
 from src.app.core.memory.active_memory import get_active_memory
+from src.app.models.insight import PromptPhase, PromptStatus, ReflectionPrompt
+from src.app.models.progression import PlayerStats
+from src.app.models.user import User
+from src.app.models.user_profile import UserProfile
+from src.app.modules.features.quests.manager import QuestManager
+from src.app.modules.features.quests.models import QuestCategory, QuestDifficulty
 from src.app.modules.intelligence.evolution.engine import get_evolution_engine
 from src.app.modules.intelligence.genesis.listener import get_genesis_listener
 from src.app.modules.intelligence.genesis.uncertainty import UncertaintyDeclaration, UncertaintyField
-from src.app.models.insight import ReflectionPrompt, PromptStatus, PromptPhase
-from src.app.protocol.packet import ProgressionPacket
 from src.app.protocol import events
+from src.app.protocol.packet import ProgressionPacket
 
 
 @pytest.mark.asyncio
@@ -163,8 +164,8 @@ async def test_semantic_evolution_loop(db: AsyncSession, test_user: User):
     assert stats.sync_history[-1]["reason"].startswith("Quest Completed")
 
     # 7. Test Passive Environmental XP
-    from src.app.modules.tracking.solar.tracker import SolarTracker
     from src.app.modules.tracking.base import TrackingData
+    from src.app.modules.tracking.solar.tracker import SolarTracker
 
     tracker = SolarTracker()
     mock_data = TrackingData(

@@ -18,10 +18,10 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.app.api.dependencies import get_current_user
-from src.app.core.db.database import async_get_db
-from src.app.core.telemetry.tracer import get_tracer
-from src.app.core.state.tracker import get_state_tracker
 from src.app.core.activity.logger import get_activity_logger
+from src.app.core.db.database import async_get_db
+from src.app.core.state.tracker import get_state_tracker
+from src.app.core.telemetry.tracer import get_tracer
 
 router = APIRouter(prefix="/observability", tags=["observability"])
 
@@ -92,6 +92,7 @@ async def stream_events(
     """
     import asyncio
     import json
+
     from src.app.core.events.bus import get_event_bus
 
     async def event_generator():

@@ -7,18 +7,18 @@ using LLM to generate unified profile insights.
 
 from __future__ import annotations
 
-import logging
 import datetime as dt
-from typing import TYPE_CHECKING, Any, List, Optional, Tuple
+import logging
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 if TYPE_CHECKING:
-    from langchain_openai import ChatOpenAI
     from langchain_core.language_models import BaseChatModel
+    from langchain_openai import ChatOpenAI
 
-from src.app.core.llm.config import get_premium_llm, LLMTier, LLMConfig
+from src.app.core.llm.config import LLMConfig, LLMTier, get_premium_llm
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +88,7 @@ async def update_user_preference(user_id: int, key: str, value: Any, db: AsyncSe
         await db.execute(
             update(UserProfile)
             .where(UserProfile.user_id == user_id)
-            .values(data=data, updated_at=dt.datetime.now(dt.timezone.utc))
+            .values(data=data, updated_at=dt.datetime.now(dt.UTC))
         )
     else:
         new_profile = UserProfile(user_id=user_id, data={"preferences": {key: value}})
@@ -117,7 +117,7 @@ class ProfileSynthesizer:
         self.activity_logger = get_activity_logger()
 
     @property
-    def llm(self) -> "BaseChatModel":
+    def llm(self) -> BaseChatModel:
         """Lazy-load LLM instance."""
         if self._llm is None:
             # If the model matches our premium tier default, use the new config
@@ -137,12 +137,12 @@ class ProfileSynthesizer:
         and includes them in synthesis.
         """
         import uuid
-        import json
+
+        from ....core.events.bus import get_event_bus
+        from ....core.memory.active_memory import get_active_memory
+        from ....protocol.events import SYNTHESIS_GENERATED
         from ...calculation.registry import CalculationModuleRegistry
         from .schemas import UnifiedProfile
-        from ....core.memory.active_memory import get_active_memory
-        from ....core.events.bus import get_event_bus
-        from ....protocol.events import SYNTHESIS_GENERATED
 
         trace_id = trace_id or str(uuid.uuid4())
 
@@ -188,11 +188,11 @@ class ProfileSynthesizer:
 
         prompt = f"""
         You are a cosmic intelligence system integrating multiple metaphysical frameworks.
-        
+
         Generate a personalized synthesis for this user based on the following modules:
-        
+
         {modules_text}
-        
+
         Requirements:
         - Create a cohesive narrative that integrates insights from ALL available modules
         - Focus on practical guidance and self-understanding
@@ -200,7 +200,7 @@ class ProfileSynthesizer:
         - Be specific and personalized (not generic)
         - Write in second person ("You are...")
         - Aim for 3-4 paragraphs, 400-600 words
-        
+
         Begin the synthesis now:
         """
 
@@ -212,7 +212,7 @@ class ProfileSynthesizer:
         )
 
         try:
-            from langchain_core.messages import SystemMessage, HumanMessage
+            from langchain_core.messages import HumanMessage, SystemMessage
 
             response = await self.llm.ainvoke(
                 [
@@ -250,7 +250,7 @@ class ProfileSynthesizer:
                 "user_id": user_id,
                 "modules": modules_included,
                 "patterns_detected": 0,
-                "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+                "generated_at": dt.datetime.now(dt.UTC).isoformat(),
             },
         )
 
@@ -261,7 +261,7 @@ class ProfileSynthesizer:
             modules_included=modules_included,
             patterns=[],
             model_used=self.model_id,
-            generated_at=dt.datetime.now(dt.timezone.utc),
+            generated_at=dt.datetime.now(dt.UTC),
             confidence=self._calculate_confidence(calculated_modules),
         )
 
@@ -320,7 +320,11 @@ class ProfileSynthesizer:
             sections.append(f"**Confirmed Self-Patterns & Theories:**\n{hypotheses}")
 
         combined = "\n\n".join(sections)
-        return f"Synthesize these insights into a cohesive cosmic profile (8-10 sentences):\n\n{combined}\n\nRequirements: Integrate, highlight themes, write in second person, provide guidance."
+        return (
+            "Synthesize these insights into a cohesive cosmic profile (8-10 sentences):\n\n"
+            f"{combined}\n\n"
+            "Requirements: Integrate, highlight themes, write in second person, provide guidance."
+        )
 
     def _extract_key_insights(self, module_name: str, data: dict):
         from .schemas import ModuleInsights
@@ -365,6 +369,6 @@ class ProfileSynthesizer:
             await db.execute(
                 update(UserProfile)
                 .where(UserProfile.user_id == user_id)
-                .values(data=data, updated_at=dt.datetime.now(dt.timezone.utc))
+                .values(data=data, updated_at=dt.datetime.now(dt.UTC))
             )
             await db.commit()

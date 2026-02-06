@@ -1,16 +1,14 @@
 import logging
 import math
-from datetime import datetime, UTC
-from typing import Any
+from datetime import UTC, datetime
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.app.core.db.database import local_session
 from src.app.core.events.bus import get_event_bus
 from src.app.models.progression import PlayerStats
 from src.app.protocol import events
-from src.app.protocol.packet import ProgressionPacket, Packet
+from src.app.protocol.packet import ProgressionPacket
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +36,8 @@ class EvolutionEngine:
         """
         # DEBUG LOG
         print(
-            f"DEBUG: EvolutionEngine received XP packet for user {packet.user_id}. Amount: {getattr(packet, 'amount', 'unset')}"
+            f"DEBUG: EvolutionEngine received XP packet for user {packet.user_id}. "
+            f"Amount: {getattr(packet, 'amount', 'unset')}"
         )
 
         user_id = packet.user_id

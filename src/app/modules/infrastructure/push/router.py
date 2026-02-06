@@ -1,11 +1,12 @@
 import logging
+
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.app.core.db.database import local_session as async_session_factory
 from src.app.models.user import User
 from src.app.models.user_profile import UserProfile
-from src.app.modules.infrastructure.push.service import notification_service
 from src.app.modules.infrastructure.push.map import EVENT_MAP
+from src.app.modules.infrastructure.push.service import notification_service
 from src.app.protocol.packet import Packet
 
 logger = logging.getLogger(__name__)
@@ -37,7 +38,7 @@ class NotificationRouter:
         async with async_session_factory() as db:
             # 2. Get Users (Simple Iteration for now, optimized later for scale)
             # Just like before, we iterate all users.
-            stmt = select(User).where(User.is_deleted == False)
+            stmt = select(User).where(User.is_deleted.is_(False))
             result = await db.execute(stmt)
             users = result.scalars().all()
 

@@ -1,5 +1,6 @@
 from datetime import date, time
-from typing import Optional, Any
+from typing import Any, Optional
+
 from langchain_core.tools import StructuredTool
 from pydantic import BaseModel, Field
 
@@ -44,6 +45,10 @@ def get_tool() -> StructuredTool:
         func=None,
         coroutine=_calculate_hd_async,
         name="calculate_human_design",
-        description="Calculate a Human Design chart. Returns Type, Strategy, Authority, Profile, and defined centers. Use this when the user asks for their Human Design, BodyGraph, or type.",
+        description=(
+            "Calculate a Human Design chart. Returns Type, Strategy, Authority, Profile, "
+            "and defined centers. Use this when the user asks for their Human Design, "
+            "BodyGraph, or type."
+        ),
         args_schema=HumanDesignInput,
     )

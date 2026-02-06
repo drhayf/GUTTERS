@@ -10,25 +10,24 @@ Verifies that:
 
 import asyncio
 import json
-from datetime import datetime, timezone
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker, selectinload
-from sqlalchemy import select, func
-
-import sys
 import os
+import sys
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import selectinload, sessionmaker
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
+from app.api.v1.quests import QuestRead
 from app.core.config import settings
 from app.models.user import User
 from app.modules.features.quests.models import Quest, QuestLog, QuestStatus
-from app.api.v1.quests import QuestRead
 
 
 async def main():
     DATABASE_URL = settings.POSTGRES_ASYNC_URI
-    print(f"📊 QUEST VISIBILITY DIAGNOSTIC CHECK")
+    print("📊 QUEST VISIBILITY DIAGNOSTIC CHECK")
     print("=" * 80)
     print(f"Database: {DATABASE_URL.split('@')[1] if '@' in DATABASE_URL else 'Unknown'}")
     print("=" * 80)
@@ -103,7 +102,7 @@ async def main():
 
                 if len(user_quests) > 0:
                     quest = user_quests[0]
-                    print(f"\n   ✓ Serializing first quest for API response...")
+                    print("\n   ✓ Serializing first quest for API response...")
 
                     try:
                         # Simulate QuestRead creation (what the API does)
@@ -125,30 +124,36 @@ async def main():
                         # Convert to dict (what FastAPI returns as JSON)
                         quest_dict = quest_read.model_dump()
 
-                        print(f"\n   API Response:")
+                        print("\n   API Response:")
                         print(f"      - id: {quest_dict['id']} (type: {type(quest_dict['id']).__name__})")
                         print(f"      - title: {quest_dict['title']} (type: {type(quest_dict['title']).__name__})")
                         print(
-                            f"      - recurrence: {quest_dict['recurrence']} (type: {type(quest_dict['recurrence']).__name__})"
+                            f"      - recurrence: {quest_dict['recurrence']} "
+                            f"(type: {type(quest_dict['recurrence']).__name__})"
                         )
-                        print(f"        ✓ Frontend expects: string 'daily', 'weekly', etc.")
-                        print(f"        {'✓ PASS' if isinstance(quest_dict['recurrence'], str) else '✗ FAIL'}")
+                        print("        ✓ Frontend expects: string 'daily', 'weekly', etc.")
+                        recurrence_valid = isinstance(quest_dict['recurrence'], str)
+                        print(f"        {'✓ PASS' if recurrence_valid else '✗ FAIL'}")
 
                         print(f"      - source: {quest_dict['source']} (type: {type(quest_dict['source']).__name__})")
-                        print(f"        ✓ Frontend expects: string 'user', 'agent', etc.")
-                        print(f"        {'✓ PASS' if isinstance(quest_dict['source'], str) else '✗ FAIL'}")
-
+                        print("        ✓ Frontend expects: string 'user', 'agent', etc.")
+                        source_valid = isinstance(quest_dict['source'], str)
+                        print(f"        {'✓ PASS' if source_valid else '✗ FAIL'}")
                         print(
-                            f"      - difficulty: {quest_dict['difficulty']} (type: {type(quest_dict['difficulty']).__name__})"
+                            f"      - difficulty: {quest_dict['difficulty']} "
+                            f"(type: {type(quest_dict['difficulty']).__name__})"
                         )
-                        print(f"        ✓ Frontend expects: integer 1-4")
-                        print(
-                            f"        {'✓ PASS' if isinstance(quest_dict['difficulty'], int) and 1 <= quest_dict['difficulty'] <= 4 else '✗ FAIL'}"
+                        print("        ✓ Frontend expects: integer 1-4")
+                        is_valid_difficulty = (
+                            isinstance(quest_dict['difficulty'], int) and
+                            1 <= quest_dict['difficulty'] <= 4
                         )
+                        result_str = "✓ PASS" if is_valid_difficulty else "✗ FAIL"
+                        print(f"        {result_str}")
 
                         # Can it be JSON serialized?
                         json_str = json.dumps(quest_dict)
-                        print(f"\n   ✓ JSON serialization: SUCCESS")
+                        print("\n   ✓ JSON serialization: SUCCESS")
                         print(f"   ✓ Sample JSON: {json_str[:100]}...")
 
                     except Exception as e:
@@ -173,7 +178,7 @@ async def main():
                 if len(user_pending_logs) > 0:
                     log = user_pending_logs[0]
                     quest = log.quest
-                    print(f"\n   ✓ Serializing first pending log for API response...")
+                    print("\n   ✓ Serializing first pending log for API response...")
 
                     try:
                         quest_read = QuestRead(
@@ -193,14 +198,14 @@ async def main():
 
                         quest_dict = quest_read.model_dump()
 
-                        print(f"\n   API Response:")
+                        print("\n   API Response:")
                         print(f"      - id: {quest_dict['id']}")
                         print(f"      - log_id: {quest_dict['log_id']} (instance ID)")
                         print(f"      - status: {quest_dict['status']} (pending/completed/etc.)")
                         print(f"      - title: {quest_dict['title']}")
 
                         json_str = json.dumps(quest_dict)
-                        print(f"\n   ✓ JSON serialization: SUCCESS")
+                        print("\n   ✓ JSON serialization: SUCCESS")
                         print(f"   Sample JSON: {json_str[:120]}...")
 
                     except Exception as e:
@@ -214,7 +219,7 @@ async def main():
             print("6️⃣  SUMMARY & RECOMMENDATIONS")
             print("=" * 80)
 
-            print(f"\n✓ Total Database Records:")
+            print("\n✓ Total Database Records:")
             print(f"  • Users: {len(users)}")
             print(f"  • Quests: {len(all_quests)}")
             print(f"  • QuestLogs: {len(all_logs)}")

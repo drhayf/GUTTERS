@@ -3,8 +3,8 @@
 Get EXACT values for Hayford at a time that should be Generator
 """
 import sys
-from pathlib import Path
 from datetime import date, time
+from pathlib import Path
 
 src_path = Path(__file__).parent.parent
 sys.path.insert(0, str(src_path))
@@ -28,16 +28,16 @@ print("EXACT VALUES FOR JOVIAN ARCHIVE VERIFICATION")
 print("=" * 80)
 print("\nEnter these values into Jovian Archive:")
 print("-" * 80)
-print(f"Name:      Hayford Ayirebi")
-print(f"Date:      July 23, 1999")
-print(f"Time:      03:00 AM (3:00 AM)")
-print(f"Location:  Accra, Ghana")
-print(f"           Latitude: 5.6037° N")
-print(f"           Longitude: 0.1870° W")
-print(f"Timezone:  Africa/Accra (GMT+0)")
+print("Name:      Hayford Ayirebi")
+print("Date:      July 23, 1999")
+print("Time:      03:00 AM (3:00 AM)")
+print("Location:  Accra, Ghana")
+print("           Latitude: 5.6037° N")
+print("           Longitude: 0.1870° W")
+print("Timezone:  Africa/Accra (GMT+0)")
 print("-" * 80)
 
-print(f"\nOUR CALCULATION RESULT:")
+print("\nOUR CALCULATION RESULT:")
 print(f"Type: {chart.type}")
 print(f"Strategy: {chart.strategy}")
 print(f"Authority: {chart.authority}")
@@ -48,7 +48,7 @@ print(f"Undefined Centers: {', '.join(chart.undefined_centers)}")
 
 print(f"\nKey Detail - Sacral Center: {'DEFINED' if 'Sacral' in chart.defined_centers else 'UNDEFINED'}")
 
-print(f"\nDefined Channels:")
+print("\nDefined Channels:")
 for ch in chart.channels:
     if ch.defined:
         g1, g2 = ch.gates
@@ -57,12 +57,12 @@ for ch in chart.channels:
         sacral_marker = " ← DEFINES SACRAL!" if (c1 == "Sacral" or c2 == "Sacral") else ""
         print(f"  {ch.name:20} Gates {g1}-{g2} ({c1} ↔ {c2}){sacral_marker}")
 
-print(f"\nTop Personality Gates:")
+print("\nTop Personality Gates:")
 for g in chart.personality_gates[:6]:
     center = calc.GATE_TO_CENTER.get(g.gate)
     print(f"  {g.planet:12} Gate {g.gate:2}.{g.line} ({center})")
 
-print(f"\nTop Design Gates:")
+print("\nTop Design Gates:")
 for g in chart.design_gates[:6]:
     center = calc.GATE_TO_CENTER.get(g.gate)
     print(f"  {g.planet:12} Gate {g.gate:2}.{g.line} ({center})")
@@ -72,7 +72,7 @@ print("EXPECTED JOVIAN RESULT:")
 print("=" * 80)
 print("If our calculation is correct, Jovian should show:")
 print(f"  Type: {chart.type}")
-print(f"  Sacral: DEFINED")
-print(f"  Channel 2-14 (Evolution): DEFINED")
+print("  Sacral: DEFINED")
+print("  Channel 2-14 (Evolution): DEFINED")
 print("\nIf Jovian shows PROJECTOR instead, we have a bug!")
 print("=" * 80)

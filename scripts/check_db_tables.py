@@ -1,12 +1,13 @@
 import asyncio
-import sys
 import os
+import sys
 
 # Add src to path
 sys.path.append(os.path.join(os.getcwd(), "src"))
 
-from src.app.core.db.database import async_engine
 from sqlalchemy import inspect
+
+from src.app.core.db.database import async_engine
 
 
 async def check_schema():

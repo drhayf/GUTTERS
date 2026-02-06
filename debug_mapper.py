@@ -1,13 +1,11 @@
-import asyncio
 import sys
+
 from sqlalchemy.orm import configure_mappers
 
 # Add src to path
 sys.path.append("src")
 
-from src.app.core.db.database import Base
 from src.app.models.user import User
-from src.app.models.chat_session import ChatSession, ChatMessage
 
 
 def test_mappers():

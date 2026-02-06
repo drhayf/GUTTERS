@@ -16,10 +16,10 @@ Example:
             ...
 """
 
-from typing import Dict, Any, Optional
+import logging
 from dataclasses import dataclass
 from datetime import datetime
-import logging
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 

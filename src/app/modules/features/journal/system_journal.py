@@ -1,18 +1,18 @@
 import logging
-from datetime import datetime, UTC
-from typing import Dict, Any
+from datetime import UTC, datetime
+from typing import Any, Dict
 
 from sqlalchemy import select
 
-from src.app.core.events.bus import get_event_bus
-from src.app.protocol import events
-from src.app.protocol.packet import ProgressionPacket
 from src.app.core.db.database import local_session
+from src.app.core.events.bus import get_event_bus
+from src.app.core.memory.active_memory import get_active_memory
+from src.app.models.insight import JournalEntry, JournalSource
+from src.app.models.progression import PlayerStats
 from src.app.modules.features.chat.session_manager import SessionManager
 from src.app.modules.intelligence.journalist.engine import JournalistEngine
-from src.app.models.insight import JournalEntry, JournalSource
-from src.app.core.memory.active_memory import get_active_memory
-from src.app.models.progression import PlayerStats
+from src.app.protocol import events
+from src.app.protocol.packet import ProgressionPacket
 
 logger = logging.getLogger(__name__)
 

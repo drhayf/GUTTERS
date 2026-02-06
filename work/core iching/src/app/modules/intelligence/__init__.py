@@ -30,6 +30,6 @@ from .synthesis.harmonic import (
 
 __all__ = [
     "CouncilOfSystems",
-    "HarmonicSynthesis", 
+    "HarmonicSynthesis",
     "cross_system_synthesis",
 ]

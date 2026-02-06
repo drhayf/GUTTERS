@@ -13,11 +13,11 @@ import sys
 os.chdir(os.path.join(os.path.dirname(__file__), "..", "src"))
 sys.path.insert(0, os.getcwd())
 
-from app.modules.infrastructure.push.service import (
-    _get_push_service_origin,
-    _get_apple_web_push_audience,
-)
 from app.core.config import settings
+from app.modules.infrastructure.push.service import (
+    _get_apple_web_push_audience,
+    _get_push_service_origin,
+)
 
 print("=" * 60)
 print("PUSH NOTIFICATION FIX VERIFICATION")
@@ -71,7 +71,7 @@ print("-" * 60)
 service_file = os.path.join(
     os.path.dirname(__file__), "..", "src", "app", "modules", "infrastructure", "push", "service.py"
 )
-with open(service_file, "r", encoding="utf-8") as f:
+with open(service_file, encoding="utf-8") as f:
     service_code = f.read()
 
 checks = [

@@ -5,17 +5,18 @@ Run this to force resubscription with the current VAPID keys.
 """
 
 import asyncio
-import sys
 import os
+import sys
 
 # Change to src directory for proper imports
 os.chdir(os.path.join(os.path.dirname(__file__), "..", "src"))
 sys.path.insert(0, os.getcwd())
 
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy import select
-from app.models.push import PushSubscription
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
 from app.core.config import settings
+from app.models.push import PushSubscription
 
 
 async def clear_user_subscriptions(db: AsyncSession, user_id: int) -> int:

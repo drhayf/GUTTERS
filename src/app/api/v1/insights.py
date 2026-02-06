@@ -1,12 +1,14 @@
-from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from pydantic import BaseModel
 import logging
+from typing import List, Optional
 
-from src.app.api.dependencies import async_get_db, get_current_user as get_current_active_user
-from src.app.models.insight import ReflectionPrompt, JournalEntry, PromptStatus
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.app.api.dependencies import async_get_db
+from src.app.api.dependencies import get_current_user as get_current_active_user
+from src.app.models.insight import JournalEntry, PromptStatus, ReflectionPrompt
 
 logger = logging.getLogger(__name__)
 
@@ -113,7 +115,7 @@ async def create_journal_entry(
 ):
     """
     Create a journal entry, optionally as a response to a prompt.
-    
+
     Automatically attaches cosmic context snapshot if not provided,
     including solar, lunar, and transit conditions at the time of entry.
     """
@@ -134,9 +136,9 @@ async def create_journal_entry(
     context_snapshot = entry_in.context_snapshot
     if context_snapshot is None:
         try:
-            from src.app.modules.tracking.context import get_cosmic_context
             from src.app.core.state.chronos import get_chronos_manager
-            
+            from src.app.modules.tracking.context import get_cosmic_context
+
             # Fetch cosmic context (solar, lunar, transits)
             cosmic_context = await get_cosmic_context(current_user["id"])
             context_snapshot = {
@@ -147,7 +149,7 @@ async def create_journal_entry(
                 "intensity_score": cosmic_context.get("intensity_score", 0),
                 "timestamp": cosmic_context.get("timestamp"),
             }
-            
+
             # Inject Magi chronos state for period-aware analysis
             chronos_manager = get_chronos_manager()
             chronos_state = await chronos_manager.get_user_chronos(current_user["id"])
@@ -182,7 +184,7 @@ async def create_journal_entry(
     db.add(entry)
     await db.commit()
     await db.refresh(entry)
-    
+
     # 4. Update relevant hypotheses with journal evidence
     try:
         await _update_hypotheses_from_journal(
@@ -221,20 +223,20 @@ async def _update_hypotheses_from_journal(
 ) -> int:
     """
     Update hypotheses that are relevant to the journal entry.
-    
+
     Args:
         user_id: User ID
         journal_entry: Journal entry data
         db: Database session
         magi_context: Optional magi chronos context
-    
+
     Returns:
         Number of hypotheses updated
     """
     from src.app.modules.intelligence.hypothesis.updater import get_hypothesis_updater
-    
+
     updater = get_hypothesis_updater()
-    
+
     # Find relevant hypotheses
     relevant = await updater.get_relevant_hypotheses_for_journal(
         user_id=user_id,
@@ -242,14 +244,14 @@ async def _update_hypotheses_from_journal(
         mood_score=journal_entry.get("mood_score"),
         tags=journal_entry.get("tags", [])
     )
-    
+
     updated_count = 0
-    
+
     for match in relevant:
         hypothesis = match["hypothesis"]
         relevance = match["relevance"]
         matching_keywords = match.get("matching_keywords", [])
-        
+
         # Only add as evidence if relevance is meaningful
         if relevance >= 0.2:
             try:
@@ -271,13 +273,13 @@ async def _update_hypotheses_from_journal(
                     f"[JournalAPI] Failed to add journal evidence to hypothesis "
                     f"{hypothesis.id}: {e}"
                 )
-    
+
     if updated_count > 0:
         logger.info(
             f"[JournalAPI] Updated {updated_count} hypotheses from journal entry "
             f"for user {user_id}"
         )
-    
+
     return updated_count
 
 
@@ -306,19 +308,19 @@ async def get_current_cosmic_context(
 ):
     """
     Get comprehensive cosmic context for the current moment.
-    
+
     Returns a snapshot of all cosmic conditions including:
     - Solar: Kp index, Bz, solar wind, shield integrity
     - Lunar: Phase, sign, VoC status
     - Transits: Active retrogrades, exact aspects to natal chart
     - Tags: Searchable tags derived from conditions
     - Intensity Score: Overall cosmic activity level (0-10)
-    
+
     Useful for understanding the cosmic backdrop of the present moment
     before journaling or making decisions.
     """
     from src.app.modules.tracking.context import get_cosmic_context
-    
+
     try:
         context = await get_cosmic_context(current_user["id"])
         return context

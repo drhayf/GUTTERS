@@ -1,5 +1,6 @@
 from arq import create_pool
 from arq.connections import ArqRedis
+
 from src.app.core.worker.settings import WorkerSettings
 
 # Singleton pool instance

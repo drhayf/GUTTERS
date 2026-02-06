@@ -1,6 +1,6 @@
 from src.app.core.events.bus import get_event_bus
-from src.app.modules.infrastructure.push.router import notification_router
 from src.app.modules.infrastructure.push.map import EVENT_MAP
+from src.app.modules.infrastructure.push.router import notification_router
 
 
 async def register_listeners():

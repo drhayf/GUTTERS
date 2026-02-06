@@ -1,14 +1,15 @@
+import uuid
+from typing import Annotated, Any, Dict, Optional
+
 from fastapi import APIRouter, Depends, HTTPException
-from typing import Annotated, Optional, Dict, Any
 from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...api.dependencies import get_current_user
-from ...models.user import User
 from ...core.db.database import async_get_db
-from sqlalchemy.ext.asyncio import AsyncSession
-from ...modules.intelligence.generative_ui.models import ComponentResponse, ComponentType
 from ...core.events.bus import get_event_bus
-import uuid
+from ...models.user import User
+from ...modules.intelligence.generative_ui.models import ComponentResponse, ComponentType
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -49,9 +50,9 @@ async def send_to_master_chat(
 
     Returns response with metadata about analysis.
     """
+    from src.app.core.memory import get_active_memory
     from src.app.modules.features.chat.master_chat import MasterChatHandler
     from src.app.modules.intelligence.query.engine import QueryEngine
-    from src.app.core.memory import get_active_memory
     from src.app.modules.intelligence.synthesis.synthesizer import get_llm
 
     memory = get_active_memory()
@@ -86,9 +87,9 @@ async def get_master_chat_history(
     session_id: Optional[int] = None,
 ):
     """Get Master Chat history."""
+    from src.app.core.memory import get_active_memory
     from src.app.modules.features.chat.master_chat import MasterChatHandler
     from src.app.modules.intelligence.query.engine import QueryEngine
-    from src.app.core.memory import get_active_memory
     from src.app.modules.intelligence.synthesis.synthesizer import get_llm
 
     memory = get_active_memory()
@@ -131,10 +132,10 @@ async def list_conversations(
     db: Annotated[AsyncSession, Depends(async_get_db)],
 ):
     """List all Master Chat conversations."""
+    from src.app.core.llm.config import LLMTier, get_premium_llm
+    from src.app.core.memory import get_active_memory
     from src.app.modules.features.chat.master_chat import MasterChatHandler
     from src.app.modules.intelligence.query.engine import QueryEngine
-    from src.app.core.memory import get_active_memory
-    from src.app.core.llm.config import get_premium_llm, LLMTier
 
     memory = get_active_memory()
     await memory.initialize()
@@ -285,8 +286,9 @@ async def get_journal_entries(
     db: Annotated[AsyncSession, Depends(async_get_db)],
 ):
     """Get journal entries from session."""
-    from src.app.models.user_profile import UserProfile
     from sqlalchemy import select
+
+    from src.app.models.user_profile import UserProfile
 
     result = await db.execute(select(UserProfile).where(UserProfile.user_id == current_user["id"]))
     profile = result.scalar_one()
@@ -311,9 +313,10 @@ async def submit_component_response(
     """
 
     # Store response in database
-    from src.app.models.user_profile import UserProfile
     from sqlalchemy import select
     from sqlalchemy.orm.attributes import flag_modified
+
+    from src.app.models.user_profile import UserProfile
 
     # Validation logic
     if response.component_type == ComponentType.MULTI_SLIDER:

@@ -5,7 +5,7 @@ Typed Pydantic models for Genesis event payloads.
 These ensure type safety when publishing/consuming Genesis events.
 """
 
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from typing import Any
 
 from pydantic import BaseModel, Field

@@ -13,28 +13,28 @@ and managing their evolution over time.
 """
 
 import logging
-from datetime import datetime, timezone
-from typing import List, Optional, Dict, Any
+from datetime import UTC, datetime
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .models import Hypothesis, HypothesisStatus
-from .confidence import (
-    EvidenceType,
-    EvidenceRecord,
-    WeightedConfidenceCalculator,
-    ConfidenceThresholds,
-)
-from .storage import HypothesisStorage
 from src.app.core.events.bus import get_event_bus
 from src.app.protocol.events import (
-    HYPOTHESIS_UPDATED,
     HYPOTHESIS_CONFIRMED,
-    HYPOTHESIS_THRESHOLD_CROSSED,
+    HYPOTHESIS_EVIDENCE_ADDED,
     HYPOTHESIS_REJECTED,
     HYPOTHESIS_STALE,
-    HYPOTHESIS_EVIDENCE_ADDED,
+    HYPOTHESIS_THRESHOLD_CROSSED,
+    HYPOTHESIS_UPDATED,
 )
+
+from .confidence import (
+    EvidenceRecord,
+    EvidenceType,
+    WeightedConfidenceCalculator,
+)
+from .models import Hypothesis, HypothesisStatus
+from .storage import HypothesisStorage
 
 logger = logging.getLogger(__name__)
 
@@ -42,17 +42,17 @@ logger = logging.getLogger(__name__)
 class HypothesisUpdater:
     """
     Service for updating hypothesis confidence with new evidence.
-    
+
     Responsibilities:
     1. Add evidence records to hypotheses
     2. Recalculate weighted confidence
     3. Manage status transitions
     4. Emit events on significant changes
     5. Persist changes to storage
-    
+
     Thread-safe for concurrent use.
     """
-    
+
     def __init__(
         self,
         storage: Optional[HypothesisStorage] = None,
@@ -60,7 +60,7 @@ class HypothesisUpdater:
     ):
         """
         Initialize updater with dependencies.
-        
+
         Args:
             storage: Optional storage instance (created if not provided)
             calculator: Optional calculator instance (created if not provided)
@@ -68,12 +68,12 @@ class HypothesisUpdater:
         self.storage = storage or HypothesisStorage()
         self.calculator = calculator or WeightedConfidenceCalculator()
         self.event_bus = get_event_bus()
-    
+
     async def _ensure_event_bus(self) -> None:
         """Ensure event bus is initialized."""
         if not self.event_bus.redis_client:
             await self.event_bus.initialize()
-    
+
     async def add_evidence(
         self,
         hypothesis_id: str,
@@ -87,9 +87,9 @@ class HypothesisUpdater:
     ) -> Optional[Hypothesis]:
         """
         Add new evidence to a hypothesis and recalculate confidence.
-        
+
         This is the primary method for updating hypotheses with new evidence.
-        
+
         Args:
             hypothesis_id: ID of hypothesis to update
             user_id: User ID
@@ -99,27 +99,27 @@ class HypothesisUpdater:
             reasoning: Why this evidence matters
             db: Database session
             magi_context: Optional magi chronos state
-        
+
         Returns:
             Updated Hypothesis or None if not found
-        
+
         Raises:
             ValueError: If hypothesis not found
         """
         await self._ensure_event_bus()
-        
+
         # Get hypothesis
         hypotheses = await self.storage.get_hypotheses(user_id)
         hypothesis = next((h for h in hypotheses if h.id == hypothesis_id), None)
-        
+
         if not hypothesis:
             logger.warning(f"Hypothesis {hypothesis_id} not found for user {user_id}")
             return None
-        
+
         # Store previous state for event
         old_confidence = hypothesis.confidence
         old_status = hypothesis.status
-        
+
         # Create evidence record
         position = len(hypothesis.evidence_records)
         evidence_record = EvidenceRecord.create(
@@ -132,13 +132,13 @@ class HypothesisUpdater:
             position=position,
             magi_context=magi_context
         )
-        
+
         # Add to hypothesis
         hypothesis.add_evidence_record(evidence_record.model_dump(mode="json"))
-        
+
         # Recalculate confidence
         updated_hypothesis = await self._recalculate_confidence(hypothesis, db)
-        
+
         # Emit events if significant change
         await self._emit_update_events(
             updated_hypothesis,
@@ -147,9 +147,9 @@ class HypothesisUpdater:
             evidence_record.id,
             evidence_record=evidence_record.model_dump(mode="json")
         )
-        
+
         return updated_hypothesis
-    
+
     async def add_user_feedback(
         self,
         hypothesis_id: str,
@@ -161,9 +161,9 @@ class HypothesisUpdater:
     ) -> Optional[Hypothesis]:
         """
         Process user feedback (confirmation/rejection) as evidence.
-        
+
         User feedback carries highest weight in the system.
-        
+
         Args:
             hypothesis_id: ID of hypothesis
             user_id: User ID
@@ -171,7 +171,7 @@ class HypothesisUpdater:
             comment: Optional user comment
             db: Database session
             magi_context: Optional magi chronos state
-        
+
         Returns:
             Updated Hypothesis or None if not found
         """
@@ -182,27 +182,27 @@ class HypothesisUpdater:
             "partially": EvidenceType.USER_EXPLICIT_FEEDBACK,
             "unsure": EvidenceType.USER_EXPLICIT_FEEDBACK,
         }
-        
+
         evidence_type = feedback_map.get(feedback_type, EvidenceType.USER_EXPLICIT_FEEDBACK)
-        
+
         # Build reasoning
         if feedback_type == "confirm":
-            reasoning = f"User confirmed hypothesis is accurate"
+            reasoning = "User confirmed hypothesis is accurate"
             if comment:
                 reasoning += f": {comment}"
         elif feedback_type == "reject":
-            reasoning = f"User rejected hypothesis as inaccurate"
+            reasoning = "User rejected hypothesis as inaccurate"
             if comment:
                 reasoning += f": {comment}"
         elif feedback_type == "partially":
-            reasoning = f"User indicated hypothesis is partially accurate"
+            reasoning = "User indicated hypothesis is partially accurate"
             if comment:
                 reasoning += f": {comment}"
         else:
             reasoning = f"User provided feedback: {feedback_type}"
             if comment:
                 reasoning += f" - {comment}"
-        
+
         return await self.add_evidence(
             hypothesis_id=hypothesis_id,
             user_id=user_id,
@@ -210,14 +210,14 @@ class HypothesisUpdater:
             data={
                 "feedback_type": feedback_type,
                 "comment": comment,
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": datetime.now(UTC).isoformat()
             },
             source="user_feedback",
             reasoning=reasoning,
             db=db,
             magi_context=magi_context
         )
-    
+
     async def add_journal_evidence(
         self,
         hypothesis: Hypothesis,
@@ -229,9 +229,9 @@ class HypothesisUpdater:
     ) -> Optional[Hypothesis]:
         """
         Add journal entry as supporting evidence.
-        
+
         Called when a journal entry is detected to be relevant to a hypothesis.
-        
+
         Args:
             hypothesis: Hypothesis to update
             journal_entry: Journal entry data
@@ -239,7 +239,7 @@ class HypothesisUpdater:
             matching_keywords: Keywords that matched
             db: Database session
             magi_context: Optional magi chronos state
-        
+
         Returns:
             Updated Hypothesis
         """
@@ -250,11 +250,11 @@ class HypothesisUpdater:
             evidence_type = EvidenceType.THEME_ALIGNMENT
         else:
             evidence_type = EvidenceType.MODULE_SUGGESTION
-        
+
         reasoning = f"Journal entry aligns with hypothesis (relevance: {relevance_score:.0%})"
         if matching_keywords:
             reasoning += f" - keywords: {', '.join(matching_keywords[:5])}"
-        
+
         return await self.add_evidence(
             hypothesis_id=hypothesis.id,
             user_id=hypothesis.user_id,
@@ -271,7 +271,7 @@ class HypothesisUpdater:
             db=db,
             magi_context=magi_context
         )
-    
+
     async def add_pattern_evidence(
         self,
         hypothesis: Hypothesis,
@@ -281,20 +281,20 @@ class HypothesisUpdater:
     ) -> Optional[Hypothesis]:
         """
         Add Observer pattern as evidence.
-        
+
         Called when Observer detects a pattern relevant to a hypothesis.
-        
+
         Args:
             hypothesis: Hypothesis to update
             pattern: Observer pattern data
             db: Database session
             magi_context: Optional magi chronos state
-        
+
         Returns:
             Updated Hypothesis
         """
         pattern_type = pattern.get("pattern_type", "unknown")
-        
+
         # Map pattern type to evidence type
         pattern_evidence_map = {
             "solar_symptom": EvidenceType.COSMIC_CORRELATION,
@@ -303,19 +303,19 @@ class HypothesisUpdater:
             "day_of_week": EvidenceType.OBSERVER_PATTERN,
             "cyclical": EvidenceType.CYCLICAL_PATTERN,
         }
-        
+
         evidence_type = pattern_evidence_map.get(
-            pattern_type, 
+            pattern_type,
             EvidenceType.OBSERVER_PATTERN
         )
-        
+
         correlation = pattern.get("correlation", 0)
         p_value = pattern.get("p_value", 1.0)
-        
+
         reasoning = f"Observer detected {pattern_type} pattern"
         if correlation:
             reasoning += f" (r={correlation:.2f}, p={p_value:.3f})"
-        
+
         return await self.add_evidence(
             hypothesis_id=hypothesis.id,
             user_id=hypothesis.user_id,
@@ -332,7 +332,7 @@ class HypothesisUpdater:
             db=db,
             magi_context=magi_context
         )
-    
+
     async def add_cyclical_pattern_evidence(
         self,
         hypothesis: Hypothesis,
@@ -342,16 +342,16 @@ class HypothesisUpdater:
     ) -> Optional[Hypothesis]:
         """
         Add cyclical pattern as high-fidelity evidence.
-        
+
         Cyclical patterns represent recurring experiences across 52-day magi periods.
         They carry higher weight because they're validated across multiple occurrences.
-        
+
         Args:
             hypothesis: Hypothesis to update
             cyclical_pattern: CyclicalPattern data from Observer
             db: Database session
             magi_context: Optional current magi chronos state
-        
+
         Returns:
             Updated Hypothesis with cyclical evidence
         """
@@ -361,17 +361,17 @@ class HypothesisUpdater:
         confidence = cyclical_pattern.get("confidence", 0)
         observation_count = cyclical_pattern.get("observation_count", 0)
         pattern_id = cyclical_pattern.get("pattern_id", cyclical_pattern.get("id", ""))
-        
+
         # Cyclical patterns are high-quality evidence
         evidence_type = EvidenceType.CYCLICAL_PATTERN
-        
+
         # Build comprehensive reasoning
         reasoning = (
             f"Cyclical pattern detected: {pattern_type} during {planetary_ruler} periods "
             f"({period_card}). Based on {observation_count} observations "
             f"with {confidence:.0%} confidence."
         )
-        
+
         # Add to hypothesis
         updated_hypothesis = await self.add_evidence(
             hypothesis_id=hypothesis.id,
@@ -393,25 +393,25 @@ class HypothesisUpdater:
             db=db,
             magi_context=magi_context
         )
-        
+
         if updated_hypothesis:
             # Track period correlation
             updated_hypothesis.track_period_evidence(planetary_ruler)
-            
+
             # Add cyclical pattern correlation
             if pattern_id:
                 updated_hypothesis.add_cyclical_pattern_correlation(pattern_id)
-            
+
             # Persist additional fields
             await self.storage.store_hypothesis(updated_hypothesis, db)
-            
+
             logger.info(
                 f"Added cyclical pattern evidence to hypothesis {hypothesis.id}: "
                 f"{pattern_type} in {planetary_ruler}"
             )
-        
+
         return updated_hypothesis
-    
+
     async def correlate_hypothesis_with_period(
         self,
         hypothesis: Hypothesis,
@@ -420,35 +420,35 @@ class HypothesisUpdater:
     ) -> Hypothesis:
         """
         Update hypothesis with current magi period and hexagram correlation.
-        
+
         Should be called when adding evidence to track which planetary periods
         AND which I-Ching gates contribute most to a hypothesis.
-        
+
         Args:
             hypothesis: Hypothesis to update
             magi_context: Current magi chronos state (includes cardology + hexagram)
             db: Database session
-        
+
         Returns:
             Updated hypothesis with period and hexagram tracking
         """
         if not magi_context:
             return hypothesis
-        
+
         # ===== CARDOLOGY (MACRO PERIOD) =====
         planetary_ruler = magi_context.get("planetary_ruler")
         period_card = magi_context.get("period_card")
-        
+
         # Track evidence during this period
         if planetary_ruler:
             hypothesis.track_period_evidence(planetary_ruler)
-        
+
         # If hypothesis doesn't have origin period set, set it now
         if not hypothesis.magi_period_card and period_card:
             hypothesis.magi_period_card = period_card
         if not hypothesis.magi_planetary_ruler and planetary_ruler:
             hypothesis.magi_planetary_ruler = planetary_ruler
-        
+
         # ===== I-CHING HEXAGRAM (MICRO PERIOD) =====
         hexagram = magi_context.get("hexagram")
         if hexagram:
@@ -456,16 +456,16 @@ class HypothesisUpdater:
             earth_gate = hexagram.get("earth_gate")
             sun_line = hexagram.get("sun_line")
             earth_line = hexagram.get("earth_line")
-            
+
             # Track hexagram evidence correlation (gate + line)
             if sun_gate:
                 hypothesis.track_hexagram_evidence(
-                    sun_gate, 
+                    sun_gate,
                     earth_gate,
                     sun_line,
                     earth_line
                 )
-            
+
             # Store origin hexagram if not set
             if not hasattr(hypothesis, 'origin_hexagram') or not hypothesis.origin_hexagram:
                 hypothesis.origin_hexagram = {
@@ -474,12 +474,12 @@ class HypothesisUpdater:
                     "sun_line": sun_line,
                     "earth_line": earth_line,
                 }
-        
+
         # Persist
         await self.storage.store_hypothesis(hypothesis, db)
-        
+
         return hypothesis
-    
+
     async def _recalculate_confidence(
         self,
         hypothesis: Hypothesis,
@@ -487,11 +487,11 @@ class HypothesisUpdater:
     ) -> Hypothesis:
         """
         Recalculate hypothesis confidence from evidence records.
-        
+
         Args:
             hypothesis: Hypothesis to recalculate
             db: Database session
-        
+
         Returns:
             Updated hypothesis
         """
@@ -500,13 +500,13 @@ class HypothesisUpdater:
             EvidenceRecord(**record)
             for record in hypothesis.evidence_records
         ]
-        
+
         # Calculate new confidence
         new_confidence = self.calculator.calculate_confidence(evidence_records)
-        
+
         # Get breakdown for caching
         breakdown = self.calculator.get_confidence_breakdown(evidence_records)
-        
+
         # Create snapshot
         snapshot = self.calculator.create_snapshot(
             evidence_records,
@@ -514,32 +514,32 @@ class HypothesisUpdater:
             evidence_id=evidence_records[-1].id if evidence_records else None,
             status=hypothesis.status.value
         )
-        
+
         # Update hypothesis
         hypothesis.confidence = new_confidence
         hypothesis.confidence_breakdown = breakdown
-        hypothesis.last_recalculation = datetime.now(timezone.utc)
+        hypothesis.last_recalculation = datetime.now(UTC)
         hypothesis.add_confidence_snapshot(snapshot.model_dump(mode="json"))
-        
+
         # Update status based on new confidence
         hypothesis.update_status_from_confidence()
-        
+
         # Update evidence records with recency-adjusted weights
         hypothesis.evidence_records = [
             record.model_dump(mode="json")
             for record in evidence_records
         ]
-        
+
         # Persist
         await self.storage.store_hypothesis(hypothesis, db)
-        
+
         logger.info(
             f"Recalculated hypothesis {hypothesis.id}: "
             f"confidence={new_confidence:.2f}, status={hypothesis.status.value}"
         )
-        
+
         return hypothesis
-    
+
     async def recalculate_all_user_hypotheses(
         self,
         user_id: int,
@@ -547,25 +547,25 @@ class HypothesisUpdater:
     ) -> List[Hypothesis]:
         """
         Recalculate confidence for all user hypotheses.
-        
+
         Useful for applying recency decay or after bulk updates.
-        
+
         Args:
             user_id: User ID
             db: Database session
-        
+
         Returns:
             List of updated hypotheses
         """
         hypotheses = await self.storage.get_hypotheses(user_id)
-        
+
         updated = []
         for hypothesis in hypotheses:
             updated_hypothesis = await self._recalculate_confidence(hypothesis, db)
             updated.append(updated_hypothesis)
-        
+
         return updated
-    
+
     async def _emit_update_events(
         self,
         hypothesis: Hypothesis,
@@ -576,7 +576,7 @@ class HypothesisUpdater:
     ) -> None:
         """
         Emit events for hypothesis updates.
-        
+
         Events:
         - HYPOTHESIS_UPDATED: Always emitted on update
         - HYPOTHESIS_CONFIRMED: When status transitions to CONFIRMED
@@ -584,7 +584,7 @@ class HypothesisUpdater:
         - HYPOTHESIS_REJECTED: When status transitions to REJECTED
         - HYPOTHESIS_STALE: When status transitions to STALE
         - HYPOTHESIS_EVIDENCE_ADDED: When new evidence is added
-        
+
         Args:
             hypothesis: Updated hypothesis
             old_confidence: Previous confidence
@@ -593,8 +593,8 @@ class HypothesisUpdater:
             evidence_record: Optional evidence record details
         """
         confidence_delta = hypothesis.confidence - old_confidence
-        timestamp = datetime.now(timezone.utc).isoformat()
-        
+        timestamp = datetime.now(UTC).isoformat()
+
         # Always emit update event
         await self.event_bus.publish(
             HYPOTHESIS_UPDATED,
@@ -611,7 +611,7 @@ class HypothesisUpdater:
                 "timestamp": timestamp
             }
         )
-        
+
         # Emit evidence added event if record provided
         if evidence_record:
             await self.event_bus.publish(
@@ -629,12 +629,12 @@ class HypothesisUpdater:
                     "timestamp": timestamp
                 }
             )
-        
+
         # Detect and emit threshold crossing events
         await self._emit_threshold_events(
             hypothesis, old_confidence, old_status, evidence_id, timestamp
         )
-    
+
     async def _emit_threshold_events(
         self,
         hypothesis: Hypothesis,
@@ -645,7 +645,7 @@ class HypothesisUpdater:
     ) -> None:
         """
         Emit events for threshold crossings.
-        
+
         Thresholds:
         - FORMING_MAX (0.60): Transition to TESTING
         - CONFIRMED_MIN (0.85): Transition to CONFIRMED
@@ -654,10 +654,10 @@ class HypothesisUpdater:
         # Only emit if status changed
         if old_status == hypothesis.status:
             return
-        
+
         # Determine threshold type
         threshold_type = None
-        
+
         if old_status == HypothesisStatus.FORMING and hypothesis.status == HypothesisStatus.TESTING:
             threshold_type = "testing_entered"
         elif old_status == HypothesisStatus.TESTING and hypothesis.status == HypothesisStatus.CONFIRMED:
@@ -668,7 +668,7 @@ class HypothesisUpdater:
             threshold_type = "rejected"
         elif hypothesis.status == HypothesisStatus.STALE:
             threshold_type = "stale"
-        
+
         if threshold_type:
             await self.event_bus.publish(
                 HYPOTHESIS_THRESHOLD_CROSSED,
@@ -685,13 +685,13 @@ class HypothesisUpdater:
                     "timestamp": timestamp
                 }
             )
-            
+
             logger.info(
                 f"Hypothesis threshold crossed: {hypothesis.id} "
                 f"{old_status.value} -> {hypothesis.status.value} "
                 f"(threshold: {threshold_type})"
             )
-        
+
         # Emit confirmation event on status transition to CONFIRMED
         if (
             old_status != HypothesisStatus.CONFIRMED and
@@ -710,12 +710,12 @@ class HypothesisUpdater:
                     "timestamp": timestamp
                 }
             )
-            
+
             logger.info(
                 f"Hypothesis CONFIRMED: {hypothesis.id} - "
                 f"{hypothesis.claim} (confidence: {hypothesis.confidence:.2f})"
             )
-        
+
         # Emit rejection event
         if (
             old_status != HypothesisStatus.REJECTED and
@@ -734,13 +734,13 @@ class HypothesisUpdater:
                     "timestamp": timestamp
                 }
             )
-            
+
             logger.info(
                 f"Hypothesis REJECTED: {hypothesis.id} - "
                 f"{hypothesis.claim} (confidence: {hypothesis.confidence:.2f}, "
                 f"contradictions: {hypothesis.contradictions})"
             )
-        
+
         # Emit stale event
         if (
             old_status != HypothesisStatus.STALE and
@@ -752,7 +752,7 @@ class HypothesisUpdater:
                 if last_ev.tzinfo:
                     last_ev = last_ev.replace(tzinfo=None)
                 days_since = (datetime.utcnow() - last_ev).days
-            
+
             await self.event_bus.publish(
                 HYPOTHESIS_STALE,
                 {
@@ -761,17 +761,17 @@ class HypothesisUpdater:
                     "hypothesis_type": hypothesis.hypothesis_type.value,
                     "claim": hypothesis.claim,
                     "days_since_evidence": days_since,
-                    "last_evidence_at": hypothesis.last_evidence_at.isoformat() 
+                    "last_evidence_at": hypothesis.last_evidence_at.isoformat()
                         if hypothesis.last_evidence_at else None,
                     "timestamp": timestamp
                 }
             )
-            
+
             logger.info(
                 f"Hypothesis STALE: {hypothesis.id} - "
                 f"{hypothesis.claim} ({days_since} days since evidence)"
             )
-    
+
     async def get_relevant_hypotheses_for_journal(
         self,
         user_id: int,
@@ -781,23 +781,23 @@ class HypothesisUpdater:
     ) -> List[Hypothesis]:
         """
         Find hypotheses relevant to a journal entry.
-        
+
         Uses keyword matching and semantic analysis to find hypotheses
         that might be supported by the journal entry.
-        
+
         Args:
             user_id: User ID
             journal_content: Journal entry content
             mood_score: Optional mood score
             tags: Optional entry tags
-        
+
         Returns:
             List of relevant hypotheses with relevance scores
         """
         hypotheses = await self.storage.get_hypotheses(user_id)
-        
+
         relevant = []
-        
+
         # Keywords by hypothesis type
         type_keywords = {
             "cosmic_sensitivity": [
@@ -820,27 +820,27 @@ class HypothesisUpdater:
                 "every time", "consistently"
             ]
         }
-        
+
         content_lower = journal_content.lower()
-        
+
         for hypothesis in hypotheses:
             # Skip rejected/stale hypotheses
             if hypothesis.status in [HypothesisStatus.REJECTED, HypothesisStatus.STALE]:
                 continue
-            
+
             # Check keyword match
             keywords = type_keywords.get(hypothesis.hypothesis_type.value, [])
             matching = [kw for kw in keywords if kw in content_lower]
-            
+
             # Check claim/predicted value match
             claim_match = any(
-                word.lower() in content_lower 
-                for word in hypothesis.claim.split() 
+                word.lower() in content_lower
+                for word in hypothesis.claim.split()
                 if len(word) > 4
             )
-            
+
             predicted_match = hypothesis.predicted_value.lower() in content_lower
-            
+
             # Calculate relevance
             relevance = 0.0
             if matching:
@@ -849,17 +849,17 @@ class HypothesisUpdater:
                 relevance += 0.3
             if predicted_match:
                 relevance += 0.2
-            
+
             if relevance > 0.1:
                 relevant.append({
                     "hypothesis": hypothesis,
                     "relevance": relevance,
                     "matching_keywords": matching
                 })
-        
+
         # Sort by relevance
         relevant.sort(key=lambda x: x["relevance"], reverse=True)
-        
+
         return relevant
 
 

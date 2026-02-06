@@ -9,13 +9,14 @@ so we can test intelligence modules (Enhanced Synthesis, Hypothesis, Vector Sear
 before Journal Module exists.
 """
 
-from datetime import datetime, timedelta
 import uuid
+from datetime import datetime, timedelta
 from typing import List
+
 
 class SeedDataGenerator:
     """Generate deterministic, realistic seed data for testing."""
-    
+
     @staticmethod
     def generate_journal_entries(
         user_id: int,
@@ -24,18 +25,18 @@ class SeedDataGenerator:
     ) -> List[dict]:
         """
         Generate realistic journal entries with detectable patterns.
-        
+
         Patterns embedded:
         1. Sunday anxiety (temporal pattern)
         2. Headaches every 10th entry (solar storm correlation)
         3. Low energy during waning moon simulation (days 15-29 of 30-day cycle)
         4. Creative breakthroughs during new moon simulation (days 0-7)
-        
+
         Args:
             user_id: User ID (for reference)
             days: How many days back to generate
             entries_per_week: Frequency (default 3 = Mon, Wed, Sat)
-        
+
         Returns:
             List of journal entry dicts matching JournalEntry schema
         """
@@ -43,11 +44,11 @@ class SeedDataGenerator:
         start_date = datetime.utcnow() - timedelta(days=days)
         current_date = start_date
         entry_count = 0
-        
+
         while current_date < datetime.utcnow():
             # Generate entries on Mon (0), Wed (2), Sat (5), Sun (6)
             if current_date.weekday() in [0, 2, 5, 6]:
-                
+
                 # PATTERN 1: Sunday anxiety (day_of_week pattern)
                 if current_date.weekday() == 6:  # Sunday
                     entry = {
@@ -59,7 +60,7 @@ class SeedDataGenerator:
                         "tags": ["anxiety", "stress"],
                         "themes": ["mental_health"]
                     }
-                
+
                 # PATTERN 2: Headaches on "storm days" (solar correlation)
                 elif entry_count % 10 == 0:  # Every 10th entry simulates geomagnetic storm day
                     entry = {
@@ -71,7 +72,7 @@ class SeedDataGenerator:
                         "tags": ["headache", "fatigue", "brain_fog"],
                         "themes": ["health"]
                     }
-                
+
                 # PATTERN 3: Low energy during "waning moon" (lunar correlation)
                 # Simulate 30-day lunar cycle, days 15-29 = waning
                 elif (entry_count % 30) in range(15, 29):
@@ -84,7 +85,7 @@ class SeedDataGenerator:
                         "tags": ["tired", "low_energy", "rest"],
                         "themes": ["health", "self_care"]
                     }
-                
+
                 # PATTERN 4: Creative breakthroughs during "new moon" (lunar correlation)
                 elif (entry_count % 30) in range(0, 7):
                     entry = {
@@ -96,7 +97,7 @@ class SeedDataGenerator:
                         "tags": ["creative", "inspired", "breakthrough", "focused"],
                         "themes": ["creativity", "work"]
                     }
-                
+
                 # PATTERN 5: Work stress (transit correlation - Saturn square Mars simulation)
                 elif entry_count % 15 == 0:
                     entry = {
@@ -108,7 +109,7 @@ class SeedDataGenerator:
                         "tags": ["stress", "work", "conflict", "frustration"],
                         "themes": ["work", "mental_health"]
                     }
-                
+
                 # NORMAL DAYS (no special pattern)
                 else:
                     entry = {
@@ -120,19 +121,19 @@ class SeedDataGenerator:
                         "tags": [],
                         "themes": []
                     }
-                
+
                 entries.append(entry)
                 entry_count += 1
-            
+
             current_date += timedelta(days=1)
-        
+
         return entries
-    
+
     @staticmethod
     def generate_observer_findings(user_id: int) -> List[dict]:
         """
         Generate realistic Observer findings that would be detected from journal entries.
-        
+
         These match patterns in generate_journal_entries().
         """
         return [
@@ -186,12 +187,12 @@ class SeedDataGenerator:
                 "detected_at": datetime.utcnow().isoformat()
             }
         ]
-    
+
     @staticmethod
     def generate_tracking_history(user_id: int, days: int = 60) -> dict:
         """
         Generate tracking history (solar, lunar, transits) that aligns with journal patterns.
-        
+
         Solar: Storms every 10 days (matches headache pattern)
         Lunar: 30-day cycle simulation
         Transits: Periodic Saturn-Mars square
@@ -201,11 +202,11 @@ class SeedDataGenerator:
             "lunar_tracking": [],
             "transit_tracking": []
         }
-        
+
         start_date = datetime.utcnow() - timedelta(days=days)
         current_date = start_date
         day_count = 0
-        
+
         while current_date < datetime.utcnow():
             # SOLAR: Storm every 10 days (aligns with headache entries)
             if day_count % 10 == 0:
@@ -214,7 +215,7 @@ class SeedDataGenerator:
             else:
                 kp_index = 2.0  # Quiet
                 geomagnetic_storm = False
-            
+
             history["solar_tracking"].append({
                 "timestamp": current_date.isoformat(),
                 "data": {
@@ -224,10 +225,10 @@ class SeedDataGenerator:
                     "solar_flares": []
                 }
             })
-            
+
             # LUNAR: 30-day cycle
             day_in_cycle = day_count % 30
-            
+
             if day_in_cycle < 7:
                 phase_name = "New Moon"
                 illumination = day_in_cycle / 14  # 0 to 0.5
@@ -240,7 +241,7 @@ class SeedDataGenerator:
             else:
                 phase_name = "Waning Crescent"
                 illumination = (30 - day_in_cycle) / 16
-            
+
             history["lunar_tracking"].append({
                 "timestamp": current_date.isoformat(),
                 "data": {
@@ -251,13 +252,13 @@ class SeedDataGenerator:
                     "is_full_moon": 14 <= day_in_cycle < 16
                 }
             })
-            
+
             # TRANSITS: Saturn square Mars every 15 days (aligns with work stress)
             if day_count % 15 == 0:
                 transit_active = True
             else:
                 transit_active = False
-            
+
             if transit_active:
                 history["transit_tracking"].append({
                     "timestamp": current_date.isoformat(),
@@ -274,8 +275,8 @@ class SeedDataGenerator:
                         ]
                     }
                 })
-            
+
             current_date += timedelta(days=1)
             day_count += 1
-        
+
         return history

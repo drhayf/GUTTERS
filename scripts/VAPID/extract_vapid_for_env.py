@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Extract VAPID keys in .env format."""
 
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.backends import default_backend
 import base64
+
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
 
 # Load the private key
 with open("src/private_key.pem", "rb") as f:
@@ -30,7 +31,7 @@ print("\nVAPID_PUBLIC_KEY (copy this):")
 print(public_b64url)
 
 # Read and escape private key for .env
-with open("src/private_key.pem", "r") as f:
+with open("src/private_key.pem") as f:
     private_pem = f.read()
 
 # In .env format, newlines are represented as \n in the string value

@@ -16,7 +16,7 @@ Events that trigger re-synthesis:
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta, UTC
+from datetime import UTC, datetime
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 

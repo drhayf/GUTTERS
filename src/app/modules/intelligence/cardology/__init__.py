@@ -18,30 +18,30 @@ The kernel calculates:
 - Relationship connection analysis
 """
 
-from .module import CardologyModule, module
 from .kernel import (
-    # Core Types
-    Card,
-    Suit,
-    Planet,
-    ZodiacSign,
-    PlanetaryPeriod,
-    CardologyBlueprint,
-    RelationshipConnection,
-    # Core Functions
-    generate_blueprint,
-    calculate_birth_card,
-    calculate_birth_card_from_date,
-    get_current_period_info,
-    generate_yearly_timeline,
-    analyze_connections,
+    FIXED_CARDS,
+    # Constants
+    JOKER,
     # Spreads
     LIFE_SPREAD,
     NATURAL_SPREAD,
-    # Constants
-    JOKER,
-    FIXED_CARDS,
+    # Core Types
+    Card,
+    CardologyBlueprint,
+    Planet,
+    PlanetaryPeriod,
+    RelationshipConnection,
+    Suit,
+    ZodiacSign,
+    analyze_connections,
+    calculate_birth_card,
+    calculate_birth_card_from_date,
+    # Core Functions
+    generate_blueprint,
+    generate_yearly_timeline,
+    get_current_period_info,
 )
+from .module import CardologyModule, module
 
 __all__ = [
     # Module
@@ -49,7 +49,7 @@ __all__ = [
     "module",
     # Types
     "Card",
-    "Suit", 
+    "Suit",
     "Planet",
     "ZodiacSign",
     "PlanetaryPeriod",

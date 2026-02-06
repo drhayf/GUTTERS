@@ -1,6 +1,6 @@
-import pytest
-from src.app.modules.intelligence.query.engine import QueryEngine
 from unittest.mock import MagicMock
+
+from src.app.modules.intelligence.query.engine import QueryEngine
 
 
 def test_format_numerology_context_handles_ints_and_dicts():
