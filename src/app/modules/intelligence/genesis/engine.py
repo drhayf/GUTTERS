@@ -542,13 +542,14 @@ class GenesisEngine:
             from ....core.state.chronos import get_chronos_manager
             chronos = get_chronos_manager()
 
-            cached_state = await chronos.get_current_state(user_id)
+            # get_user_chronos returns the state dict directly with keys like
+            # current_planet, current_card at the top level (no nesting)
+            current_state = await chronos.get_user_chronos(user_id)
 
-            if not cached_state or not cached_state.get("current_state"):
+            if not current_state:
                 logger.warning(f"No MAGI state found for user {user_id}, skipping alignment audit")
                 return None
 
-            current_state = cached_state.get("current_state", {})
             period_planet = current_state.get("current_planet", "Unknown")
             current_card = current_state.get("current_card", {})
             period_card = current_card.get("name") or current_card.get("card", "Unknown")

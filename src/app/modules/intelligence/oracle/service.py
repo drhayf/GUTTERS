@@ -8,9 +8,8 @@
 ╚══════════════════════════════════════════════════════════════════════════════╝
 """
 
-import secrets
 from datetime import UTC, date, datetime
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional
 
 import structlog
 from sqlalchemy import select
@@ -165,34 +164,6 @@ class OracleService:
         logger.info("oracle.draw.complete", user_id=user_id, reading_id=reading.id)
 
         return reading
-
-    def _random_card(self) -> Tuple[int, str]:
-        """
-        Select a random card using cryptographically secure entropy.
-
-        Uses secrets.SystemRandom which is backed by os.urandom
-        (cryptographically secure PRNG).
-
-        Returns:
-            Tuple of (rank: 1-13, suit: str)
-        """
-        rank = secrets.randbelow(13) + 1  # 1-13 (Ace to King)
-        suits = ["Hearts", "Clubs", "Diamonds", "Spades"]
-        suit = suits[secrets.randbelow(4)]
-
-        return rank, suit
-
-    def _random_hexagram(self) -> Tuple[int, int]:
-        """
-        Select a random hexagram and line using cryptographically secure entropy.
-
-        Returns:
-            Tuple of (hexagram: 1-64, line: 1-6)
-        """
-        hexagram = secrets.randbelow(64) + 1  # 1-64
-        line = secrets.randbelow(6) + 1  # 1-6
-
-        return hexagram, line
 
     async def _gather_transit_context(
         self,
