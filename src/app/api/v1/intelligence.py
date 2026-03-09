@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...api.dependencies import get_current_user
 from ...core.db.database import async_get_db
+from ...models.user import User
 from ...models.user_profile import UserProfile
 from ...modules.intelligence.query import QueryEngine, QueryRequest, QueryResponse
 from ...modules.intelligence.synthesis import (
@@ -848,10 +849,10 @@ async def perform_oracle_draw(
 
     # Get user's birth date for personalized context
     result = await db.execute(
-        select(UserProfile).where(UserProfile.user_id == user_id)
+        select(User).where(User.id == user_id)
     )
-    profile = result.scalar_one_or_none()
-    birth_date = profile.birth_date if profile else None
+    user = result.scalar_one_or_none()
+    birth_date = user.birth_date if user else None
 
     # Perform draw
     service = OracleService()
@@ -906,7 +907,16 @@ async def accept_oracle_reading(
     user_id = current_user["id"]
 
     service = OracleService()
-    quest = await service.accept_reading(reading_id, user_id, db)
+    try:
+        quest = await service.accept_reading(reading_id, user_id, db)
+    except Exception as e:
+        # HTTPExceptions from service propagate as-is
+        from fastapi import HTTPException
+        if isinstance(e, HTTPException):
+            raise
+        import structlog
+        structlog.get_logger().error("oracle.accept.error", error=str(e), reading_id=reading_id)
+        raise HTTPException(status_code=500, detail="Failed to accept reading")
 
     return {
         "status": "success",
@@ -915,7 +925,7 @@ async def accept_oracle_reading(
             "id": quest.id,
             "title": quest.title,
             "description": quest.description,
-            "category": quest.category.value,
+            "category": quest.category.value if hasattr(quest.category, 'value') else quest.category,
             "xp_reward": quest.xp_reward,
             "created_at": quest.created_at.isoformat()
         }
@@ -944,7 +954,15 @@ async def reflect_on_oracle_reading(
     user_id = current_user["id"]
 
     service = OracleService()
-    prompt = await service.reflect_on_reading(reading_id, user_id, db)
+    try:
+        prompt = await service.reflect_on_reading(reading_id, user_id, db)
+    except Exception as e:
+        from fastapi import HTTPException
+        if isinstance(e, HTTPException):
+            raise
+        import structlog
+        structlog.get_logger().error("oracle.reflect.error", error=str(e), reading_id=reading_id)
+        raise HTTPException(status_code=500, detail="Failed to create reflection")
 
     return {
         "status": "success",

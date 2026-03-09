@@ -15,6 +15,7 @@ import CouncilPage from './features/council/CouncilPage'
 import OraclePage from './features/oracle/OraclePage'
 
 import NotificationSettingsPage from './features/settings/NotificationSettingsPage'
+import UserManagementPage from './features/settings/UserManagementPage'
 
 export const router = createBrowserRouter([
     {
@@ -84,6 +85,10 @@ export const router = createBrowserRouter([
             {
                 path: 'settings/notifications',
                 element: <NotificationSettingsPage />
+            },
+            {
+                path: 'settings/users',
+                element: <UserManagementPage />
             }
         ]
     }

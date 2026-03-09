@@ -24,9 +24,10 @@ export const LunarObservatory = () => {
     const { data: lunarData, isLoading, error } = useQuery({
         queryKey: ['tracking-lunar'],
         queryFn: async () => {
-            const res = await api.get<{ current_data: LunarData }>('/api/v1/tracking/lunar');
+            const res = await api.get('/api/v1/tracking/lunar');
             console.log('[LunarObservatory] API Response:', res.data);
-            return res.data.current_data;
+            // current_data is a TrackingData: { timestamp, source, data: {...actual lunar values} }
+            return (res.data.current_data?.data ?? res.data.current_data) as LunarData;
         },
         refetchInterval: 60000, // 1 minute for more live feel
         retry: 3,

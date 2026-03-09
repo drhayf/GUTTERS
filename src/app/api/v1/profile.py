@@ -482,14 +482,9 @@ async def get_chronos_state(
     """
 
     user_id = current_user["id"]
+    birth_date = current_user.get("birth_date")
 
-    # Get user's birth date from profile
-    result = await db.execute(
-        select(UserProfile).where(UserProfile.user_id == user_id)
-    )
-    profile = result.scalar_one_or_none()
-
-    if not profile or not profile.birth_date:
+    if not birth_date:
         raise HTTPException(
             status_code=400,
             detail="Birth data required. Please complete onboarding first."
@@ -497,11 +492,11 @@ async def get_chronos_state(
 
     # Get chronos state from manager
     chronos = get_chronos_manager()
-    state = await chronos.get_user_chronos(user_id, birth_date=profile.birth_date)
+    state = await chronos.get_user_chronos(user_id, birth_date=birth_date)
 
     if not state:
         # Calculate fresh if no cached state
-        state = await chronos.refresh_user_chronos(user_id, profile.birth_date)
+        state = await chronos.refresh_user_chronos(user_id, birth_date)
 
     # Calculate days elapsed and progress percentage
     days_remaining = state.get("days_remaining", 0)
@@ -511,7 +506,11 @@ async def get_chronos_state(
 
     # Get karma cards from full profile data if available
     karma_cards = None
-    if profile.data and profile.data.get("cardology"):
+    result = await db.execute(
+        select(UserProfile).where(UserProfile.user_id == user_id)
+    )
+    profile = result.scalar_one_or_none()
+    if profile and profile.data and profile.data.get("cardology"):
         cardology_data = profile.data["cardology"]
         if "karma_cards" in cardology_data:
             karma_cards = cardology_data["karma_cards"]

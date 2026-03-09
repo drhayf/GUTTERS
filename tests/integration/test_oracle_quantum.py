@@ -394,6 +394,48 @@ class TestQuantumEntropyWithMockedAPI:
         assert 1 <= hexagram <= 64
         assert 1 <= line <= 6
 
+    @pytest.mark.asyncio
+    async def test_full_oracle_draw_batched_quantum(self):
+        """get_full_oracle_draw should fetch all 4 values in one API call."""
+        qe = QuantumEntropy()
+
+        async def mock_get(*args, **kwargs):
+            # Single call returns 4 uint16 values
+            params = kwargs.get("params", {})
+            assert params.get("length") == 4, "Should request 4 values in batch"
+            return httpx.Response(
+                status_code=200,
+                json={"success": True, "data": [5000, 2000, 30000, 3000]},
+                request=httpx.Request("GET", "https://qrng.anu.edu.au/API/jsonI.php"),
+            )
+
+        with patch.object(httpx.AsyncClient, "get", side_effect=mock_get):
+            rank, suit, hexagram, line, source = await qe.get_full_oracle_draw()
+
+        assert source == "QUANTUM"
+        assert 1 <= rank <= 13
+        assert suit in ["Hearts", "Clubs", "Diamonds", "Spades"]
+        assert 1 <= hexagram <= 64
+        assert 1 <= line <= 6
+
+    @pytest.mark.asyncio
+    async def test_full_oracle_draw_fallback_on_failure(self):
+        """get_full_oracle_draw falls back to individual draws on batch failure."""
+        qe = QuantumEntropy()
+
+        async def mock_get(*args, **kwargs):
+            raise httpx.TimeoutException("timeout")
+
+        with patch.object(httpx.AsyncClient, "get", side_effect=mock_get):
+            rank, suit, hexagram, line, source = await qe.get_full_oracle_draw()
+
+        # All individual draws also fail → LOCAL_CHAOS
+        assert source == "LOCAL_CHAOS"
+        assert 1 <= rank <= 13
+        assert suit in ["Hearts", "Clubs", "Diamonds", "Spades"]
+        assert 1 <= hexagram <= 64
+        assert 1 <= line <= 6
+
 
 # ============================================================================
 # SECTION 3: QuantumEntropy Live API Test (Optional, Skippable)
@@ -506,16 +548,27 @@ class TestOracleServiceQuantumIntegration:
         service = OracleService()
 
         # Mock the quantum API to return valid values
+        # The service now uses get_full_oracle_draw() which makes ONE batch call
+        # requesting 4 uint16 values at once
         _req = httpx.Request("GET", "https://qrng.anu.edu.au/API/jsonI.php")
-        mock_responses = iter([
-            httpx.Response(200, json={"success": True, "data": [5000]}, request=_req),
-            httpx.Response(200, json={"success": True, "data": [2000]}, request=_req),
-            httpx.Response(200, json={"success": True, "data": [30000]}, request=_req),
-            httpx.Response(200, json={"success": True, "data": [3000]}, request=_req),
-        ])
 
         async def mock_get(*args, **kwargs):
-            return next(mock_responses)
+            params = kwargs.get("params", {})
+            count = params.get("length", 1)
+            if count == 4:
+                # Batched call: return all 4 values at once
+                return httpx.Response(
+                    200,
+                    json={"success": True, "data": [5000, 2000, 30000, 3000]},
+                    request=_req,
+                )
+            else:
+                # Single call fallback
+                return httpx.Response(
+                    200,
+                    json={"success": True, "data": [5000]},
+                    request=_req,
+                )
 
         # Mock LLM to avoid real API calls
         mock_llm = AsyncMock()

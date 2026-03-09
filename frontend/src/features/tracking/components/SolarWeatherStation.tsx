@@ -34,9 +34,10 @@ export const SolarWeatherStation = () => {
     const { data: solarData, isLoading: solarLoading, error } = useQuery({
         queryKey: ['tracking-solar'],
         queryFn: async () => {
-            const res = await api.get<{ current_data: SolarData }>('/api/v1/tracking/solar');
+            const res = await api.get('/api/v1/tracking/solar');
             console.log('[SolarWeatherStation] API Response:', res.data);
-            return res.data.current_data;
+            // current_data is a TrackingData: { timestamp, source, data: {...actual solar values} }
+            return (res.data.current_data?.data ?? res.data.current_data) as SolarData;
         },
         refetchInterval: 30000, // 30 seconds for more live feel
         retry: 3,
@@ -207,8 +208,9 @@ export const SolarWeatherStation = () => {
                     </div>
 
                     <div className="h-[180px] w-full">
+                      {(historyData && historyData.length > 0) ? (
                         <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={historyData || []}>
+                            <LineChart data={historyData}>
                                 <defs>
                                     <linearGradient id="bzGradient" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="#fbbf24" stopOpacity={0.3} />
@@ -245,6 +247,9 @@ export const SolarWeatherStation = () => {
                                 />
                             </LineChart>
                         </ResponsiveContainer>
+                      ) : (
+                        <div className="flex items-center justify-center h-full text-xs text-muted-foreground">Collecting data...</div>
+                      )}
                     </div>
                 </motion.div>
 
@@ -271,8 +276,9 @@ export const SolarWeatherStation = () => {
                     </div>
 
                     <div className="h-[180px] w-full">
+                      {(historyData && historyData.length > 0) ? (
                         <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={historyData || []}>
+                            <AreaChart data={historyData}>
                                 <defs>
                                     <linearGradient id="speedGradient" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="#0d9488" stopOpacity={0.3} />
@@ -305,6 +311,9 @@ export const SolarWeatherStation = () => {
                                 />
                             </AreaChart>
                         </ResponsiveContainer>
+                      ) : (
+                        <div className="flex items-center justify-center h-full text-xs text-muted-foreground">Collecting data...</div>
+                      )}
                     </div>
                 </motion.div>
             </div>

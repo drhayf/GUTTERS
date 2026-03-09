@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Shield, ExternalLink, Activity, Moon } from 'lucide-react'
+import { Shield, ExternalLink, Activity, Moon, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useAuthStore } from '@/stores/authStore'
@@ -34,6 +34,14 @@ export default function ProfilePage() {
                     action: () => { }, // Placeholder
                     color: "text-blue-600",
                     bgColor: "bg-blue-50"
+                },
+                {
+                    icon: Users,
+                    label: "User Registry",
+                    description: "View and manage system users",
+                    action: () => navigate('/settings/users'),
+                    color: "text-slate-600",
+                    bgColor: "bg-slate-50"
                 }
             ]
         },

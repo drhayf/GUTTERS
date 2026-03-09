@@ -96,14 +96,9 @@ class OracleService:
         """
         logger.info("oracle.draw.start", user_id=user_id)
 
-        # STEP 1: Quantum-seeded random selection
-        card_rank, card_suit, card_source = await self.quantum.get_card_draw()
-        hexagram_number, hexagram_line, hex_source = await self.quantum.get_hexagram_draw()
-
-        # Determine overall entropy source (QUANTUM only if ALL draws were quantum)
-        entropy_source = (
-            "QUANTUM" if card_source == "QUANTUM" and hex_source == "QUANTUM"
-            else "LOCAL_CHAOS"
+        # STEP 1: Quantum-seeded random selection (single batched API call)
+        card_rank, card_suit, hexagram_number, hexagram_line, entropy_source = (
+            await self.quantum.get_full_oracle_draw()
         )
 
         logger.info(
@@ -480,10 +475,12 @@ Example style: "The {card_data['suit']} speaks of {card_data['meanings']['domain
         reading = result.scalar_one_or_none()
 
         if not reading:
-            raise ValueError(f"Reading {reading_id} not found for user {user_id}")
+            from fastapi import HTTPException
+            raise HTTPException(status_code=404, detail=f"Reading {reading_id} not found")
 
         if reading.accepted:
-            raise ValueError(f"Reading {reading_id} already accepted")
+            from fastapi import HTTPException
+            raise HTTPException(status_code=409, detail=f"Reading {reading_id} already accepted")
 
         # Build quest from reading
         card_data = self._get_card_data(reading.card_rank, reading.card_suit)
@@ -526,6 +523,9 @@ from the shadow of {hexagram_data['shadow']} into the gift of {hexagram_data['gi
 
         # Update reading
         reading.accepted = True
+
+        # Flush to get quest.id before linking
+        await db.flush()
         reading.quest_id = quest.id
 
         await db.commit()
@@ -568,10 +568,12 @@ from the shadow of {hexagram_data['shadow']} into the gift of {hexagram_data['gi
         reading = result.scalar_one_or_none()
 
         if not reading:
-            raise ValueError(f"Reading {reading_id} not found for user {user_id}")
+            from fastapi import HTTPException
+            raise HTTPException(status_code=404, detail=f"Reading {reading_id} not found")
 
         if reading.reflected:
-            raise ValueError(f"Reading {reading_id} already has reflection prompt")
+            from fastapi import HTTPException
+            raise HTTPException(status_code=409, detail=f"Reading {reading_id} already has reflection prompt")
 
         # Create ReflectionPrompt with diagnostic question
         prompt = ReflectionPrompt(
@@ -592,6 +594,9 @@ from the shadow of {hexagram_data['shadow']} into the gift of {hexagram_data['gi
 
         # Update reading
         reading.reflected = True
+
+        # Flush to get prompt.id before linking
+        await db.flush()
         reading.prompt_id = prompt.id
 
         await db.commit()

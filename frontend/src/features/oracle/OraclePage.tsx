@@ -46,7 +46,7 @@ export default function OraclePage() {
     // Draw mutation
     const drawMutation = useMutation({
         mutationFn: async () => {
-            const response = await api.post<DrawResponse>('/intelligence/oracle/draw')
+            const response = await api.post<DrawResponse>('/api/v1/intelligence/oracle/draw')
             return response.data.reading
         },
         onSuccess: (data) => {
@@ -68,7 +68,7 @@ export default function OraclePage() {
     // Accept mutation
     const acceptMutation = useMutation({
         mutationFn: async (readingId: number) => {
-            const response = await api.post<ActionResponse>(`/intelligence/oracle/${readingId}/accept`)
+            const response = await api.post<ActionResponse>(`/api/v1/intelligence/oracle/${readingId}/accept`)
             return response.data
         },
         onSuccess: () => {
@@ -81,7 +81,7 @@ export default function OraclePage() {
     // Reflect mutation
     const reflectMutation = useMutation({
         mutationFn: async (readingId: number) => {
-            const response = await api.post<ActionResponse>(`/intelligence/oracle/${readingId}/reflect`)
+            const response = await api.post<ActionResponse>(`/api/v1/intelligence/oracle/${readingId}/reflect`)
             return response.data
         },
         onSuccess: () => {

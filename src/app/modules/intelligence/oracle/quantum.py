@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import math
 import secrets
-from typing import Literal, Tuple
+from typing import List, Literal, Tuple
 
 import httpx
 import structlog
@@ -25,7 +25,7 @@ logger = structlog.get_logger(__name__)
 
 # ANU Quantum Random Numbers Server
 ANU_QRNG_URL = "https://qrng.anu.edu.au/API/jsonI.php"
-ANU_TIMEOUT_MS = 1000  # 1 second hard cap — UI must never hang
+ANU_TIMEOUT_MS = 3000  # 3 second cap — single batched call instead of 4 rapid-fire
 
 EntropySource = Literal["QUANTUM", "LOCAL_CHAOS"]
 
@@ -41,6 +41,10 @@ class QuantumEntropy:
     Both sources are cryptographically suitable. The quantum source adds
     "true" (non-deterministic) randomness from physical phenomena rather
     than algorithmic PRNG.
+
+    Performance:
+        Fetches all needed random values in a SINGLE batched API call
+        to avoid rate-limiting and connection overhead.
     """
 
     def __init__(self, timeout_ms: int = ANU_TIMEOUT_MS):
@@ -108,12 +112,15 @@ class QuantumEntropy:
         )
         return result, "LOCAL_CHAOS"
 
-    async def _fetch_quantum_uint16(self) -> int:
+    async def _fetch_quantum_uint16(self, count: int = 1) -> int | List[int]:
         """
-        Fetch a single uint16 (0–65535) from the ANU Quantum API.
+        Fetch uint16 value(s) (0–65535) from the ANU Quantum API.
+
+        Args:
+            count: Number of uint16 values to fetch in a single call.
 
         Returns:
-            Raw quantum random integer in range [0, 65535].
+            Single raw integer if count=1, list of ints if count>1.
 
         Raises:
             httpx.TimeoutException: If API doesn't respond within timeout.
@@ -123,7 +130,7 @@ class QuantumEntropy:
         async with httpx.AsyncClient(timeout=self._timeout_seconds) as client:
             response = await client.get(
                 ANU_QRNG_URL,
-                params={"length": 1, "type": "uint16"},
+                params={"length": count, "type": "uint16"},
             )
             response.raise_for_status()
 
@@ -133,14 +140,17 @@ class QuantumEntropy:
                 raise ValueError(f"ANU QRNG returned failure: {data}")
 
             numbers = data.get("data", [])
-            if not numbers:
-                raise ValueError(f"ANU QRNG returned no data: {data}")
+            if len(numbers) < count:
+                raise ValueError(f"ANU QRNG returned {len(numbers)} values, expected {count}")
 
-            raw_value = int(numbers[0])
-            if not (0 <= raw_value <= 65535):
-                raise ValueError(f"ANU QRNG value out of uint16 range: {raw_value}")
+            for val in numbers:
+                v = int(val)
+                if not (0 <= v <= 65535):
+                    raise ValueError(f"ANU QRNG value out of uint16 range: {v}")
 
-            return raw_value
+            if count == 1:
+                return int(numbers[0])
+            return [int(n) for n in numbers]
 
     @staticmethod
     def _rejection_sample_from_uint16(raw: int, range_size: int) -> int:
@@ -245,3 +255,65 @@ class QuantumEntropy:
         )
 
         return hexagram, line, combined_source
+
+    async def get_full_oracle_draw(
+        self,
+    ) -> Tuple[int, str, int, int, EntropySource]:
+        """
+        Draw a complete Oracle reading (card + hexagram) in a SINGLE
+        batched API call.
+
+        This is the preferred method — it fetches all 4 random values
+        from ANU QRNG in one HTTP request, avoiding rate-limit failures
+        that occur with 4 sequential calls.
+
+        Returns:
+            Tuple of (card_rank, suit_name, hexagram_number, line, entropy_source).
+            entropy_source is QUANTUM only if ALL values came from the batch.
+        """
+        suits = ["Hearts", "Clubs", "Diamonds", "Spades"]
+
+        try:
+            # Single batched call — 4 uint16 values in one request
+            raw_values = await self._fetch_quantum_uint16(count=4)
+            if not isinstance(raw_values, list) or len(raw_values) < 4:
+                raise ValueError(f"Expected 4 values, got {raw_values}")
+
+            # Apply rejection sampling to each value
+            rank_val = self._rejection_sample_from_uint16(raw_values[0], 13)
+            suit_val = self._rejection_sample_from_uint16(raw_values[1], 4)
+            hex_val = self._rejection_sample_from_uint16(raw_values[2], 64)
+            line_val = self._rejection_sample_from_uint16(raw_values[3], 6)
+
+            card_rank = 1 + rank_val      # [1, 13]
+            suit_name = suits[suit_val]   # index [0, 3]
+            hexagram = 1 + hex_val        # [1, 64]
+            line = 1 + line_val           # [1, 6]
+
+            logger.info(
+                "quantum.oracle.batch_success",
+                raw=raw_values,
+                card=f"{card_rank} of {suit_name}",
+                hexagram=hexagram,
+                line=line,
+            )
+
+            return card_rank, suit_name, hexagram, line, "QUANTUM"
+
+        except Exception as e:
+            logger.warning(
+                "quantum.oracle.batch_fallback",
+                error=str(e),
+                reason="Falling back to individual draws with OS CSPRNG",
+            )
+
+        # Fallback: use the individual methods (which use LOCAL_CHAOS)
+        card_rank, suit_name, card_source = await self.get_card_draw()
+        hexagram, line, hex_source = await self.get_hexagram_draw()
+
+        combined_source: EntropySource = (
+            "QUANTUM" if card_source == "QUANTUM" and hex_source == "QUANTUM"
+            else "LOCAL_CHAOS"
+        )
+
+        return card_rank, suit_name, hexagram, line, combined_source

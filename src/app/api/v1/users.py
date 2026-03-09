@@ -139,6 +139,25 @@ async def erase_db_user(
     return {"message": "User deleted from the database"}
 
 
+@router.delete("/admin/users/{username}")
+async def admin_delete_user(
+    request: Request,
+    username: str,
+    current_user: Annotated[dict, Depends(get_current_superuser)],
+    db: Annotated[AsyncSession, Depends(async_get_db)],
+) -> dict[str, str]:
+    """Permanently remove a user and all related data. Superuser only."""
+    if username == current_user["username"]:
+        raise ForbiddenException()
+
+    db_user = await crud_users.exists(db=db, username=username)
+    if not db_user:
+        raise NotFoundException("User not found")
+
+    await crud_users.db_delete(db=db, username=username)
+    return {"message": f"User '{username}' permanently removed"}
+
+
 @router.get("/user/{username}/rate_limits", dependencies=[Depends(get_current_superuser)])
 async def read_user_rate_limits(
     request: Request, username: str, db: Annotated[AsyncSession, Depends(async_get_db)]
